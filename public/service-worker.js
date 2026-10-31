@@ -2,7 +2,6 @@
 
 const CACHE_PREFIX = "lumina-app-shell-";
 const CACHE_NAME = `${CACHE_PREFIX}v3`;
-const MAX_CACHE_ENTRIES = 100;
 const APP_SHELL_URLS = [
   "/",
   "/favicon.svg",
@@ -32,24 +31,6 @@ function isCacheable(response) {
   );
 }
 
-async function trimCache(cache) {
-  const keys = await cache.keys();
-
-  if (keys.length <= MAX_CACHE_ENTRIES) {
-    return;
-  }
-
-  const protectedPaths = new Set(APP_SHELL_URLS);
-  const removableKeys = keys.filter(
-    (request) => !protectedPaths.has(new URL(request.url).pathname),
-  );
-  const overflow = keys.length - MAX_CACHE_ENTRIES;
-
-  await Promise.all(
-    removableKeys.slice(0, overflow).map((request) => cache.delete(request)),
-  );
-}
-
 async function cacheResponse(cache, request, response) {
   if (!isCacheable(response)) {
     return;
@@ -57,7 +38,6 @@ async function cacheResponse(cache, request, response) {
 
   try {
     await cache.put(request, response.clone());
-    await trimCache(cache);
   } catch {
     // Cache quota or storage failures must never hide a valid network response.
   }
@@ -129,7 +109,7 @@ async function cacheRequestedUrls(urls) {
   const cache = await caches.open(CACHE_NAME);
 
   await Promise.all(
-    urls.slice(0, MAX_CACHE_ENTRIES).map(async (value) => {
+    urls.map(async (value) => {
       try {
         const url = new URL(value, self.location.origin);
 

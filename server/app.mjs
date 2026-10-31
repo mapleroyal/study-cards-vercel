@@ -25,7 +25,8 @@ export function createApplication({ runtime = getRuntime } = {}) {
     }
     next();
   });
-  app.use(express.json({ limit: "4mb" }));
+  // The hosting platform owns its request-body limit; do not impose a smaller one.
+  app.use(express.json({ limit: Infinity }));
   app.get("/api/health", (_req, res) =>
     res.json({ ok: true, app: "lumina", edition: "vercel" }),
   );

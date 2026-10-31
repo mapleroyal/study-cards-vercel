@@ -70,7 +70,7 @@ export default defineConfig({
     reactRouter(),
     nitro({
       serverDir: "./server",
-      vercel: { functions: { maxDuration: 300 } },
+      vercel: { functions: { maxDuration: "max" } },
       ...(process.env.NITRO_PRESET === "vercel"
         ? { output: { publicDir: "build/client" } }
         : {

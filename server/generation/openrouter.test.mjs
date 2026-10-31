@@ -52,7 +52,7 @@ describe("OpenRouter generation", () => {
     expect(payload.model).toBe(DEFAULT_GENERATION_MODEL);
     expect(payload.provider).toEqual({ require_parameters: true });
     expect(payload.reasoning).toEqual({ effort: "xhigh", exclude: true });
-    expect(payload.max_tokens).toBe(32768);
+    expect(payload.max_tokens).toBe(128000);
     expect(payload.messages[1].content[1].text).toBe(
       `Complete source:\n\n${text}`,
     );
@@ -83,7 +83,85 @@ describe("OpenRouter generation", () => {
       job: { ...job, reasoningEffort: "none" },
     });
     expect(disabled.reasoning).toEqual({ effort: "none", exclude: true });
-    expect(disabled.max_tokens).toBe(4096);
+    expect(disabled.max_tokens).toBe(128000);
+  });
+
+  it("does not impose a count-based cap or invent a missing provider limit", () => {
+    for (const questionCount of [1, 25, 10000]) {
+      const payload = buildGenerationPayload({
+        document,
+        job: { ...job, questionCount },
+      });
+      expect(payload.max_tokens).toBe(128000);
+    }
+    const unknownLimit = buildGenerationPayload({
+      document,
+      job: { ...job, modelSnapshot: { reasoning: true } },
+    });
+    expect(unknownLimit).not.toHaveProperty("max_tokens");
+  });
+
+  it("records hidden reasoning and identifies the request limit without blaming the model capacity", async () => {
+    const onUsage = vi.fn();
+    const fetchImpl = vi.fn().mockResolvedValue(
+      response(null, {
+        provider: "Fixture provider",
+        choices: [
+          {
+            finish_reason: "length",
+            native_finish_reason: "max_tokens",
+            message: { content: "" },
+          },
+        ],
+        usage: {
+          cost: 0.02,
+          prompt_tokens: 44000,
+          completion_tokens: 32768,
+          completion_tokens_details: { reasoning_tokens: 32768 },
+        },
+      }),
+    );
+    await expect(
+      generateWithOpenRouter({
+        document,
+        job,
+        apiKey: "test-only",
+        fetchImpl,
+        onUsage,
+      }),
+    ).rejects.toThrow(
+      "Generation stopped at an output limit after using 32,768 tokens for reasoning, before returning any cards. The request allowed up to 128,000 output tokens, including reasoning.",
+    );
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(onUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outputTokens: 32768,
+        reasoningTokens: 32768,
+        visibleOutputTokens: 0,
+        requestedMaxOutputTokens: 128000,
+        finishReason: "length",
+        nativeFinishReason: "max_tokens",
+        provider: "Fixture provider",
+      }),
+    );
+  });
+
+  it("keeps missing reasoning usage unknown instead of reporting zero reasoning", async () => {
+    const onUsage = vi.fn();
+    await generateWithOpenRouter({
+      document,
+      job,
+      apiKey: "test-only",
+      fetchImpl: vi.fn().mockResolvedValue(response(set)),
+      onUsage,
+    });
+    expect(onUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outputTokens: 50,
+        reasoningTokens: null,
+        visibleOutputTokens: null,
+      }),
+    );
   });
 
   it("pins raw PDFs to Cloudflare text parsing with no native or OCR fallback", () => {
@@ -135,9 +213,9 @@ describe("OpenRouter generation", () => {
       }),
     ).toEqual(set);
     expect(fetchImpl).toHaveBeenCalledTimes(2);
-    expect(fetchImpl.mock.calls[0][1].signal).toBe(
-      fetchImpl.mock.calls[1][1].signal,
-    );
+    // The host/provider owns runtime limits; the app adds no shorter deadline.
+    expect(fetchImpl.mock.calls[0][1]).not.toHaveProperty("signal");
+    expect(fetchImpl.mock.calls[1][1]).not.toHaveProperty("signal");
     expect(onUsage).toHaveBeenCalledTimes(2);
     const repair = JSON.parse(fetchImpl.mock.calls[1][1].body);
     expect(repair.messages[1].content[1].text).toBe(
@@ -188,6 +266,76 @@ describe("OpenRouter generation", () => {
       }),
     ).rejects.toThrow(/output limit/);
     expect(truncated).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(["headers", "body"])(
+    "reports provider %s timeouts without calling them unreadable output",
+    async (stage) => {
+      const error = Object.assign(new TypeError("terminated"), {
+        cause: {
+          code:
+            stage === "body"
+              ? "UND_ERR_BODY_TIMEOUT"
+              : "UND_ERR_HEADERS_TIMEOUT",
+        },
+      });
+      const fetchImpl =
+        stage === "body"
+          ? vi.fn().mockResolvedValue({
+              json: async () => {
+                throw error;
+              },
+            })
+          : vi.fn().mockRejectedValue(error);
+      await expect(
+        generateWithOpenRouter({
+          document,
+          job,
+          apiKey: "test-only",
+          fetchImpl,
+        }),
+      ).rejects.toMatchObject({
+        status: 504,
+        message: expect.stringContaining("provider connection timed out"),
+      });
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("reports malformed provider JSON separately from connection failures", async () => {
+    await expect(
+      generateWithOpenRouter({
+        document,
+        job,
+        apiKey: "test-only",
+        fetchImpl: vi.fn().mockResolvedValue(new globalThis.Response("{incomplete")),
+      }),
+    ).rejects.toThrow("OpenRouter returned an unreadable response.");
+  });
+
+  it("distinguishes the provider's context-window stop from an output-token limit", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      response(null, {
+        choices: [
+          {
+            finish_reason: "length",
+            native_finish_reason: "model_context_window_exceeded",
+            message: { content: "" },
+          },
+        ],
+      }),
+    );
+    await expect(
+      generateWithOpenRouter({
+        document,
+        job,
+        apiKey: "test-only",
+        fetchImpl,
+      }),
+    ).rejects.toThrow(
+      "The complete source and response exceeded this model's context window.",
+    );
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
   it("records incurred usage even when parser annotation validation rejects the document", async () => {

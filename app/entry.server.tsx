@@ -7,8 +7,6 @@ import { isbot } from "isbot";
 import type { RenderToPipeableStreamOptions } from "react-dom/server";
 import { renderToPipeableStream } from "react-dom/server";
 
-export const streamTimeout = 5_000;
-
 export default function handleRequest(
   request: Request,
   responseStatusCode: number,
@@ -35,12 +33,7 @@ export default function handleRequest(
         ? "onAllReady"
         : "onShellReady";
 
-    // Abort the rendering stream after the `streamTimeout` so it has time to
-    // flush down the rejected boundaries
-    let timeoutId: ReturnType<typeof setTimeout> | undefined = setTimeout(
-      () => abort(),
-      streamTimeout + 1000,
-    );
+    const onRequestAbort = () => abort(request.signal.reason);
 
     const { pipe, abort } = renderToPipeableStream(
       <ServerRouter context={routerContext} url={request.url} nonce={nonce} />,
@@ -50,9 +43,7 @@ export default function handleRequest(
           shellRendered = true;
           const body = new PassThrough({
             final(callback) {
-              // Clear the timeout to prevent retaining the closure and memory leak
-              clearTimeout(timeoutId);
-              timeoutId = undefined;
+              request.signal.removeEventListener("abort", onRequestAbort);
               callback();
             },
           });
@@ -70,7 +61,7 @@ export default function handleRequest(
           );
         },
         onShellError(error: unknown) {
-          clearTimeout(timeoutId);
+          request.signal.removeEventListener("abort", onRequestAbort);
           reject(error);
         },
         onError(error: unknown) {
@@ -84,5 +75,10 @@ export default function handleRequest(
         },
       },
     );
+    if (request.signal.aborted) {
+      onRequestAbort();
+    } else {
+      request.signal.addEventListener("abort", onRequestAbort, { once: true });
+    }
   });
 }

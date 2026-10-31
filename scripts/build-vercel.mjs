@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { cpSync, readFileSync, writeFileSync } from "node:fs";
+import { cpSync, readFileSync } from "node:fs";
 
 execFileSync("npm", ["run", "build"], {
   stdio: "inherit",
@@ -13,10 +13,4 @@ if (config.version !== 3) {
   throw new Error("Vercel build output is missing.");
 }
 
-// Workflow defaults to the plan maximum. Keep a consistent five-minute ceiling
-// even on larger plans; the initial provider request and repair share 240 seconds.
-const flowConfigPath =
-  ".vercel/output/functions/.well-known/workflow/v1/flow.func/.vc-config.json";
-const flowConfig = JSON.parse(readFileSync(flowConfigPath, "utf8"));
-flowConfig.maxDuration = 300;
-writeFileSync(flowConfigPath, `${JSON.stringify(flowConfig, null, 2)}\n`);
+// Keep Workflow's generated maxDuration: "max" and queue-trigger configuration.

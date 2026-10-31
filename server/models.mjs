@@ -89,9 +89,7 @@ export function createModelCatalog({
       return { models: cached, defaultSelection: DEFAULT_SELECTION };
     }
     pending ??= (async () => {
-      const response = await fetchImpl("https://openrouter.ai/api/v1/models", {
-        signal: globalThis.AbortSignal.timeout(10000),
-      });
+      const response = await fetchImpl("https://openrouter.ai/api/v1/models");
       if (!response.ok) {
         throw problem("Models could not be loaded. Try again.", 503);
       }

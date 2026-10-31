@@ -32,6 +32,10 @@ import { humanizeType } from "@/lib/study-sets";
 import { formatPageTitle } from "@/lib/app-config";
 import { useStudySetsStore } from "@/stores/use-study-sets-store";
 
+function isReusableSource(source) {
+  return Boolean(source && !["uploading", "deleting"].includes(source.status));
+}
+
 export function meta() {
   return [{ title: formatPageTitle("Generate cards") }];
 }
@@ -296,12 +300,18 @@ export default function GenerateRoute() {
     }
   }
   function retry() {
-    setSourceId(job.sourceId);
+    const source = sources.find((item) => item.id === job.sourceId);
+    setSourceId(isReusableSource(source) ? source.id : "");
+    setFile(null);
+    setText("");
     setTypes(job.cardTypes);
     setCount(String(job.questionCount));
+    preparedRef.current = null;
     requestRef.current = null;
     setParams({});
-    setError(null);
+    setError(
+      isReusableSource(source) ? null : "Add the source again to retry.",
+    );
   }
   const canSubmit =
     ready &&
@@ -309,7 +319,11 @@ export default function GenerateRoute() {
     types.length > 0 &&
     Number.isSafeInteger(Number(count)) &&
     Number(count) > 0 &&
-    (sourceId || (mode === "text" ? text.trim() : file));
+    (sourceId
+      ? isReusableSource(selectedSource)
+      : mode === "text"
+        ? text.trim()
+        : file);
   return (
     <div
       className="min-h-dvh bg-background"
@@ -348,7 +362,12 @@ export default function GenerateRoute() {
                 job && (
                   <>
                     {job.status !== "completed" && (
-                      <Button onClick={retry}>Try again</Button>
+                      <Button
+                        onClick={retry}
+                        disabled={!ready || Boolean(busy)}
+                      >
+                        Try again
+                      </Button>
                     )}
                     <Button
                       variant="ghost"
@@ -596,11 +615,7 @@ export default function GenerateRoute() {
                 className="self-end"
                 disabled={!canSubmit || Boolean(busy) || modelBusy}
               >
-                {busy ? (
-                  <Spinner />
-                ) : (
-                  <PlusIcon aria-hidden="true" />
-                )}
+                {busy ? <Spinner /> : <PlusIcon aria-hidden="true" />}
                 {busy || "Generate"}
               </Button>
             </fieldset>
@@ -614,32 +629,44 @@ export default function GenerateRoute() {
         {visibleJobs.length > 0 && (
           <section className="flex flex-col gap-2 border-t pt-5">
             <h2 className="text-title-md">Recent generations</h2>
-            {visibleJobs.slice(0, 8).map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between gap-3 py-1"
-              >
-                <span className="min-w-0 truncate text-body-sm">
-                  {item.resultRecord?.rawSet?.title ||
-                    sources.find((source) => source.id === item.sourceId)
-                      ?.name ||
-                    "Study set"}
-                </span>
-                {item.status === "completed" && item.resultRecord?.slug ? (
-                  <Button asChild variant="ghost" size="sm">
-                    <Link to={`/sets/${item.resultRecord.slug}`}>Open set</Link>
-                  </Button>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setParams({ job: item.id })}
-                  >
-                    {jobLabels[item.status] || item.status}
-                  </Button>
-                )}
-              </div>
-            ))}
+            {visibleJobs.map((item) => {
+              const title =
+                item.resultRecord?.rawSet?.title ||
+                sources.find((source) => source.id === item.sourceId)?.name ||
+                item.sourceName ||
+                "Study set";
+              return (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 py-1"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words text-body-sm">{title}</p>
+                    {item.status !== "completed" && (
+                      <p className="text-body-sm text-muted-foreground">
+                        {jobLabels[item.status] || item.status}
+                      </p>
+                    )}
+                  </div>
+                  {item.status === "completed" && item.resultRecord?.slug ? (
+                    <Button asChild variant="ghost" size="sm">
+                      <Link to={`/sets/${item.resultRecord.slug}`}>
+                        Open set
+                      </Link>
+                    </Button>
+                  ) : item.id !== jobId ? (
+                    <Button asChild variant="ghost" size="sm">
+                      <Link
+                        to={`?job=${encodeURIComponent(item.id)}`}
+                        aria-label={`View details for ${title}`}
+                      >
+                        Details
+                      </Link>
+                    </Button>
+                  ) : null}
+                </div>
+              );
+            })}
           </section>
         )}
       </main>

@@ -24,6 +24,37 @@ async function fail(jobId: string, message: string, runId: string) {
   return generation.fail(jobId, new Error(message), runId);
 }
 
+function generationFailureMessage(error: unknown) {
+  const failure = error as {
+    message?: string;
+    code?: string;
+    errorCode?: string;
+    cause?: { code?: string; errorCode?: string };
+  } | null;
+  const message =
+    typeof failure?.message === "string"
+      ? failure.message
+      : "Generation could not be completed.";
+  const codes = [
+    failure?.code,
+    failure?.errorCode,
+    failure?.cause?.code,
+    failure?.cause?.errorCode,
+  ];
+  if (
+    codes.includes("FUNCTION_INVOCATION_TIMEOUT") ||
+    /\bFUNCTION_INVOCATION_TIMEOUT\b/.test(message)
+  ) {
+    return "Generation was stopped by the hosting provider's runtime limit before it finished.";
+  }
+  if (/^Step ".+" exceeded max retries \(0 retries\)$/.test(message)) {
+    // A killed invocation can also mean a process crash. Only an explicit
+    // platform timeout above is sufficient to call this a time-limit failure.
+    return "Generation was interrupted before it finished. It was not retried automatically.";
+  }
+  return message;
+}
+
 export async function generateStudySetWorkflow(jobId: string) {
   "use workflow";
   const { workflowRunId } = getWorkflowMetadata();
@@ -31,12 +62,6 @@ export async function generateStudySetWorkflow(jobId: string) {
     const job = await generate(jobId, workflowRunId);
     return job.status === "saving" ? await save(jobId) : job;
   } catch (error) {
-    return await fail(
-      jobId,
-      error instanceof Error
-        ? error.message
-        : "Generation could not be completed.",
-      workflowRunId,
-    );
+    return await fail(jobId, generationFailureMessage(error), workflowRunId);
   }
 }

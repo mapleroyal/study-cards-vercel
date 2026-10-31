@@ -62,12 +62,7 @@ export function buildGenerationPayload({ document, job }) {
   const usesReasoning = job.reasoningEffort
     ? job.reasoningEffort !== "none"
     : Boolean(job.modelSnapshot?.reasoning);
-  const visibleBudget = Math.max(4096, job.questionCount * 600);
-  // Reasoning and visible JSON share the model's output budget. Leave room for
-  // both, while respecting the selected model's advertised completion limit.
-  const outputBudget = usesReasoning
-    ? Math.max(32768, visibleBudget * 2)
-    : visibleBudget;
+  const outputLimit = job.modelSnapshot?.maxCompletionTokens;
   const content = [
     {
       type: "text",
@@ -95,11 +90,11 @@ export function buildGenerationPayload({ document, job }) {
       },
     },
     provider: { require_parameters: true },
-    // This bounds response cost; a truncated response is an explicit failure.
-    max_tokens: Math.min(
-      job.modelSnapshot?.maxCompletionTokens || 128000,
-      outputBudget,
-    ),
+    // Use the model's advertised capacity; card count is not an output limit.
+    // When the catalog has no limit, leave it to the provider.
+    ...(Number.isSafeInteger(outputLimit) && outputLimit > 0
+      ? { max_tokens: outputLimit }
+      : {}),
     ...(job.reasoningEffort || usesReasoning
       ? {
           reasoning: {
@@ -135,6 +130,20 @@ function getContent(message) {
     : "";
 }
 
+function outputLimitMessage({ maxTokens, outputTokens, reasoningTokens }) {
+  const allowed = maxTokens
+    ? ` The request allowed up to ${maxTokens.toLocaleString("en-US")} output tokens, including reasoning.`
+    : "";
+  if (
+    Number.isSafeInteger(outputTokens) &&
+    outputTokens > 0 &&
+    reasoningTokens === outputTokens
+  ) {
+    return `Generation stopped at an output limit after using ${outputTokens.toLocaleString("en-US")} tokens for reasoning, before returning any cards.${allowed} Try a lower reasoning effort.`;
+  }
+  return `Generation stopped at an output limit before the set was complete.${allowed} Try a lower reasoning effort or fewer cards.`;
+}
+
 export async function generateWithOpenRouter({
   document,
   job,
@@ -151,35 +160,67 @@ export async function generateWithOpenRouter({
     );
   }
   const payload = buildGenerationPayload({ document, job });
-  // Initial generation and its one repair share one function-safe deadline.
-  const deadline = globalThis.AbortSignal.timeout(240000);
   for (let attempt = 0; attempt < 2; attempt += 1) {
     await assertActive();
-    const response = await fetchImpl(endpoint, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "X-Title": "Lumina",
-      },
-      body: JSON.stringify(payload),
-      signal: deadline,
-    });
-    const result = await response.json().catch(() => {
-      throw new GenerationRequestError(
-        "OpenRouter returned an unreadable response.",
-      );
-    });
+    let response;
+    let result;
+    try {
+      response = await fetchImpl(endpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "X-Title": "Lumina",
+        },
+        body: JSON.stringify(payload),
+      });
+      result = await response.json();
+    } catch (error) {
+      if (
+        error.name === "TimeoutError" ||
+        ["UND_ERR_HEADERS_TIMEOUT", "UND_ERR_BODY_TIMEOUT"].includes(
+          error.code || error.cause?.code,
+        )
+      ) {
+        throw new GenerationRequestError(
+          "The provider connection timed out before generation finished. Try again or use a lower reasoning effort.",
+          504,
+        );
+      }
+      if (error instanceof SyntaxError) {
+        throw new GenerationRequestError(
+          "OpenRouter returned an unreadable response.",
+        );
+      }
+      throw error;
+    }
     const annotations =
       result.choices?.[0]?.message?.annotations ||
       result.error?.metadata?.file_annotations ||
       [];
+    const choice = result.choices?.[0];
+    const rawReasoningTokens =
+      result.usage?.completion_tokens_details?.reasoning_tokens;
+    const reasoningTokens =
+      Number.isSafeInteger(rawReasoningTokens) && rawReasoningTokens >= 0
+        ? rawReasoningTokens
+        : null;
+    const outputTokens = result.usage?.completion_tokens ?? null;
     if (result.id || result.usage) {
       await onUsage({
         generationId: result.id || null,
         cost: Number(result.usage?.cost) || 0,
         inputTokens: result.usage?.prompt_tokens || 0,
-        outputTokens: result.usage?.completion_tokens || 0,
+        outputTokens: outputTokens ?? 0,
+        reasoningTokens,
+        visibleOutputTokens:
+          reasoningTokens !== null && Number.isSafeInteger(outputTokens)
+            ? Math.max(0, outputTokens - reasoningTokens)
+            : null,
+        requestedMaxOutputTokens: payload.max_tokens ?? null,
+        finishReason: choice?.finish_reason ?? null,
+        nativeFinishReason: choice?.native_finish_reason ?? null,
+        provider: result.provider ?? null,
       });
     }
     await onParsed(annotations);
@@ -191,10 +232,19 @@ export async function generateWithOpenRouter({
         response.status >= 400 && response.status < 500 ? response.status : 502,
       );
     }
-    const choice = result.choices?.[0];
+    if (choice?.native_finish_reason === "model_context_window_exceeded") {
+      throw new GenerationRequestError(
+        "The complete source and response exceeded this model's context window. Choose a model with a larger context window.",
+        422,
+      );
+    }
     if (choice?.finish_reason === "length") {
       throw new GenerationRequestError(
-        "The response exceeded the model's output limit. Request fewer cards or lower reasoning effort.",
+        outputLimitMessage({
+          maxTokens: payload.max_tokens,
+          outputTokens,
+          reasoningTokens,
+        }),
         422,
       );
     }

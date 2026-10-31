@@ -6,10 +6,6 @@ import { STUDY_INTERACTIONS_STORAGE_KEY } from "@/lib/app-config";
 
 export { STUDY_INTERACTIONS_STORAGE_KEY };
 
-export const studyInteractionLimits = Object.freeze({
-  maxTextResponseCharacters: 5_000,
-});
-
 function resolveStorage(storage) {
   return storage ?? globalThis?.window?.localStorage;
 }
@@ -123,9 +119,7 @@ function sanitizeTrueFalseAnswer(selectedAnswer) {
 }
 
 function sanitizeTextResponse(response) {
-  return typeof response === "string"
-    ? response.slice(0, studyInteractionLimits.maxTextResponseCharacters)
-    : "";
+  return typeof response === "string" ? response : "";
 }
 
 function sanitizeOrderedItems(card, items) {

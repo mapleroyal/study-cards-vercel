@@ -8,7 +8,6 @@ import {
   hasDirtyStudyInteractions,
   isStudyInteractionDirty,
   mergeStudyInteraction,
-  studyInteractionLimits,
   STUDY_INTERACTIONS_STORAGE_KEY,
 } from "./use-study-interactions-store";
 
@@ -334,20 +333,19 @@ describe("createStudyInteractionsStore", () => {
     expect(store.getState().interactionsBySet.science).toBeUndefined();
   });
 
-  it("bounds text responses before synchronous persistence", () => {
+  it("preserves complete text responses across persistence and rehydration", () => {
     const storage = createStorage();
     const store = createStudyInteractionsStore({ storage });
-    const oversizedResponse = "x".repeat(
-      studyInteractionLimits.maxTextResponseCharacters + 100,
-    );
-
-    store
-      .getState()
-      .setTextResponse("science", shortAnswerCard, oversizedResponse);
-
+    const response = "An extended answer. ".repeat(1000);
+    store.getState().setTextResponse("science", shortAnswerCard, response);
     expect(
       store.getState().interactionsBySet.science[shortAnswerCard.id].response,
-    ).toHaveLength(studyInteractionLimits.maxTextResponseCharacters);
+    ).toBe(response);
+    const restored = createStudyInteractionsStore({ storage });
+    expect(
+      restored.getState().interactionsBySet.science[shortAnswerCard.id]
+        .response,
+    ).toBe(response);
   });
 
   it("keeps interactions usable when browser storage rejects writes", () => {

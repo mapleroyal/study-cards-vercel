@@ -64,15 +64,15 @@ npx vercel env add APP_PASSWORD preview
 
 Repeat for production when ready. `BLOB_READ_WRITE_TOKEN` normally comes from the connected store. Do not paste secret values into shell command arguments, committed files, or chat output. The [Vercel environment CLI](https://vercel.com/docs/cli/env) also accepts values from standard input.
 
-| Variable                | Meaning                                                                                                                              |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `DATABASE_URL`          | Neon connection string for this deployment.                                                                                          |
-| `BLOB_READ_WRITE_TOKEN` | Token for its private Blob store.                                                                                                    |
-| `APP_SECRET`            | Random secret of at least 32 characters, used for session encryption and provider-key encryption. Keep it stable across deployments. |
-| `APP_PASSWORD`          | Owner login password. Use a different password for each deployment.                                                                  |
-| `OPENROUTER_API_KEY`    | Optional initial key. A key saved in Settings takes precedence; removing the connection explicitly disables this fallback.                                                          |
-| `OPENROUTER_MODEL`      | Initial model, default `anthropic/claude-sonnet-5.5`. The owner's saved choice takes precedence. |
-| `OPENROUTER_REASONING_EFFORT` | Initial reasoning effort, default `xhigh` for Sonnet 5.5. The saved choice takes precedence. |
+| Variable                      | Meaning                                                                                                                              |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `DATABASE_URL`                | Neon connection string for this deployment.                                                                                          |
+| `BLOB_READ_WRITE_TOKEN`       | Token for its private Blob store.                                                                                                    |
+| `APP_SECRET`                  | Random secret of at least 32 characters, used for session encryption and provider-key encryption. Keep it stable across deployments. |
+| `APP_PASSWORD`                | Owner login password. Use a different password for each deployment.                                                                  |
+| `OPENROUTER_API_KEY`          | Optional initial key. A key saved in Settings takes precedence; removing the connection explicitly disables this fallback.           |
+| `OPENROUTER_MODEL`            | Initial model, default `anthropic/claude-sonnet-5.5`. The owner's saved choice takes precedence.                                     |
+| `OPENROUTER_REASONING_EFFORT` | Initial reasoning effort, default `xhigh` for Sonnet 5.5. The saved choice takes precedence.                                         |
 
 The empty library offers Generate cards and Import set. Generate cards prompts for an OpenRouter key when needed. Settings can replace or remove the connection; removing it clears the saved key and keeps it disconnected even if an environment fallback exists. It does not revoke the key at OpenRouter.
 
@@ -150,7 +150,11 @@ Use a disposable key with an authorized spending limit for live qualification. V
 
 Neon owns persistent library/progress/job state; Blob owns uploaded files and parser artifacts. Back up and restore them as a matching deployment. Deploying new frontend code does not migrate or erase either service. Export individual study sets through the app for portable copies.
 
-Workflow progress belongs to the job, not the browser tab. A failed job reports an error instead of silently narrowing the source or using another extraction route. Function/model limits still apply; a Workflow does not make an individual model request unlimited. The initial inference request and its optional repair share one 240-second deadline. Vercel application and Workflow functions are explicitly capped at 300 seconds. The save operation is idempotent, so retrying the save stage does not duplicate cards.
+Workflow progress belongs to the job, not the browser tab. A failed job reports an error instead of silently narrowing the source or using another extraction route. Generation requests use the selected model's advertised completion maximum; when the catalog does not advertise one, the app leaves that parameter to the provider. There is no card-count-based output cap or application inference timeout. Reasoning and visible cards share the provider's output allowance, even when reasoning text is excluded from the response. See [OpenRouter's reasoning budget semantics](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens).
+
+Application functions and Workflow's generated handler use `maxDuration: "max"`, which selects the hosting plan's maximum. Do not overwrite Workflow's emitted setting during the build. Omitting the setting uses the project/platform default, which can be lower than the plan maximum. On the verified Hobby deployment, Fluid compute's hard limit is 300 seconds per invocation. Pro and Enterprise support 800 seconds with `"max"`; their separate 1800-second beta requires an explicit function-level duration on a supported runtime and is not selected by `"max"`. See [Vercel's Build Output API](https://vercel.com/docs/build-output-api/primitives#base-config) and [duration limits](https://vercel.com/docs/functions/configuring-functions/duration).
+
+A durable workflow can wait and resume across invocations; an individual model call still has to fit within its step's hosting limit. The billable generation step has `maxRetries = 0` so a failed or killed invocation cannot automatically issue another model call. The workflow catches the failed step and records the job failure in a separate step. The save operation is idempotent, so retrying the save stage does not duplicate cards. See [Workflow retries](https://workflow-sdk.dev/docs/foundations/errors-and-retries).
 
 If deleting a source fails, its row remains visible for another Delete attempt, and it remains unavailable for generation. Active jobs are canceled before file removal; a late result cannot create a set from a source marked for deletion.
 

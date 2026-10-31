@@ -3,10 +3,7 @@ import * as React from "react";
 import { CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  studyInteractionLimits,
-  useStudyInteractionsStore,
-} from "@/stores/use-study-interactions-store";
+import { useStudyInteractionsStore } from "@/stores/use-study-interactions-store";
 
 export function TextResponsePrompt({
   card,
@@ -27,7 +24,6 @@ export function TextResponsePrompt({
         id={responseId}
         aria-labelledby={questionId}
         autoComplete="off"
-        maxLength={studyInteractionLimits.maxTextResponseCharacters}
         value={interaction.response ?? ""}
         onChange={(event) => setTextResponse(setSlug, card, event.target.value)}
         placeholder="Type your answer"

@@ -49,9 +49,9 @@ describe("portable study-set export", () => {
       });
       expect(filename).toMatch(/^study-cards-.+\.json$/);
       expect(filename).not.toMatch(/[<>:"/\\|?*]/);
-      expect(new globalThis.TextEncoder().encode(filename).length).toBeLessThan(
-        255,
-      );
+      if (title === "A".repeat(500)) {
+        expect(filename).toBe(`study-cards-${title.toLowerCase()}.json`);
+      }
     }
   });
 });

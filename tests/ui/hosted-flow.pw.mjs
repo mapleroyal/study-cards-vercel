@@ -196,14 +196,14 @@ async function mockApp(page, extra, { openRouterConfigured = true } = {}) {
     settingsUpdates,
   };
 }
-async function capture(page, testInfo, name) {
+async function capture(page, testInfo, name, target = page) {
   await page.evaluate(() => document.fonts.ready);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= globalThis.innerWidth,
     ),
   ).toBe(true);
-  await page.screenshot({
+  await target.screenshot({
     path: testInfo.outputPath(`${name}.png`),
     animations: "disabled",
   });
@@ -763,14 +763,19 @@ test("recent generations omit deleted sets while pending and failed jobs remain 
   await expect(
     page.getByRole("link", { name: "Open set", exact: true }),
   ).toHaveCount(0);
+  await expect(
+    recent.getByRole("button", { name: "Generation failed", exact: true }),
+  ).toHaveCount(0);
   await recent
-    .getByRole("button", { name: "Generation failed", exact: true })
+    .getByRole("link", { name: "View details for Failed source", exact: true })
     .click();
   await expect(page).toHaveURL(/job=failed$/);
   await expect(page.getByRole("alert")).toHaveText(
     "Temporary provider failure",
   );
-  await recent.getByRole("button", { name: "Queued", exact: true }).click();
+  await recent
+    .getByRole("link", { name: "View details for Pending source", exact: true })
+    .click();
   await expect(page).toHaveURL(/job=pending$/);
   await expect(
     page.getByRole("button", { name: "Cancel", exact: true }),
@@ -794,6 +799,151 @@ test("recent generations omit deleted sets while pending and failed jobs remain 
   await expect(
     page.getByRole("link", { name: "Open set", exact: true }),
   ).toHaveCount(0);
+});
+
+test("failed generation statuses are plain text and Details supports a complete retry", async ({
+  page,
+}, testInfo) => {
+  const source = { id: "source-11", name: "Section 11", status: "uploaded" };
+  const jobs = Array.from({ length: 11 }, (_, index) => ({
+    id: `failed-${index + 1}`,
+    sourceId: `source-${index + 1}`,
+    sourceName: `Section ${index + 1}`,
+    status: "failed",
+    error: "The provider could not generate this set.",
+    questionCount: 3,
+    cardTypes: ["short_answer"],
+    ...defaultSelection,
+  }));
+  let started;
+  let starts = 0;
+  let complete = false;
+  await mockApp(page, ({ path, request, record }) => {
+    if (path === "/api/sources") {
+      return { sources: [source] };
+    }
+    if (path === "/api/generation/jobs") {
+      if (request.method() === "POST") {
+        starts++;
+        started = request.postDataJSON();
+        return { job: { ...started, id: "retried", status: "generating" } };
+      }
+      return { jobs };
+    }
+    if (path === "/api/generation/jobs/retried") {
+      return {
+        job: {
+          ...started,
+          id: "retried",
+          status: complete ? "completed" : "generating",
+          ...(complete ? { resultRecord: record } : {}),
+        },
+      };
+    }
+    if (path.startsWith("/api/generation/jobs/")) {
+      return { job: jobs.find((job) => job.id === path.split("/").at(-1)) };
+    }
+  });
+  await page.goto("/generate");
+  const recent = page
+    .getByRole("heading", { name: "Recent generations", exact: true })
+    .locator("..");
+  await expect(
+    recent.getByText("Generation failed", { exact: true }),
+  ).toHaveCount(11);
+  await expect(
+    recent.getByRole("button", { name: "Generation failed", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    recent.getByRole("link", { name: "Generation failed", exact: true }),
+  ).toHaveCount(0);
+  await recent.scrollIntoViewIfNeeded();
+  await capture(page, testInfo, "failed-generation-history", recent);
+  await recent
+    .getByRole("link", { name: "View details for Section 11", exact: true })
+    .click();
+  await expect(page).toHaveURL(/job=failed-11$/);
+  await expect(page.getByRole("alert")).toHaveText(
+    "The provider could not generate this set.",
+  );
+  await expect(page.getByRole("alert")).toBeInViewport();
+  await expect(
+    recent.getByRole("link", {
+      name: "View details for Section 11",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(page).toHaveURL(/\/generate$/);
+  await expect(
+    page.locator("form").getByText("Section 11", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Cards", { exact: true })).toHaveValue("3");
+  await expect(page.getByRole("checkbox", { checked: true })).toHaveCount(1);
+  await expect(
+    page.getByRole("checkbox", { name: "Short Answer", exact: true }),
+  ).toBeChecked();
+  expect(starts).toBe(0);
+  await page.getByRole("button", { name: "Generate", exact: true }).click();
+  await expect(page).toHaveURL(/job=retried$/);
+  expect(started).toMatchObject({
+    sourceId: source.id,
+    questionCount: 3,
+    cardTypes: ["short_answer"],
+    ...defaultSelection,
+  });
+  expect(started.mutationId).toBeTruthy();
+  complete = true;
+  await expect(page).toHaveURL(/sets\/biology$/);
+  expect(starts).toBe(1);
+});
+
+test("retry asks for a deleted source again instead of submitting a stale source ID", async ({
+  page,
+}) => {
+  const failed = {
+    id: "missing-source",
+    sourceId: "removed",
+    sourceName: "Deleted source",
+    status: "failed",
+    error: "Generation failed",
+    questionCount: 4,
+    cardTypes: ["short_answer"],
+    ...defaultSelection,
+  };
+  let starts = 0;
+  await mockApp(page, ({ path, request }) => {
+    if (path === "/api/sources") {
+      return { sources: [] };
+    }
+    if (path === "/api/generation/jobs") {
+      if (request.method() === "POST") {
+        starts++;
+      }
+      return { jobs: [failed] };
+    }
+    if (path === "/api/generation/jobs/missing-source") {
+      return { job: failed };
+    }
+  });
+  await page.goto("/generate?job=missing-source");
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(page).toHaveURL(/\/generate$/);
+  await expect(page.getByLabel("Cards", { exact: true })).toHaveValue("4");
+  await expect(page.getByRole("alert")).toHaveText(
+    "Add the source again to retry.",
+  );
+  await expect(
+    page.getByRole("button", { name: "Generate", exact: true }),
+  ).toBeDisabled();
+  await page.getByRole("radio", { name: "Paste text", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "Source text", exact: true })
+    .fill("The replacement source section.");
+  await expect(
+    page.getByRole("button", { name: "Generate", exact: true }),
+  ).toBeEnabled();
+  expect(starts).toBe(0);
 });
 
 test("sign out clears private browser data and closes other signed-in tabs", async ({

@@ -302,7 +302,6 @@ export function createSourceService({
           addRandomSuffix: false,
           allowOverwrite: false,
           tokenPayload: JSON.stringify({ sourceId }),
-          validUntil: Date.now() + 15 * 60 * 1000,
         };
       },
       onUploadCompleted: async ({ tokenPayload, blob: uploaded }) => {

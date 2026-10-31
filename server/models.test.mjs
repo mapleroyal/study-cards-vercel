@@ -115,7 +115,7 @@ describe("OpenRouter model catalog", () => {
     );
     expect(first.defaultSelection).toEqual(DEFAULT_SELECTION);
     expect(fetchImpl).toHaveBeenCalledTimes(1);
-    expect(fetchImpl.mock.calls[0][1]).not.toHaveProperty("headers");
+    expect(fetchImpl.mock.calls[0][1]?.headers).toBeUndefined();
     await catalog.list();
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     currentTime += 1001;

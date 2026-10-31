@@ -4,7 +4,7 @@ export function createStudySetExport(record) {
     .replace(/[^\p{L}\p{N}]+/gu, "-")
     .replace(/^-+|-+$/g, "")
     .toLowerCase();
-  const stem = Array.from(title).slice(0, 50).join("") || "export";
+  const stem = title || "export";
   return {
     filename: `study-cards-${stem}.json`,
     // Export the saved source order and answer keys, never reader/session state.

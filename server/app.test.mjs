@@ -145,6 +145,22 @@ it("logs in with a private owner cookie, serves the canonical library and clears
   expect(logout.headers.get("clear-site-data")).toBe('"cache", "storage"');
 });
 
+it("accepts complete source text above the former 4 MiB application cap", async () => {
+  const { request, blob } = await fixture();
+  blob.put.mockResolvedValue({
+    url: "https://fixture.private.blob.vercel-storage.com/complete.txt",
+  });
+  const text = "x".repeat(4 * 1024 * 1024 + 1024);
+  const cookie = await createSessionCookie();
+  const response = await request("/sources/text", {
+    body: { text, name: "Complete source" },
+    headers: { cookie },
+  });
+  expect(response.status).toBe(201);
+  expect(response.data.source.characters).toBe(text.length);
+  expect(blob.put.mock.calls[0][1]).toBe(text);
+});
+
 it("rejects cross-origin mutation attempts and invalidates sessions after password rotation", async () => {
   const { request, runtime } = await fixture();
   const cookie = await createSessionCookie();

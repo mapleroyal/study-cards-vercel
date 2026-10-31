@@ -32,6 +32,7 @@ export default {
     const forwarded = new Request(request.url, {
       method: request.method,
       headers,
+      signal: request.signal,
       ...(!["GET", "HEAD"].includes(request.method)
         ? { body: request.body, duplex: "half" as const }
         : {}),

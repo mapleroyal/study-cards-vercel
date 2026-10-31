@@ -443,3 +443,18 @@ test("keyboard favorite actions and nested dismissal keep the study browser open
   await expect(menuButton).toBeFocused();
   expect(errors).toEqual([]);
 });
+
+test("long text answers remain complete after saving and reloading", async ({
+  page,
+}) => {
+  await importStudySet(page);
+  const answer = page
+    .locator(`[data-study-card-id="${studySet.cards[6].id}"]`)
+    .getByRole("textbox");
+  const text = "Extended reasoning for the answer.\n".repeat(400);
+  expect(await answer.getAttribute("maxlength")).toBeNull();
+  await answer.fill(text);
+  await expect(answer).toHaveValue(text);
+  await page.reload();
+  await expect(answer).toHaveValue(text);
+});

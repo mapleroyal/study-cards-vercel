@@ -96,3 +96,14 @@ Validation on the server:
 
 
 The final deployed browser check also passed model/effort changes across Settings, reload and Generate; per-set/global shuffle with answer preservation; exact JSON downloads from both menus; and the deleted-generation URL. It wrote no key fields and made no inference calls. Only its own temporary study set was deleted afterward.
+
+## Follow-up: generation limits and failure controls (2026-10-31)
+
+Investigation of a failed 25-card Haiku 5.5/max request showed a model capacity of 128,000 tokens but an application request cap of 32,768. OpenRouter reported 44,548 native input tokens and 32,768 native completion tokens, all attributed to reasoning, with native finish reason `max_tokens`. Its reported cost was $0.0208388. This was request-cap exhaustion, not evidence that the model exceeded 128,000 tokens. The metadata lookup made no inference call.
+
+- Removed card-count-based output budgets. Requests use the model catalog's advertised completion maximum; unknown limits remain provider defaults. Usage records now retain the requested cap, reasoning/visible token counts when known, provider and native stop reason. Output exhaustion, context-window exhaustion, connection timeouts and hosting interruptions have distinct messages.
+- Removed the custom 240-second inference deadline and build-time 300-second override. Nitro and Workflow functions use `maxDuration: "max"`. The current Hobby plan still has its real 300-second limit. This supersedes the fixed-duration artifact notes above.
+- Removed the eight-job history cap, 5,000-character text-answer truncation, 50-character export-filename shortening and 100-entry offline-cache/warm-up caps. JSON parsing, model-catalog fetches, upload-token expiry and SSR rendering no longer impose smaller app-specific limits. Provider/platform requirements, schema validity, authentication and security controls remain.
+- Failed job status is plain text. A separate Details link opens its error/retry view; the selected job does not offer a redundant self-link. Retry preserves count/types and reuses a source only if it still exists and is ready.
+
+Validation: lint passed; all 270 unit/integration tests across 38 files passed; production and Vercel builds passed. All 20 affected browser scenarios passed across light/dark desktop/narrow viewports, including history beyond eight entries, status/details/retry, missing-source retry, whole-source completion and long-answer reload. Four history screenshots were visually inspected. A browser-test transition assertion was corrected before the final rerun; no product change was required. Offline regression verified the first and last of 105 warmed resources remain available. No new paid generation was run for this fix.
