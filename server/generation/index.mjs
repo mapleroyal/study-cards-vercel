@@ -171,8 +171,8 @@ export function createGenerationService({
               }
             : undefined,
         );
-        if (job?.status === "canceled" && job.runId) {
-          await cancelWorkflow(job.runId).catch(() => undefined);
+        if (job?.status === "canceled") {
+          job = await dispatchCancellation(job);
         }
       } catch (error) {
         const current = await inspect(id);
@@ -184,6 +184,23 @@ export function createGenerationService({
       }
     }
     return publicJob(job);
+  }
+  async function dispatchCancellation(job) {
+    if (!job.runId) {
+      return job;
+    }
+    let cancellationError = null;
+    try {
+      await cancelWorkflow(job.runId);
+    } catch {
+      cancellationError =
+        "Stopping the provider request could not be confirmed. Try canceling again.";
+    }
+    return store.updateRecord("jobs", job.id, (current) =>
+      current?.status === "canceled" && current.runId === job.runId
+        ? { ...current, cancellationError, updatedAt: now() }
+        : undefined,
+    );
   }
   async function cancel(id) {
     await inspect(id);
@@ -197,10 +214,9 @@ export function createGenerationService({
           }
         : undefined,
     );
-    if (job.status === "canceled" && job.runId) {
-      await cancelWorkflow(job.runId).catch(() => undefined);
-    }
-    return publicJob(job);
+    return publicJob(
+      job.status === "canceled" ? await dispatchCancellation(job) : job,
+    );
   }
   async function fail(id, error, runId) {
     return publicJob(
@@ -215,12 +231,13 @@ export function createGenerationService({
       ),
     );
   }
-  async function runPrepareAndGenerate(id, runId) {
+  async function runPrepareAndGenerate(id, runId, signal) {
     const original = await inspect(id);
     if (terminal.has(original.status) || original.generatedSet) {
       return publicJob(original);
     }
     try {
+      signal?.throwIfAborted();
       await assertActive(id);
       let claimed = false;
       const claimedJob = await store.updateRecord("jobs", id, (current) => {
@@ -240,13 +257,17 @@ export function createGenerationService({
       }
       const document = await sources.document(original.sourceId);
       await assertActive(id);
-      const job = await transition(id, "generating");
+      const job = await transition(id, "generating", { totalCost: null });
       const generatedSet = await generateWithOpenRouter({
         document,
         job,
         apiKey: await getApiKey(),
         fetchImpl,
-        assertActive: () => assertActive(id),
+        signal,
+        assertActive: async () => {
+          signal?.throwIfAborted();
+          return assertActive(id);
+        },
         onParsed: (annotations) =>
           sources.rememberParsed(job.sourceId, annotations),
         onUsage: (usage) =>
@@ -254,19 +275,41 @@ export function createGenerationService({
             if (!current) {
               return undefined;
             }
-            const duplicate =
-              usage.generationId &&
-              current.usage.some(
-                (item) => item.generationId === usage.generationId,
-              );
-            return duplicate
-              ? undefined
-              : {
-                  ...current,
-                  usage: [...current.usage, usage],
-                  totalCost: current.totalCost + usage.cost,
-                  updatedAt: now(),
-                };
+            const index = usage.generationId
+              ? current.usage.findIndex(
+                  (item) => item.generationId === usage.generationId,
+                )
+              : -1;
+            const known = index < 0 ? {} : current.usage[index];
+            const updated = { ...known, ...usage };
+            // A first stream frame identifies the request before accounting is
+            // available. Repeated/partial frames must not erase known usage.
+            for (const [key, value] of Object.entries(known)) {
+              if (
+                (updated[key] === null || updated[key] === undefined) &&
+                value !== null &&
+                value !== undefined
+              ) {
+                updated[key] = value;
+              }
+            }
+            if (known.usageComplete) {
+              updated.usageComplete = true;
+            }
+            const usages = [...current.usage];
+            if (index < 0) {
+              usages.push(updated);
+            } else {
+              usages[index] = updated;
+            }
+            return {
+              ...current,
+              usage: usages,
+              totalCost: usages.some((item) => !Number.isFinite(item.cost))
+                ? null
+                : usages.reduce((sum, item) => sum + item.cost, 0),
+              updatedAt: now(),
+            };
           }),
       });
       await assertActive(id);

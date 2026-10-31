@@ -227,6 +227,185 @@ describe("durable generation jobs", () => {
     expect(cancelWorkflow).toHaveBeenCalledWith(job.runId);
   });
 
+  it("closes a live provider connection on cancellation and retains its unknown accounting ID", async () => {
+    let disconnected;
+    const closed = new Promise((resolve) => {
+      disconnected = resolve;
+    });
+    const provider = express();
+    provider.post("/", (_req, res) => {
+      res.set({
+        "Content-Type": "text/event-stream",
+        "X-Generation-Id": "generation-pending",
+      });
+      res.flushHeaders();
+      res.write(": OPENROUTER PROCESSING\n\n");
+      res.on("close", disconnected);
+    });
+    const server = provider.listen(0, "127.0.0.1");
+    servers.push(server);
+    await new Promise((resolve) => server.once("listening", resolve));
+    const controller = new globalThis.AbortController();
+    const fetchImpl = vi.fn((_url, options) =>
+      fetch(`http://127.0.0.1:${server.address().port}/`, options),
+    );
+    const { generation, input, store } = await setup({
+      fetchImpl,
+      cancelWorkflow: async () => controller.abort(),
+    });
+    const job = await generation.create(input);
+    const running = generation.runPrepareAndGenerate(
+      job.id,
+      job.runId,
+      controller.signal,
+    );
+    await vi.waitFor(async () =>
+      expect((await generation.inspect(job.id)).usage[0]?.generationId).toBe(
+        "generation-pending",
+      ),
+    );
+    await generation.cancel(job.id);
+    expect((await running).status).toBe("canceled");
+    await closed;
+    const canceled = await generation.inspect(job.id);
+    expect(canceled.usage).toEqual([
+      expect.objectContaining({
+        generationId: "generation-pending",
+        cost: null,
+        usageComplete: false,
+      }),
+    ]);
+    expect(canceled.totalCost).toBeNull();
+    expect(fetchImpl).toHaveBeenCalledOnce();
+    expect(await store.listStudySets()).toHaveLength(0);
+  });
+
+  it("replaces pending stream accounting with one final usage receipt", async () => {
+    const chunks = [
+      {
+        id: "generation-streamed",
+        provider: "Fixture",
+        choices: [
+          {
+            index: 0,
+            delta: { content: JSON.stringify(set) },
+            finish_reason: "stop",
+          },
+        ],
+      },
+      {
+        id: "generation-streamed",
+        provider: "Fixture",
+        choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+        usage: {
+          cost: 0.003,
+          prompt_tokens: 123,
+          completion_tokens: 45,
+          completion_tokens_details: { reasoning_tokens: 20 },
+        },
+      },
+    ];
+    const fetchImpl = vi.fn(
+      async () =>
+        new globalThis.Response(
+          `${chunks
+            .map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`)
+            .join("")}data: [DONE]\n\n`,
+          {
+            headers: {
+              "Content-Type": "text/event-stream",
+              "X-Generation-Id": "generation-streamed",
+            },
+          },
+        ),
+    );
+    const { generation, input } = await setup({ fetchImpl });
+    const job = await generation.create(input);
+    const saved = await generation.runPrepareAndGenerate(job.id);
+    expect(saved.status).toBe("saving");
+    expect(saved.usage).toEqual([
+      expect.objectContaining({
+        generationId: "generation-streamed",
+        cost: 0.003,
+        inputTokens: 123,
+        outputTokens: 45,
+        reasoningTokens: 20,
+        provider: "Fixture",
+        usageComplete: true,
+      }),
+    ]);
+    expect(saved.totalCost).toBe(0.003);
+  });
+
+  it("keeps cost unknown when the provider connection fails before returning an ID", async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new Error("Connection closed");
+    });
+    const { generation, input } = await setup({ fetchImpl });
+    const job = await generation.create(input);
+    expect(job.totalCost).toBe(0);
+    const failed = await generation.runPrepareAndGenerate(job.id);
+    expect(failed.status).toBe("failed");
+    expect(failed.usage).toEqual([]);
+    expect(failed.totalCost).toBeNull();
+    expect(fetchImpl).toHaveBeenCalledOnce();
+  });
+
+  it("retains cancellation delivery errors for retry without reopening the save fence", async () => {
+    const { generation, input, cancelWorkflow, store } = await setup();
+    const job = await generation.create(input);
+    cancelWorkflow.mockRejectedValueOnce(new Error("Queue unavailable"));
+    const canceled = await generation.cancel(job.id);
+    expect(canceled.status).toBe("canceled");
+    expect(canceled.cancellationError).toMatch(/could not be confirmed/);
+    expect((await generation.runSave(job.id)).status).toBe("canceled");
+    const retried = await generation.cancel(job.id);
+    expect(retried.status).toBe("canceled");
+    expect(retried.cancellationError).toBeNull();
+    expect(cancelWorkflow).toHaveBeenCalledTimes(2);
+    expect(await store.listStudySets()).toHaveLength(0);
+  });
+
+  it("delivers cancellation after a concurrently starting workflow supplies its run ID", async () => {
+    let started;
+    let release;
+    const entered = new Promise((resolve) => {
+      started = resolve;
+    });
+    const startWorkflow = vi.fn(() => {
+      started();
+      return new Promise((resolve) => {
+        release = resolve;
+      });
+    });
+    const { generation, input, cancelWorkflow } = await setup({
+      startWorkflow,
+    });
+    const creating = generation.create(input);
+    await entered;
+    const canceled = await generation.cancel(input.mutationId);
+    expect(canceled.status).toBe("canceled");
+    expect(cancelWorkflow).not.toHaveBeenCalled();
+    release({ runId: "late-run" });
+    expect((await creating).status).toBe("canceled");
+    expect(cancelWorkflow).toHaveBeenCalledWith("late-run");
+  });
+
+  it("does not start inference when its durable cancellation signal already fired", async () => {
+    const { generation, input, fetchImpl } = await setup();
+    const job = await generation.create(input);
+    await generation.cancel(job.id);
+    const controller = new globalThis.AbortController();
+    controller.abort();
+    const result = await generation.runPrepareAndGenerate(
+      job.id,
+      job.runId,
+      controller.signal,
+    );
+    expect(result.status).toBe("canceled");
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
   it("cancels pending saves when their source is deleted", async () => {
     const { generation, sources, store, input, source } = await setup();
     const job = await generation.create(input);

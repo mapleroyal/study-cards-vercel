@@ -2,6 +2,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
 import { PlusIcon } from "@primer/octicons-react";
+import { GenerateCardsButton } from "@/components/study/generate-cards-button";
 import { OpenRouterKeyDialog } from "@/components/study/openrouter-key-dialog";
 import { ModelPicker } from "@/components/study/model-picker";
 import { StudyAppHeader } from "@/components/study/study-app-header";
@@ -11,6 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Combobox,
@@ -36,8 +43,20 @@ function isReusableSource(source) {
   return Boolean(source && !["uploading", "deleting"].includes(source.status));
 }
 
-export function meta() {
-  return [{ title: formatPageTitle("Generate cards") }];
+function canCancelJob(job) {
+  return (
+    activeJobStatuses.has(job?.status) ||
+    (job?.status === "canceled" && Boolean(job.cancellationError))
+  );
+}
+
+export function meta({ location }) {
+  const historyView =
+    new globalThis.URLSearchParams(location.search).get("view") ===
+    "generations";
+  return [
+    { title: formatPageTitle(historyView ? "Generations" : "Generate cards") },
+  ];
 }
 export default function GenerateRoute() {
   const navigate = useNavigate();
@@ -45,16 +64,21 @@ export default function GenerateRoute() {
   const [keyDialogOpen, setKeyDialogOpen] = React.useState(false);
   const [params, setParams] = useSearchParams();
   const jobId = params.get("job");
+  const historyView = params.get("view") === "generations";
   const [mode, setMode] = React.useState("file");
   const [file, setFile] = React.useState(null);
   const [text, setText] = React.useState("");
   const [sourceId, setSourceId] = React.useState("");
   const [sources, setSources] = React.useState([]);
+  const [highlightedSourceId, setHighlightedSourceId] = React.useState(null);
   const [types, setTypes] = React.useState([...supportedCardTypes]);
   const [count, setCount] = React.useState("25");
   const [job, setJob] = React.useState(null);
   const [jobs, setJobs] = React.useState([]);
+  const [jobsLoaded, setJobsLoaded] = React.useState(false);
   const [busy, setBusy] = React.useState(null);
+  const [cancelingId, setCancelingId] = React.useState(null);
+  const cancelingRef = React.useRef(null);
   const [error, setError] = React.useState(null);
   const [ready, setReady] = React.useState(false);
   const [settings, setSettings] = React.useState(null);
@@ -69,13 +93,19 @@ export default function GenerateRoute() {
     (item) => item.status !== "completed" || item.resultRecord?.slug,
   );
   const active = activeJobStatuses.has(job?.status);
+  const hasActiveJobs = jobs.some((item) => activeJobStatuses.has(item.status));
   const selectedSource = sources.find((source) => source.id === sourceId);
 
   React.useEffect(() => {
-    if (ready && settings?.openRouterConfigured === false && !jobId) {
+    if (
+      ready &&
+      settings?.openRouterConfigured === false &&
+      !jobId &&
+      !historyView
+    ) {
       setKeyDialogOpen(true);
     }
-  }, [ready, settings?.openRouterConfigured, jobId, location.key]);
+  }, [ready, settings?.openRouterConfigured, jobId, historyView, location.key]);
 
   React.useEffect(() => {
     let stopped = false;
@@ -98,26 +128,43 @@ export default function GenerateRoute() {
   }, []);
 
   React.useEffect(() => {
+    if (cancelingId) {
+      return;
+    }
     let stopped = false;
-    apiRequest("/api/generation/jobs")
-      .then((result) => {
+    let timer;
+    async function refresh() {
+      try {
+        const result = await apiRequest("/api/generation/jobs");
         if (!stopped) {
           setJobs(result.jobs);
+          setJobsLoaded(true);
+          if (result.jobs.some((item) => activeJobStatuses.has(item.status))) {
+            timer = setTimeout(refresh, 1500);
+          }
         }
-      })
-      .catch((cause) => {
+      } catch (cause) {
         if (!stopped) {
           setError(cause.message);
+          if (hasActiveJobs) {
+            timer = setTimeout(refresh, 5000);
+          }
         }
-      });
+      }
+    }
+    refresh();
     return () => {
       stopped = true;
+      clearTimeout(timer);
     };
-  }, [librarySignature]);
+  }, [librarySignature, hasActiveJobs, cancelingId]);
 
   React.useEffect(() => {
     if (!jobId) {
       setJob(null);
+      return;
+    }
+    if (cancelingId === jobId) {
       return;
     }
     let stopped = false;
@@ -169,7 +216,7 @@ export default function GenerateRoute() {
       stopped = true;
       clearTimeout(timer);
     };
-  }, [jobId, navigate]);
+  }, [jobId, navigate, cancelingId]);
 
   async function saveModel(selection) {
     setModelBusy(true);
@@ -258,19 +305,30 @@ export default function GenerateRoute() {
       setBusy(null);
     }
   }
-  async function cancel() {
-    setBusy("Canceling…");
+  async function cancel(id) {
+    if (!id || cancelingRef.current) {
+      return;
+    }
+    cancelingRef.current = id;
+    setCancelingId(id);
     setError(null);
     try {
-      const result = await apiRequest(`/api/generation/jobs/${job.id}/cancel`, {
-        method: "POST",
-        body: {},
-      });
-      setJob(result.job);
+      const result = await apiRequest(
+        `/api/generation/jobs/${encodeURIComponent(id)}/cancel`,
+        {
+          method: "POST",
+          body: {},
+        },
+      );
+      setJob((current) => (current?.id === id ? result.job : current));
+      setJobs((current) =>
+        current.map((item) => (item.id === id ? result.job : item)),
+      );
     } catch (cause) {
       setError(cause.message);
     } finally {
-      setBusy(null);
+      cancelingRef.current = null;
+      setCancelingId(null);
     }
   }
   async function deleteSource(id) {
@@ -331,7 +389,12 @@ export default function GenerateRoute() {
     >
       <StudyAppHeader />
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-7 px-4 py-8 sm:px-6">
-        <h1 className="text-headline-lg">Generate cards</h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-headline-lg">
+            {historyView ? "Generations" : "Generate cards"}
+          </h1>
+          {historyView && <GenerateCardsButton variant="outline" />}
+        </div>
         {jobId ? (
           <section className="flex flex-col gap-4" aria-live="polite">
             <div className="flex items-center gap-3">
@@ -349,14 +412,23 @@ export default function GenerateRoute() {
                 {typeof job.error === "string" ? job.error : job.error.message}
               </p>
             )}
+            {job?.cancellationError && (
+              <p role="alert" className="text-body-sm text-destructive">
+                {job.cancellationError}
+              </p>
+            )}
             <div className="flex gap-2">
-              {active ? (
+              {canCancelJob(job) ? (
                 <Button
                   variant="outline"
-                  onClick={cancel}
-                  disabled={Boolean(busy)}
+                  onClick={() => cancel(job.id)}
+                  disabled={Boolean(busy) || Boolean(cancelingId)}
                 >
-                  Cancel
+                  {cancelingId === job.id
+                    ? "Canceling…"
+                    : job.cancellationError
+                      ? "Retry cancel"
+                      : "Cancel"}
                 </Button>
               ) : (
                 job && (
@@ -383,7 +455,7 @@ export default function GenerateRoute() {
               )}
             </div>
           </section>
-        ) : (
+        ) : !historyView ? (
           <form onSubmit={submit} className="flex flex-col gap-6">
             <fieldset
               disabled={Boolean(busy) || modelBusy || !ready}
@@ -406,7 +478,10 @@ export default function GenerateRoute() {
                 </ToggleGroup>
                 {sourceId ? (
                   <div className="flex items-center justify-between gap-3">
-                    <span className="truncate text-title-md">
+                    <span
+                      className="truncate text-title-md"
+                      title={selectedSource?.name}
+                    >
                       {selectedSource?.name || "Selected source"}
                     </span>
                     <Button
@@ -465,52 +540,78 @@ export default function GenerateRoute() {
                   />
                 )}
                 {sources.length > 0 && (
-                  <Combobox
-                    items={sources
-                      .filter(
-                        (source) =>
-                          !["uploading", "deleting"].includes(source.status),
-                      )
-                      .map((source) => source.id)}
-                    value={sourceId || null}
-                    itemToStringLabel={(id) =>
-                      sources.find((source) => source.id === id)?.name || id
-                    }
-                    onValueChange={(value) => {
-                      if (value) {
-                        setSourceId(value);
-                        setFile(null);
+                  <TooltipProvider>
+                    <Combobox
+                      onOpenChange={(open) => {
+                        if (!open) {
+                          setHighlightedSourceId(null);
+                        }
+                      }}
+                      onItemHighlighted={(id, details) =>
+                        setHighlightedSourceId(
+                          details.reason === "none" ? null : id,
+                        )
                       }
-                    }}
-                  >
-                    <ComboboxTrigger
-                      render={
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="self-start"
-                        />
+                      items={sources
+                        .filter(
+                          (source) =>
+                            !["uploading", "deleting"].includes(source.status),
+                        )
+                        .map((source) => source.id)}
+                      value={sourceId || null}
+                      itemToStringLabel={(id) =>
+                        sources.find((source) => source.id === id)?.name || id
                       }
+                      onValueChange={(value) => {
+                        if (value) {
+                          setSourceId(value);
+                          setFile(null);
+                        }
+                      }}
                     >
-                      Use a saved source
-                    </ComboboxTrigger>
-                    <ComboboxContent>
-                      <ComboboxInput
-                        aria-label="Search sources"
-                        placeholder="Search sources…"
-                        showTrigger={false}
-                      />
-                      <ComboboxEmpty>No sources found</ComboboxEmpty>
-                      <ComboboxList>
-                        {(id) => (
-                          <ComboboxItem key={id} value={id}>
-                            {sources.find((source) => source.id === id)?.name ||
-                              id}
-                          </ComboboxItem>
-                        )}
-                      </ComboboxList>
-                    </ComboboxContent>
-                  </Combobox>
+                      <ComboboxTrigger
+                        render={
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="self-start"
+                          />
+                        }
+                      >
+                        Use a saved source
+                      </ComboboxTrigger>
+                      <ComboboxContent>
+                        <ComboboxInput
+                          aria-label="Search sources"
+                          placeholder="Search sources…"
+                          showTrigger={false}
+                        />
+                        <ComboboxEmpty>No sources found</ComboboxEmpty>
+                        <ComboboxList>
+                          {(id) => {
+                            const name =
+                              sources.find((source) => source.id === id)
+                                ?.name || id;
+                            return (
+                              <Tooltip
+                                key={id}
+                                open={highlightedSourceId === id}
+                              >
+                                <TooltipTrigger asChild>
+                                  <ComboboxItem value={id}>{name}</ComboboxItem>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <span className="min-w-0 [overflow-wrap:anywhere]">
+                                    {name}
+                                  </span>
+                                </TooltipContent>
+                              </Tooltip>
+                            );
+                          }}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                  </TooltipProvider>
                 )}
                 {sourceId && (
                   <Button
@@ -620,15 +721,20 @@ export default function GenerateRoute() {
               </Button>
             </fieldset>
           </form>
-        )}
+        ) : null}
         {error && (
           <p role="alert" className="text-body-sm text-destructive">
             {error}
           </p>
         )}
-        {visibleJobs.length > 0 && (
+        {(visibleJobs.length > 0 || historyView) && (
           <section className="flex flex-col gap-2 border-t pt-5">
             <h2 className="text-title-md">Recent generations</h2>
+            {visibleJobs.length === 0 && (
+              <p className="text-body-sm text-muted-foreground">
+                {jobsLoaded ? "No generations yet" : "Loading…"}
+              </p>
+            )}
             {visibleJobs.map((item) => {
               const title =
                 item.resultRecord?.rawSet?.title ||
@@ -644,26 +750,51 @@ export default function GenerateRoute() {
                     <p className="break-words text-body-sm">{title}</p>
                     {item.status !== "completed" && (
                       <p className="text-body-sm text-muted-foreground">
-                        {jobLabels[item.status] || item.status}
+                        {item.cancellationError
+                          ? "Cancellation unconfirmed"
+                          : jobLabels[item.status] || item.status}
                       </p>
                     )}
                   </div>
-                  {item.status === "completed" && item.resultRecord?.slug ? (
-                    <Button asChild variant="ghost" size="sm">
-                      <Link to={`/sets/${item.resultRecord.slug}`}>
-                        Open set
-                      </Link>
-                    </Button>
-                  ) : item.id !== jobId ? (
-                    <Button asChild variant="ghost" size="sm">
-                      <Link
-                        to={`?job=${encodeURIComponent(item.id)}`}
-                        aria-label={`View details for ${title}`}
+                  <div className="flex shrink-0 items-center gap-1">
+                    {canCancelJob(item) && item.id !== jobId && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => cancel(item.id)}
+                        disabled={Boolean(cancelingId) || Boolean(busy)}
+                        aria-label={
+                          (item.cancellationError
+                            ? "Retry cancel for "
+                            : "Cancel generation for ") + title
+                        }
                       >
-                        Details
-                      </Link>
-                    </Button>
-                  ) : null}
+                        {cancelingId === item.id
+                          ? "Canceling…"
+                          : item.cancellationError
+                            ? "Retry cancel"
+                            : "Cancel"}
+                      </Button>
+                    )}
+                    {item.status === "completed" && item.resultRecord?.slug ? (
+                      <Button asChild variant="ghost" size="sm">
+                        <Link to={`/sets/${item.resultRecord.slug}`}>
+                          Open set
+                        </Link>
+                      </Button>
+                    ) : item.id !== jobId ? (
+                      <Button asChild variant="ghost" size="sm">
+                        <Link
+                          to={`?${
+                            historyView ? "view=generations&" : ""
+                          }job=${encodeURIComponent(item.id)}`}
+                          aria-label={`View details for ${title}`}
+                        >
+                          Details
+                        </Link>
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
               );
             })}

@@ -132,7 +132,7 @@ function ComboboxList({ className, ...props }) {
     <ComboboxPrimitive.List
       data-slot="combobox-list"
       className={cn(
-        "min-h-0 max-h-[min(15.75rem,var(--available-height))] scroll-py-1.5 overflow-y-auto overscroll-contain p-1.5 data-empty:p-0",
+        "min-h-0 max-h-[min(15.75rem,var(--available-height))] scroll-py-1.5 overflow-x-hidden overflow-y-auto overscroll-contain p-1.5 data-empty:p-0",
         className,
       )}
       {...props}
@@ -150,7 +150,16 @@ function ComboboxItem({ className, children, ...props }) {
       )}
       {...props}
     >
-      {children}
+      {typeof children === "string" || typeof children === "number" ? (
+        <span
+          data-slot="combobox-item-label"
+          className="min-w-0 flex-1 truncate"
+        >
+          {children}
+        </span>
+      ) : (
+        children
+      )}
       <ComboboxPrimitive.ItemIndicator
         render={
           <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center" />

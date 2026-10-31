@@ -1,5 +1,6 @@
 import * as React from "react";
 import { toast } from "sonner";
+import { Link } from "react-router";
 import { ModelPicker } from "@/components/study/model-picker";
 import { ShuffleSettings } from "@/components/study/shuffle-settings";
 import { StudyAppHeader } from "@/components/study/study-app-header";
@@ -108,6 +109,9 @@ export default function SettingsRoute() {
       <StudyAppHeader />
       <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-8 sm:px-6">
         <h1 className="text-headline-lg">Settings</h1>
+        <Button asChild variant="outline" className="self-start">
+          <Link to="/generate?view=generations">Generations</Link>
+        </Button>
         <ShuffleSettings />
         <section
           aria-label="Generation model"

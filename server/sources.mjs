@@ -256,7 +256,18 @@ export function createSourceService({
             : undefined,
         );
         if (canceled?.runId) {
-          await cancelRun(canceled.runId).catch(() => undefined);
+          await cancelRun(canceled.runId).catch(() =>
+            store.updateRecord("jobs", canceled.id, (current) =>
+              current?.status === "canceled"
+                ? {
+                    ...current,
+                    cancellationError:
+                      "Stopping the provider request could not be confirmed. Try canceling again.",
+                    updatedAt: now(),
+                  }
+                : undefined,
+            ),
+          );
         }
       }
       await blob.del(

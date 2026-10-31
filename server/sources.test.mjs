@@ -50,6 +50,30 @@ describe("private source documents", () => {
     ).rejects.toMatchObject({ status: 415 });
   });
 
+  it("keeps a retryable cancellation error when deleting an active source cannot stop its workflow", async () => {
+    const { store, sources } = setup({
+      cancelRun: async () => {
+        throw new Error("Queue unavailable");
+      },
+    });
+    const source = await sources.addText({
+      text: "Complete source",
+      name: "Source",
+    });
+    await store.putRecord("jobs", "fixture-job", {
+      id: "fixture-job",
+      sourceId: source.id,
+      status: "generating",
+      runId: "fixture-run",
+    });
+    await sources.remove(source.id);
+    expect(await store.getRecord("sources", source.id)).toBeNull();
+    expect(await store.getRecord("jobs", "fixture-job")).toMatchObject({
+      status: "canceled",
+      cancellationError: expect.stringMatching(/could not be confirmed/),
+    });
+  });
+
   it("verifies upload metadata against the server-owned pathname", async () => {
     const { sources, blob } = setup();
     const source = await sources.beginUpload({

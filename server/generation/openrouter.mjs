@@ -1,3 +1,4 @@
+import { readOpenRouterResponse } from "./openrouter-stream.mjs";
 import {
   validateGeneratedStudySet,
   supportedCardTypes,
@@ -103,7 +104,8 @@ export function buildGenerationPayload({ document, job }) {
           },
         }
       : {}),
-    stream: false,
+    stream: true,
+    stream_options: { include_usage: true },
     ...(document.fileData
       ? { plugins: [{ id: "file-parser", pdf: { engine: "cloudflare-ai" } }] }
       : {}),
@@ -148,6 +150,7 @@ export async function generateWithOpenRouter({
   document,
   job,
   apiKey,
+  signal,
   fetchImpl = fetch,
   onParsed = async () => {},
   onUsage = async () => {},
@@ -161,6 +164,7 @@ export async function generateWithOpenRouter({
   }
   const payload = buildGenerationPayload({ document, job });
   for (let attempt = 0; attempt < 2; attempt += 1) {
+    signal?.throwIfAborted();
     await assertActive();
     let response;
     let result;
@@ -173,8 +177,25 @@ export async function generateWithOpenRouter({
           "X-Title": "Lumina",
         },
         body: JSON.stringify(payload),
+        ...(signal ? { signal } : {}),
       });
-      result = await response.json();
+      result = await readOpenRouterResponse(response, {
+        signal,
+        onStart: ({ id, provider }) =>
+          onUsage({
+            generationId: id,
+            cost: null,
+            inputTokens: null,
+            outputTokens: null,
+            reasoningTokens: null,
+            visibleOutputTokens: null,
+            requestedMaxOutputTokens: payload.max_tokens ?? null,
+            finishReason: null,
+            nativeFinishReason: null,
+            provider,
+            usageComplete: false,
+          }),
+      });
     } catch (error) {
       if (
         error.name === "TimeoutError" ||
@@ -209,9 +230,10 @@ export async function generateWithOpenRouter({
     if (result.id || result.usage) {
       await onUsage({
         generationId: result.id || null,
-        cost: Number(result.usage?.cost) || 0,
-        inputTokens: result.usage?.prompt_tokens || 0,
-        outputTokens: outputTokens ?? 0,
+        cost: Number.isFinite(result.usage?.cost) ? result.usage.cost : null,
+        inputTokens: result.usage?.prompt_tokens ?? null,
+        outputTokens,
+        usageComplete: Boolean(result.usage),
         reasoningTokens,
         visibleOutputTokens:
           reasoningTokens !== null && Number.isSafeInteger(outputTokens)
@@ -245,6 +267,20 @@ export async function generateWithOpenRouter({
           outputTokens,
           reasoningTokens,
         }),
+        422,
+      );
+    }
+    if (choice?.finish_reason === "error") {
+      throw new GenerationRequestError(
+        "The provider stopped generation with an error.",
+      );
+    }
+    if (
+      choice?.finish_reason === "content_filter" ||
+      choice?.message?.refusal
+    ) {
+      throw new GenerationRequestError(
+        "The provider declined to return study cards.",
         422,
       );
     }

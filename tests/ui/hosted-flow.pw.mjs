@@ -946,6 +946,248 @@ test("retry asks for a deleted source again instead of submitting a stale source
   expect(starts).toBe(0);
 });
 
+test("saved source names stay within the picker and remain available by tooltip and search", async ({
+  page,
+}, testInfo) => {
+  const sources = [
+    {
+      id: "source-spaced",
+      name: `Human Anatomy and Physiology - Chapter 12 - ${"Detailed study material ".repeat(7)}Appendix.pdf`,
+      status: "uploaded",
+    },
+    {
+      id: "source-unbroken",
+      name: `chapter_${"abcdefghij".repeat(18)}_uniquetail.pdf`,
+      status: "uploaded",
+    },
+  ];
+  let generation;
+  await mockApp(page, ({ path, request }) => {
+    if (path === "/api/sources") {
+      return { sources };
+    }
+    if (path === "/api/generation/jobs" && request.method() === "POST") {
+      generation = request.postDataJSON();
+      return {
+        job: { id: "long-source-job", status: "queued", ...generation },
+      };
+    }
+    if (path === "/api/generation/jobs/long-source-job") {
+      return {
+        job: { id: "long-source-job", status: "queued", ...generation },
+      };
+    }
+  });
+  await page.goto("/generate");
+  await page
+    .getByRole("combobox", { name: "Show options", exact: true })
+    .click();
+  const popup = page.locator('[data-slot="combobox-content"]');
+  const list = page.locator('[data-slot="combobox-list"]');
+  for (const source of sources) {
+    const option = page.getByRole("option", { name: source.name, exact: true });
+    await expect(option).toBeVisible();
+    const metrics = await option.evaluate((element) => {
+      const label = element.querySelector('[data-slot="combobox-item-label"]');
+      const listElement = element.closest('[data-slot="combobox-list"]');
+      return {
+        labelWidth: label.clientWidth,
+        textWidth: label.scrollWidth,
+        overflow: globalThis.getComputedStyle(label).textOverflow,
+        listWidth: listElement.clientWidth,
+        listScrollWidth: listElement.scrollWidth,
+        optionRight: element.getBoundingClientRect().right,
+        listRight: listElement.getBoundingClientRect().right,
+      };
+    });
+    expect(metrics.textWidth).toBeGreaterThan(metrics.labelWidth);
+    expect(metrics.overflow).toBe("ellipsis");
+    expect(metrics.listScrollWidth).toBeLessThanOrEqual(metrics.listWidth);
+    expect(metrics.optionRight).toBeLessThanOrEqual(metrics.listRight);
+    await option.hover();
+    await expect(
+      page.getByRole("tooltip", { name: source.name, exact: true }),
+    ).toHaveText(source.name);
+    await capture(page, testInfo, `${source.id}-tooltip`);
+  }
+  await page.getByLabel("Search sources", { exact: true }).fill("uniquetail");
+  await expect(page.getByRole("option")).toHaveCount(1);
+  await page.mouse.move(0, 0);
+  await page.getByLabel("Search sources", { exact: true }).press("ArrowDown");
+  await expect(
+    page.getByRole("tooltip", { name: sources[1].name, exact: true }),
+  ).toHaveText(sources[1].name);
+  await page.getByLabel("Search sources", { exact: true }).press("Enter");
+  await expect(popup).toBeHidden();
+  await expect(list).toHaveCount(0);
+  await expect(
+    page.locator("span[title]").filter({ hasText: sources[1].name }),
+  ).toHaveAttribute("title", sources[1].name);
+  await page.getByRole("button", { name: "Generate", exact: true }).click();
+  await expect.poll(() => generation?.sourceId).toBe(sources[1].id);
+  await expect(page).toHaveURL(/job=long-source-job$/);
+});
+
+test("Settings opens live generations with row cancellation, retry and active detail cancellation", async ({
+  page,
+}, testInfo) => {
+  const jobs = ["queued", "preparing", "generating", "saving"].map(
+    (status, index) => ({
+      id: `cancel-${index}`,
+      sourceId: `cancel-source-${index}`,
+      sourceName: `Section ${index + 1}`,
+      status,
+      questionCount: 4,
+      cardTypes: ["short_answer"],
+      ...defaultSelection,
+    }),
+  );
+  const cancels = [];
+  let starts = 0;
+  let releaseCancel;
+  const firstCancel = new Promise((resolve) => {
+    releaseCancel = resolve;
+  });
+  const cancellationError =
+    "Stopping the provider request could not be confirmed. Try canceling again.";
+  await mockApp(
+    page,
+    async ({ path, request }) => {
+      if (path === "/api/generation/jobs") {
+        if (request.method() === "POST") {
+          starts++;
+        }
+        return { jobs };
+      }
+      if (path.startsWith("/api/generation/jobs/")) {
+        const parts = path.split("/");
+        const job = jobs.find((item) => item.id === parts[4]);
+        if (parts[5] === "cancel") {
+          cancels.push(job.id);
+          if (cancels.length === 1) {
+            await firstCancel;
+          }
+          job.status = "canceled";
+          job.cancellationError =
+            cancels.length === 1 ? cancellationError : null;
+        }
+        return { job };
+      }
+    },
+    { openRouterConfigured: false },
+  );
+  await page.goto("/settings");
+  await page.getByRole("link", { name: "Generations", exact: true }).click();
+  await expect(page).toHaveURL(/\/generate\?view=generations$/);
+  await expect(
+    page.getByRole("heading", { name: "Generations", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("dialog", { name: "OpenRouter key" }),
+  ).toHaveCount(0);
+  await expect(page.getByLabel("Source text", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: /^Cancel generation for / }),
+  ).toHaveCount(4);
+  jobs[1].status = "generating";
+  const secondRow = page
+    .getByText("Section 2", { exact: true })
+    .locator("../..");
+  await expect(
+    secondRow.getByText("Generating cards", { exact: true }),
+  ).toBeVisible();
+  await capture(page, testInfo, "generations-screen");
+
+  const firstRow = page
+    .getByText("Section 1", { exact: true })
+    .locator("../..");
+  await firstRow
+    .getByRole("button", {
+      name: "Cancel generation for Section 1",
+      exact: true,
+    })
+    .click();
+  const pendingCancel = firstRow.getByRole("button", {
+    name: "Cancel generation for Section 1",
+    exact: true,
+  });
+  await expect(pendingCancel).toHaveText("Canceling…");
+  await expect(pendingCancel).toBeDisabled();
+  await pendingCancel.evaluate((element) => element.click());
+  expect(cancels).toEqual(["cancel-0"]);
+  releaseCancel();
+  await expect(
+    firstRow.getByText("Cancellation unconfirmed", { exact: true }),
+  ).toBeVisible();
+  await firstRow
+    .getByRole("button", { name: "Retry cancel for Section 1", exact: true })
+    .click();
+  await expect(firstRow.getByText("Canceled", { exact: true })).toBeVisible();
+  await expect(firstRow.getByRole("button")).toHaveCount(0);
+  expect(cancels).toEqual(["cancel-0", "cancel-0"]);
+
+  await secondRow
+    .getByRole("link", { name: "View details for Section 2", exact: true })
+    .click();
+  await expect(page).toHaveURL(/view=generations&job=cancel-1$/);
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Try again", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator('section[aria-live="polite"]')
+      .getByText("Canceled", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.locator('section[aria-live="polite"] [data-slot="spinner"]'),
+  ).toHaveCount(0);
+  await page.reload();
+  await expect(
+    page
+      .locator('section[aria-live="polite"]')
+      .getByText("Canceled", { exact: true }),
+  ).toBeVisible();
+  expect(cancels).toEqual(["cancel-0", "cancel-0", "cancel-1"]);
+  expect(starts).toBe(0);
+});
+
+test("cancellation delivery failure remains visible and retryable in job details", async ({
+  page,
+}) => {
+  const job = {
+    id: "cancel-delivery",
+    sourceName: "Study source",
+    status: "canceled",
+    cancellationError:
+      "Stopping the provider request could not be confirmed. Try canceling again.",
+    questionCount: 4,
+    cardTypes: ["short_answer"],
+  };
+  let cancels = 0;
+  await mockApp(page, ({ path }) => {
+    if (path === "/api/generation/jobs") {
+      return { jobs: [job] };
+    }
+    if (path === "/api/generation/jobs/cancel-delivery/cancel") {
+      cancels++;
+      job.cancellationError = null;
+      return { job };
+    }
+    if (path === "/api/generation/jobs/cancel-delivery") {
+      return { job };
+    }
+  });
+  await page.goto("/generate?view=generations&job=cancel-delivery");
+  await expect(page.getByRole("alert")).toHaveText(job.cancellationError);
+  await page.getByRole("button", { name: "Retry cancel", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Try again", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  expect(cancels).toBe(1);
+});
+
 test("sign out clears private browser data and closes other signed-in tabs", async ({
   page,
   context,

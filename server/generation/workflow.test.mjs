@@ -1,6 +1,11 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { generateStudySetWorkflow } from "../../workflows/generation.ts";
 
+const hook = vi.hoisted(() => ({
+  getConflict: vi.fn(async () => null),
+  dispose: vi.fn(),
+  then: vi.fn(() => new Promise(() => {})),
+}));
 const generation = vi.hoisted(() => ({
   runPrepareAndGenerate: vi.fn(),
   runSave: vi.fn(),
@@ -11,12 +16,15 @@ const generation = vi.hoisted(() => ({
 }));
 vi.mock("workflow", () => ({
   getWorkflowMetadata: () => ({ workflowRunId: "fixture-run" }),
+  createHook: () => hook,
 }));
 vi.mock("../runtime.mjs", () => ({
   getRuntime: async () => ({ generation }),
 }));
 beforeEach(() => {
   vi.clearAllMocks();
+  hook.getConflict.mockResolvedValue(null);
+  hook.then.mockImplementation(() => new Promise(() => {}));
 });
 
 it.each([
@@ -67,4 +75,55 @@ it.each([
   generation.runPrepareAndGenerate.mockRejectedValueOnce(new Error(message));
   const result = await generateStudySetWorkflow("fixture-job");
   expect(result.error).toBe(message);
+});
+
+it("registers cancellation before starting inference and aborts the running step cooperatively", async () => {
+  let register;
+  hook.getConflict.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        register = resolve;
+      }),
+  );
+  let resume;
+  hook.then.mockImplementationOnce(
+    (callback) =>
+      new Promise((resolve) => {
+        resume = () => resolve(callback());
+      }),
+  );
+  let requestSignal;
+  generation.runPrepareAndGenerate.mockImplementationOnce(
+    (_jobId, _runId, signal) => {
+      requestSignal = signal;
+      return new Promise((resolve) =>
+        signal.addEventListener(
+          "abort",
+          () => resolve({ status: "canceled" }),
+          { once: true },
+        ),
+      );
+    },
+  );
+  const running = generateStudySetWorkflow("fixture-job");
+  expect(generation.runPrepareAndGenerate).not.toHaveBeenCalled();
+  register(null);
+  await vi.waitFor(() => expect(requestSignal).toBeDefined());
+  expect(requestSignal.aborted).toBe(false);
+  resume();
+  expect(await running).toEqual({ status: "canceled" });
+  expect(requestSignal.aborted).toBe(true);
+  expect(generation.runSave).not.toHaveBeenCalled();
+  expect(generation.fail).not.toHaveBeenCalled();
+  expect(hook.dispose).toHaveBeenCalledOnce();
+});
+
+it("saves successful inference and disposes its cancellation hook", async () => {
+  generation.runPrepareAndGenerate.mockResolvedValueOnce({ status: "saving" });
+  generation.runSave.mockResolvedValueOnce({ status: "completed" });
+  expect(await generateStudySetWorkflow("fixture-job")).toEqual({
+    status: "completed",
+  });
+  expect(generation.runSave).toHaveBeenCalledWith("fixture-job");
+  expect(hook.dispose).toHaveBeenCalledOnce();
 });
