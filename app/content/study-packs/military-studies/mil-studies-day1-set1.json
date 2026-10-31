@@ -1,0 +1,383 @@
+{
+  "title": "Joint Operations Set 1",
+  "category": "Military Studies/Day 1/Joint Operations",
+  "cards": [
+    {
+      "id": 1,
+      "type": "multiple_response",
+      "question": "Which of the following are the three basic truths that the Air Force believes are fundamental to the nature of warfare?",
+      "options": {
+        "a": "War is a purely scientific and predictable equation.",
+        "b": "War is an extension of politics by other means.",
+        "c": "War is inherently limited to the physical domain.",
+        "d": "War is a complex and chaotic human endeavor.",
+        "e": "War is a clash of opposing wills."
+      },
+      "answer": ["b", "d", "e"],
+      "explanation": "Warfare is fundamentally driven by human nature and political objectives. It is an instrument used to achieve national policy goals (politics), characterized by unpredictability and friction (chaos), and fundamentally relies on the resolve and character of the competing actors (opposing wills)."
+    },
+    {
+      "id": 2,
+      "type": "matching",
+      "question": "Match the core Air Force capability to its defining function within the National Defense Strategy.",
+      "prompts": ["Global Vigilance", "Global Reach", "Global Power"],
+      "choices": [
+        "The ability to gain and maintain awareness anywhere to determine intent, capability, or vulnerability.",
+        "The ability to hold at risk or strike any target anywhere to create swift, decisive, precise effects.",
+        "The ability to project military capability responsively with unsurpassed velocity and precision anywhere."
+      ],
+      "answer": [
+        {
+          "prompt": "Global Vigilance",
+          "choices": [
+            "The ability to gain and maintain awareness anywhere to determine intent, capability, or vulnerability."
+          ]
+        },
+        {
+          "prompt": "Global Reach",
+          "choices": [
+            "The ability to project military capability responsively with unsurpassed velocity and precision anywhere."
+          ]
+        },
+        {
+          "prompt": "Global Power",
+          "choices": [
+            "The ability to hold at risk or strike any target anywhere to create swift, decisive, precise effects."
+          ]
+        }
+      ],
+      "explanation": "These three pillars represent how the Air Force operates on a global scale. Vigilance ensures comprehensive situational awareness, Reach ensures forces and supplies can be moved anywhere rapidly, and Power ensures the ability to apply kinetic or non-kinetic force against any target worldwide."
+    },
+    {
+      "id": 3,
+      "type": "fill_in_the_blank",
+      "question": "The Air Force core values are Integrity first, Service before self, and ________ in all we do.",
+      "answer": ["Excellence", "excellence"],
+      "explanation": "The core values form the ethical and moral foundation of an Airman's character. Pursuing excellence in every endeavor ensures that Airmen continually improve and maintain the high standards required for mission success in demanding environments."
+    },
+    {
+      "id": 4,
+      "type": "multiple_choice",
+      "question": "What is the primary philosophy behind 'Mission Command' in the control of airpower?",
+      "options": {
+        "a": "Consolidating all tactical decision-making at the highest echelon of command.",
+        "b": "Empowering subordinate decision-making for flexibility, initiative, and responsiveness within the commander's intent.",
+        "c": "Relying strictly on highly detailed, step-by-step orders that dictate exactly how tasks must be accomplished.",
+        "d": "Distributing administrative authorities across multiple Services to ensure parity."
+      },
+      "answer": "b",
+      "explanation": "Mission command focuses on the 'what' and 'why' rather than the 'how'. By giving subordinates a clear intent and the freedom to act, forces can rapidly adapt to chaotic, fast-changing environments and exploit fleeting opportunities without waiting for higher-level approval."
+    },
+    {
+      "id": 5,
+      "type": "true_false",
+      "question": "Flexibility and versatility in the application of airpower mean the exact same thing and are used interchangeably in doctrine.",
+      "answer": false,
+      "explanation": "While closely related, they describe different operational attributes. Flexibility is the ability to seamlessly shift between different types of missions or targets quickly. Versatility is the broader capability to employ airpower effectively across all levels of warfare (strategic, operational, tactical) simultaneously."
+    },
+    {
+      "id": 6,
+      "type": "short_answer",
+      "question": "Why is control of the air considered a necessary precondition for control of the surface?",
+      "answer": "Friendly operations in all domains can only proceed safely and effectively if enemy airpower is defeated or neutralized.",
+      "explanation": "Without air superiority, surface forces (land and maritime) remain vulnerable to aerial attack and observation. Neutralizing enemy airpower removes this overhead threat, granting friendly forces the freedom to maneuver and execute their missions safely."
+    },
+    {
+      "id": 7,
+      "type": "multiple_choice",
+      "question": "How does military doctrine define 'Campaigning' across the competition continuum?",
+      "options": {
+        "a": "The temporary deployment of forces to a localized region to resolve a short-term humanitarian crisis.",
+        "b": "The persistent conduct of related operations, activities, and investments that align military actions with other instruments of national power.",
+        "c": "A strictly kinetic series of engagements focused entirely on destroying an adversary's main combat forces.",
+        "d": "The process of withdrawing military forces from an operational area after a conflict has ended."
+      },
+      "answer": "b",
+      "explanation": "Campaigning is a continuous, long-term effort that integrates military actions with diplomatic, economic, and informational strategies. It is designed to actively shape the operational environment, pursue strategic objectives, and maintain a competitive advantage over time."
+    },
+    {
+      "id": 8,
+      "type": "true_false",
+      "question": "Campaigns are always joint operations and are implemented through campaign plans.",
+      "answer": true,
+      "explanation": "Modern strategic objectives are too complex for any single military branch to achieve alone. Therefore, campaigns inherently require the integration of multiple Services operating together under a unified Joint Force Commander to synchronize efforts across all domains."
+    },
+    {
+      "id": 9,
+      "type": "short_answer",
+      "question": "What is the core objective of 'Integrated Deterrence'?",
+      "answer": "To reduce competitors' perceptions of the net benefits of aggression relative to restraint using a coordinated, whole-of-government approach.",
+      "explanation": "Integrated deterrence works by combining all tools of national power—along with allies and partners—to convince an adversary that the costs of attacking will overwhelmingly outweigh any potential gains, thereby discouraging aggression before it starts."
+    },
+    {
+      "id": 10,
+      "type": "multiple_choice",
+      "question": "In the context of Agile Combat Employment (ACE), how must sustainment and logistics systems transform?",
+      "options": {
+        "a": "From a system that leverages local markets to one that strictly uses stateside military airlifts.",
+        "b": "From a fully connected 'pull' system optimized for efficiency to a 'push' system that maximizes distributed mission effectiveness.",
+        "c": "From a robust distribution network into a single, centralized hub-and-spoke system that eliminates all contingency locations.",
+        "d": "From a reliance on Mission Ready Airmen to a reliance on highly specialized, single-skill contractors."
+      },
+      "answer": "b",
+      "explanation": "Traditional logistics rely on 'pulling' supplies only when requested, which is efficient but vulnerable if communications or supply lines are cut. ACE requires a 'push' model, where supplies are proactively staged and delivered ahead of need to ensure dispersed forces remain combat-effective even when cut off."
+    },
+    {
+      "id": 11,
+      "type": "multiple_response",
+      "question": "Which of the following are ways that Mission Ready Airmen will conduct Agile Combat Employment (ACE)?",
+      "options": {
+        "a": "Planning to tailor tenets of airpower to the operational environment.",
+        "b": "Waiting for continuous, detailed micromanagement from the air operations center.",
+        "c": "Generating and understanding orders to communicate commander's intent.",
+        "d": "Understanding joint force integration.",
+        "e": "Operating strictly from centralized, enduring physical infrastructure."
+      },
+      "answer": ["a", "c", "d"],
+      "explanation": "Mission Ready Airmen execute ACE by understanding capabilities, planning cross-domain solutions, transmitting commander's intent through decentralized orders, and integrating with the joint force. They rely on multi-skilled training to operate independently rather than waiting for centralized micromanagement."
+    },
+    {
+      "id": 12,
+      "type": "matching",
+      "question": "Match the type of operating location to its defining characteristics.",
+      "prompts": [
+        "Main Operating Base (MOB)",
+        "Forward Operating Site (FOS)",
+        "Cooperative Security Location (CSL)"
+      ],
+      "choices": [
+        "A facility with permanently stationed operating forces and robust infrastructure.",
+        "A scalable location intended for rotational use by operating forces.",
+        "A facility with little or no permanent United States presence, maintained by periodic Service, contractor, or host nation support."
+      ],
+      "answer": [
+        {
+          "prompt": "Main Operating Base (MOB)",
+          "choices": [
+            "A facility with permanently stationed operating forces and robust infrastructure."
+          ]
+        },
+        {
+          "prompt": "Forward Operating Site (FOS)",
+          "choices": [
+            "A scalable location intended for rotational use by operating forces."
+          ]
+        },
+        {
+          "prompt": "Cooperative Security Location (CSL)",
+          "choices": [
+            "A facility with little or no permanent United States presence, maintained by periodic Service, contractor, or host nation support."
+          ]
+        }
+      ],
+      "explanation": "These classifications dictate the footprint, infrastructure, and permanence of a base. MOBs provide permanent, heavy infrastructure; FOSs provide scalable infrastructure for rotating units; and CSLs offer minimal footprint, relying primarily on local or periodic support to enable rapid, temporary staging."
+    },
+    {
+      "id": 13,
+      "type": "ordering",
+      "question": "Order the first five steps of the Air Force Planning Process (AFPP).",
+      "unordered_items": [
+        "Course of Action Analysis and Wargaming",
+        "Mission Analysis",
+        "Course of Action Development",
+        "Course of Action Comparison",
+        "Planning Initiation"
+      ],
+      "answer": [
+        "Planning Initiation",
+        "Mission Analysis",
+        "Course of Action Development",
+        "Course of Action Analysis and Wargaming",
+        "Course of Action Comparison"
+      ],
+      "explanation": "The AFPP follows a logical progression: commanders first initiate the planning process, then thoroughly analyze the assigned mission to understand the requirements. Once understood, they develop potential Courses of Action (COAs), test them through wargaming, and finally compare the results to select the best option."
+    },
+    {
+      "id": 14,
+      "type": "multiple_choice",
+      "question": "What framework provides a methodology consisting of defining the problem, analyzing guidance, understanding the environment, and developing a method to solve the problem?",
+      "options": {
+        "a": "Decentralized Execution",
+        "b": "Operational Design",
+        "c": "Hub-and-Spoke Distribution",
+        "d": "Civilian Harm Mitigation"
+      },
+      "answer": "b",
+      "explanation": "Operational Design is the conceptual foundation of planning. It provides leaders with a structured way to think adaptively about complex, uncertain environments, ensuring that before detailed plans are written, the core problem is accurately identified and a broad solution is conceptualized."
+    },
+    {
+      "id": 15,
+      "type": "true_false",
+      "question": "Civilian Harm Mitigation and Response (CHMR) considerations are only integrated during the Course of Action Development phase of planning.",
+      "answer": false,
+      "explanation": "Protecting civilian life is a comprehensive moral and legal obligation that enhances the legitimacy of military operations. Because of its importance, CHMR must be integrated continuously through all steps of the planning process, from initial design all the way through to final orders development."
+    },
+    {
+      "id": 16,
+      "type": "matching",
+      "question": "Match the military branch to its core identity and culture.",
+      "prompts": [
+        "United States Army",
+        "United States Navy",
+        "United States Marine Corps",
+        "United States Space Force"
+      ],
+      "choices": [
+        "Founded on a fundamental belief in the human dimension of war and the centrality of land combat.",
+        "A deployment culture that prizes autonomy of command at sea and technical expertise.",
+        "Proud to be 'one of the few', where all members are fundamentally riflemen first.",
+        "A lean, mission-focused, digital service that relentlessly pursues new ideas and values agility."
+      ],
+      "answer": [
+        {
+          "prompt": "United States Army",
+          "choices": [
+            "Founded on a fundamental belief in the human dimension of war and the centrality of land combat."
+          ]
+        },
+        {
+          "prompt": "United States Navy",
+          "choices": [
+            "A deployment culture that prizes autonomy of command at sea and technical expertise."
+          ]
+        },
+        {
+          "prompt": "United States Marine Corps",
+          "choices": [
+            "Proud to be 'one of the few', where all members are fundamentally riflemen first."
+          ]
+        },
+        {
+          "prompt": "United States Space Force",
+          "choices": [
+            "A lean, mission-focused, digital service that relentlessly pursues new ideas and values agility."
+          ]
+        }
+      ],
+      "explanation": "Each branch maintains a unique culture tailored to its domain and history. The Army focuses on land dominance and soldiers; the Navy on maritime independence; the Marines on a shared, elite infantry ethos; and the Space Force on rapid innovation in the digital and orbital realms."
+    },
+    {
+      "id": 17,
+      "type": "multiple_choice",
+      "question": "Which Joint Core Value binds service members together and conveys their moral commitment or obligation as defenders of the Constitution?",
+      "options": {
+        "a": "Selfless Service",
+        "b": "Courage",
+        "c": "Duty",
+        "d": "Honor"
+      },
+      "answer": "c",
+      "explanation": "Duty is the fundamental obligation to act in the service of the Nation. It requires individuals to accept responsibility for their actions and to carry out their assigned tasks regardless of self-interest, serving as the bedrock of military commitment."
+    },
+    {
+      "id": 18,
+      "type": "multiple_response",
+      "question": "Which of the following are among the seven joint functions common to joint operations?",
+      "options": {
+        "a": "Command and Control (C2)",
+        "b": "Information",
+        "c": "Procurement",
+        "d": "Fires",
+        "e": "Diplomacy"
+      },
+      "answer": ["a", "b", "d"],
+      "explanation": "Joint functions are groups of related capabilities essential to combat. They include C2, Information, Intelligence, Fires, Movement/Maneuver, Protection, and Sustainment. Procurement and Diplomacy, while vital to national power, are not distinct operational joint functions executed by a Joint Force Commander."
+    },
+    {
+      "id": 19,
+      "type": "fill_in_the_blank",
+      "question": "The purpose of ________ is to concentrate the effects of combat power at the most advantageous place and time to produce decisive results.",
+      "answer": ["mass", "Mass"],
+      "explanation": "By synchronizing combat power—not necessarily just grouping large numbers of troops together—a commander can achieve overwhelming effects at a critical point. This allows even a numerically smaller force to decisively defeat an enemy by striking effectively where it matters most."
+    },
+    {
+      "id": 20,
+      "type": "multiple_choice",
+      "question": "Which Principle of Joint Operations aims to limit collateral damage and prevent the unnecessary use of force?",
+      "options": {
+        "a": "Security",
+        "b": "Economy of Force",
+        "c": "Restraint",
+        "d": "Legitimacy"
+      },
+      "answer": "c",
+      "explanation": "Restraint requires the judicious application of military force. Applying too much force can cause civilian casualties and political backlash, which can undermine the strategic objectives of the mission. Rules of Engagement are typically used to enforce this principle."
+    },
+    {
+      "id": 21,
+      "type": "short_answer",
+      "question": "Under what structural arrangement does the Department of Defense primarily employ forces from at least two military departments in a single operation?",
+      "answer": "Joint Operations under a single Joint Force Commander (JFC).",
+      "explanation": "To ensure unity of effort and maximize the synergistic effects of different military branches, forces from multiple departments are integrated into a Joint Force. A single commander directs this combined force to achieve overarching strategic and operational objectives."
+    },
+    {
+      "id": 22,
+      "type": "true_false",
+      "question": "Noncommissioned officers (NCOs) and petty officers (POs) are considered 'off duty' regarding the well-being of their subordinates after normal duty hours.",
+      "answer": false,
+      "explanation": "NCOs and POs hold a continuous, 24/7 responsibility for their personnel and the maintenance of standards. Their leadership role requires them to respond to crises and uphold discipline at all times, including weekends and holidays, meaning their duty to their subordinates never truly pauses."
+    },
+    {
+      "id": 23,
+      "type": "multiple_choice",
+      "question": "Under the Uniform Code of Military Justice (UCMJ), which two articles provide legal authority for NCOs/POs by punishing insubordinate conduct and failure to obey orders?",
+      "options": {
+        "a": "Articles 15 and 31",
+        "b": "Articles 91 and 92",
+        "c": "Articles 133 and 134",
+        "d": "Articles 85 and 86"
+      },
+      "answer": "b",
+      "explanation": "Article 91 criminalizes insubordination toward warrant, noncommissioned, and petty officers, while Article 92 penalizes the failure to obey lawful orders. Together, these articles legally empower enlisted leaders to maintain strict good order and discipline within the ranks."
+    },
+    {
+      "id": 24,
+      "type": "matching",
+      "question": "Match the Principle of Joint Operations to its defined purpose.",
+      "prompts": [
+        "Objective",
+        "Offensive",
+        "Economy of Force",
+        "Unity of Command"
+      ],
+      "choices": [
+        "Direct every military operation toward a clearly defined, decisive, and achievable goal.",
+        "Seize, retain, and exploit the initiative.",
+        "Expend minimum essential combat power on secondary efforts to allocate maximum combat power on primary efforts.",
+        "Ensure unity of effort under one responsible commander for every objective."
+      ],
+      "answer": [
+        {
+          "prompt": "Objective",
+          "choices": [
+            "Direct every military operation toward a clearly defined, decisive, and achievable goal."
+          ]
+        },
+        {
+          "prompt": "Offensive",
+          "choices": ["Seize, retain, and exploit the initiative."]
+        },
+        {
+          "prompt": "Economy of Force",
+          "choices": [
+            "Expend minimum essential combat power on secondary efforts to allocate maximum combat power on primary efforts."
+          ]
+        },
+        {
+          "prompt": "Unity of Command",
+          "choices": [
+            "Ensure unity of effort under one responsible commander for every objective."
+          ]
+        }
+      ],
+      "explanation": "These principles guide warfighting strategy. Objective ensures focus; Offensive dictates actively dictating the terms of battle; Economy of Force ensures resources aren't wasted on low-priority tasks; and Unity of Command prevents conflicting orders by placing one leader in charge."
+    },
+    {
+      "id": 25,
+      "type": "short_answer",
+      "question": "What is the primary role of the Noncommissioned Officer / Petty Officer in the chain of command regarding the relationship between the commander's intent and mission execution?",
+      "answer": "They serve as the indispensable link that translates command guidance into actual mission execution.",
+      "explanation": "NCOs and POs are the critical bridge between the theoretical plans made by officers and the physical execution of tasks by junior enlisted personnel. They interpret higher-level guidance and provide the direct leadership, technical expertise, and supervision required to get the job done."
+    }
+  ]
+}

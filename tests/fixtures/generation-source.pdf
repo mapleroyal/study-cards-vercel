@@ -1,0 +1,67 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 1156 >>
+stream
+BT
+/F1 12 Tf
+50 790 Td
+20 TL
+(Reservoir station training notes) Tj
+T*
+(The station stores clean water for a demonstration garden.) Tj
+T*
+(Its three components are the intake screen, reservoir, and outlet valve.) Tj
+T*
+(The intake screen catches leaves before water enters the reservoir.) Tj
+T*
+(The reservoir stores water. Its maximum capacity is 100 litres.) Tj
+T*
+(The outlet valve controls water flowing from the reservoir to the garden.) Tj
+T*
+(The amber indicator means the reservoir holds less than 20 litres.) Tj
+T*
+(The red indicator means the reservoir holds more than 80 litres.) Tj
+T*
+(The green indicator means the reservoir holds 20 through 80 litres.) Tj
+T*
+(To start the station, inspect the intake screen first.) Tj
+T*
+(Next, open the intake valve. Then fill the reservoir to 50 litres.) Tj
+T*
+(Finally, open the outlet valve to send water to the garden.) Tj
+T*
+(Inspect the screen every morning. Remove trapped leaves by hand.) Tj
+T*
+(Keep the outlet closed whenever the amber indicator is on.) Tj
+T*
+(Close the intake valve whenever the red indicator is on.) Tj
+T*
+(Record the reservoir level and indicator colour in the daily log.) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1519
+%%EOF

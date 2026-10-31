@@ -1,0 +1,321 @@
+{
+  "title": "NDS & Power Set 2",
+  "category": "Military Studies/Day 2/NDS & Instruments of National Power",
+  "cards": [
+    {
+      "id": 1,
+      "type": "multiple_choice",
+      "question": "Which two reviews were fully integrated into the 2022 National Defense Strategy for the first time?",
+      "options": {
+        "A": "The Cyber Security Review and the Space Force Posture Review",
+        "B": "The Nuclear Posture Review and the Missile Defense Review",
+        "C": "The Quadrennial Defense Review and the Base Realignment Report",
+        "D": "The Homeland Security Review and the Global Intelligence Estimate"
+      },
+      "answer": "B",
+      "explanation": "By officially folding the Nuclear Posture Review (NPR) and Missile Defense Review (MDR) into the National Defense Strategy, the DoD created a unified plan. This ensures that the nation's high-level strategic goals directly match the financial resources allocated for nuclear and missile defense capabilities."
+    },
+    {
+      "id": 2,
+      "type": "true_false",
+      "question": "The unclassified version of the 2022 National Defense Strategy was transmitted to Congress on the same day as the classified version.",
+      "answer": false,
+      "explanation": "The document notes that while the classified version was transmitted to Congress 'today,' the unclassified version would be 'forthcoming,' meaning it was scheduled to be released to the public at a later date."
+    },
+    {
+      "id": 3,
+      "type": "short_answer",
+      "question": "What broad presidential guidance document dictates how the Department of Defense shapes its National Defense Strategy?",
+      "answer": "The President's Interim National Security Strategic Guidance (or National Security Strategy)",
+      "explanation": "Agency-level strategies do not exist in a vacuum. The DoD builds the National Defense Strategy to directly support and operationalize the overarching priorities established by the President in the National Security Strategy (NSS)."
+    },
+    {
+      "id": 4,
+      "type": "multiple_response",
+      "question": "Which of the following does the text explicitly identify as the 'vital U.S. national interests' that the DoD safeguards?",
+      "options": {
+        "A": "Protecting the American people",
+        "B": "Expanding America's prosperity",
+        "C": "Eliminating all foreign adversaries",
+        "D": "Realizing and defending our democratic values",
+        "E": "Establishing global economic dominance"
+      },
+      "answer": ["A", "B", "D"],
+      "explanation": "Vital national interests are the core survival imperatives of the nation. The strategy defines these as ensuring the physical protection of citizens, growing economic prosperity, and upholding democratic ideals."
+    },
+    {
+      "id": 5,
+      "type": "fill_in_the_blank",
+      "question": "To answer the call to action regarding alliances, the Department of Defense will incorporate ally and partner perspectives at every stage of defense _____.",
+      "answer": ["planning"],
+      "explanation": "Rather than just calling on allies when a conflict starts, the DoD aims to integrate partner nations from the very beginning of the strategizing phase, ensuring a unified and mutually beneficial approach to global security."
+    },
+    {
+      "id": 6,
+      "type": "matching",
+      "question": "Match the specific threat to its classification as defined in the 2022 National Defense Strategy.",
+      "prompts": ["The PRC", "Russia", "Iran", "Pandemics"],
+      "choices": [
+        "Pacing challenge",
+        "Acute threat",
+        "Persistent threat",
+        "Transboundary threat"
+      ],
+      "answer": [
+        {
+          "prompt": "The PRC",
+          "choices": ["Pacing challenge"]
+        },
+        {
+          "prompt": "Russia",
+          "choices": ["Acute threat"]
+        },
+        {
+          "prompt": "Iran",
+          "choices": ["Persistent threat"]
+        },
+        {
+          "prompt": "Pandemics",
+          "choices": ["Transboundary threat"]
+        }
+      ],
+      "explanation": "The DoD categorizes threats based on their nature and immediacy: China dictates the long-term pace of modernization; Russia poses immediate, severe (acute) danger; Iran is an ongoing (persistent) regional issue; and pandemics cross borders, transforming the operational environment entirely."
+    },
+    {
+      "id": 7,
+      "type": "multiple_choice",
+      "question": "Which entity often directs appropriate government officials to employ the instruments of national power?",
+      "options": {
+        "A": "The Supreme Court",
+        "B": "The National Security Council",
+        "C": "The Department of the Treasury",
+        "D": "The United Nations Security Council"
+      },
+      "answer": "B",
+      "explanation": "The National Security Council acts as the central coordinating body for the Executive Branch, guiding various government departments on how to synchronize their specific tools (diplomatic, military, economic, etc.) to achieve national strategic goals."
+    },
+    {
+      "id": 8,
+      "type": "true_false",
+      "question": "Building enduring advantages involves slowing down the acquisition of new technologies to ensure they are fully tested before implementation.",
+      "answer": false,
+      "explanation": "The strategy explicitly calls for undertaking reforms to 'accelerate' force development and get necessary technology 'more quickly,' recognizing that speed is critical to outpacing strategic competitors."
+    },
+    {
+      "id": 9,
+      "type": "short_answer",
+      "question": "What is the primary method used by the DoD to complicate competitors' military preparations and undermine competitor coercion?",
+      "answer": "Campaigning",
+      "explanation": "Campaigning is the daily, synchronized execution of military operations and interagency activities. By constantly maneuvering and aligning efforts, the U.S. keeps adversaries off-balance and deters aggressive actions before they escalate to conflict."
+    },
+    {
+      "id": 10,
+      "type": "multiple_choice",
+      "question": "According to the definition of 'vital interests,' what makes these interests unique compared to general national objectives?",
+      "options": {
+        "A": "They are strictly tied to economic trade agreements.",
+        "B": "They represent matters for which the Nation is willing to sacrifice and are necessary for survival.",
+        "C": "They are temporary goals that change with every new presidential administration.",
+        "D": "They only apply to domestic policy, not foreign affairs."
+      },
+      "answer": "B",
+      "explanation": "Vital interests are the absolute bedrock of a nation's existence. Because they involve the fundamental survival, safety, and way of life of the country, they are the specific ideals that justify the ultimate sacrifice of going to war."
+    },
+    {
+      "id": 11,
+      "type": "fill_in_the_blank",
+      "question": "The ultimate purpose of the U.S. Armed Forces is to fight and win the Nation's wars, but military activities also include humanitarian aid and capacity building of _____ militaries.",
+      "answer": ["partner"],
+      "explanation": "The Military instrument of power isn't exclusively for combat. Peacetime operations, such as training the militaries of allied nations, build a stronger global network that can collectively deter aggression without needing direct U.S. intervention."
+    },
+    {
+      "id": 12,
+      "type": "ordering",
+      "question": "Order the sequence of how national security guidance flows from the highest level of government down to operational execution.",
+      "unordered_items": [
+        "Departments/agencies build individual strategies (e.g., NDS).",
+        "President outlines broad objectives in the National Security Strategy (NSS).",
+        "Officials employ instruments of national power (DIME-FIL) to achieve objectives."
+      ],
+      "answer": [
+        "President outlines broad objectives in the National Security Strategy (NSS).",
+        "Departments/agencies build individual strategies (e.g., NDS).",
+        "Officials employ instruments of national power (DIME-FIL) to achieve objectives."
+      ],
+      "explanation": "Strategy cascades downward: the President sets the broad vision (NSS), individual agencies like the DoD translate that into specialized plans (NDS), and then the government actively uses its tools (DIME-FIL) to make those plans a reality."
+    },
+    {
+      "id": 13,
+      "type": "multiple_response",
+      "question": "Under the 'Financial' instrument of national power, which of the following are listed as resources used to deny access to funding systems?",
+      "options": {
+        "A": "Foreign aid",
+        "B": "Tariffs",
+        "C": "Economic sanctions",
+        "D": "Missile defense systems",
+        "E": "Cyber warfare operations"
+      },
+      "answer": ["A", "B", "C"],
+      "explanation": "The Financial instrument targets an adversary's wallet. The U.S. leverages tools like foreign aid, tariffs, embargos, and sanctions to block hostile actors from the financial networks they need to fund their operations."
+    },
+    {
+      "id": 14,
+      "type": "matching",
+      "question": "Match the specific DIME-FIL action to its corresponding instrument of national power.",
+      "prompts": [
+        "Detaining criminals",
+        "Displaying an image to communicate DoD intent",
+        "Soliciting foreign support for operations",
+        "Preventing economic crises via international finance institutions"
+      ],
+      "choices": ["Law Enforcement", "Information", "Diplomatic", "Economic"],
+      "answer": [
+        {
+          "prompt": "Detaining criminals",
+          "choices": ["Law Enforcement"]
+        },
+        {
+          "prompt": "Displaying an image to communicate DoD intent",
+          "choices": ["Information"]
+        },
+        {
+          "prompt": "Soliciting foreign support for operations",
+          "choices": ["Diplomatic"]
+        },
+        {
+          "prompt": "Preventing economic crises via international finance institutions",
+          "choices": ["Economic"]
+        }
+      ],
+      "explanation": "Law enforcement secures borders and apprehends actors; Information shapes public and adversary perception; Diplomacy builds coalitions; and Economics utilizes market access and institutions to stabilize regions."
+    },
+    {
+      "id": 15,
+      "type": "multiple_choice",
+      "question": "What is the primary function of the 'Information' instrument of national power as defined in the text?",
+      "options": {
+        "A": "Collecting ambiguous data and translating it into actionable reports.",
+        "B": "Communicating DoD and U.S. government intent through planned actions, words, and images to achieve strategic effects.",
+        "C": "Enforcing trade laws and tracking financial funding streams.",
+        "D": "Engaging in diplomatic talks with foreign state leaders."
+      },
+      "answer": "B",
+      "explanation": "While Intelligence collects data *from* the environment, Information is how the U.S. projects its narrative *outward*. Every action, word, and image is a deliberate signal meant to influence allies and deter adversaries."
+    },
+    {
+      "id": 16,
+      "type": "short_answer",
+      "question": "The text states that a strong economy with free access to global markets is the fundamental enabler of what?",
+      "answer": "A strong national defense",
+      "explanation": "Economic prosperity and military might are directly linked. A thriving economy provides the wealth, industrial base, and technological innovation required to sustain a modern, powerful military."
+    },
+    {
+      "id": 17,
+      "type": "true_false",
+      "question": "The Law Enforcement instrument of national power operates exclusively within the borders of the United States to secure the homeland.",
+      "answer": false,
+      "explanation": "The text clarifies that Law Enforcement utilizes not just U.S. government agencies, but also 'intergovernmental organizations, and host-nation partners' to detain criminals and assist mission partners globally, extending its reach beyond U.S. borders."
+    },
+    {
+      "id": 18,
+      "type": "fill_in_the_blank",
+      "question": "Proactively applied, DIME-FIL instruments ensure U.S. investment in critical relationships with _____-_____ foreign allies and partners.",
+      "answer": ["like-minded"],
+      "explanation": "Proactive DIME-FIL strategies focus on building coalitions before conflicts occur. By investing in nations that share similar democratic values and interests (like-minded partners), the U.S. establishes a powerful unified front."
+    },
+    {
+      "id": 19,
+      "type": "multiple_choice",
+      "question": "During the first Gulf War, what was the primary purpose of President George H. W. Bush's use of diplomacy before military action?",
+      "options": {
+        "A": "To negotiate a peaceful surrender with Saddam Hussein directly.",
+        "B": "To energize a coalition of nations to develop specific rules of engagement for the counter operation.",
+        "C": "To establish global tariffs against all Middle Eastern oil exports.",
+        "D": "To convince the Iraqi military to overthrow their own government."
+      },
+      "answer": "B",
+      "explanation": "Diplomacy was used to build international consensus and legitimacy. By energizing a coalition, the U.S. ensured the subsequent military action was a unified, multinational effort with agreed-upon rules, rather than a unilateral attack."
+    },
+    {
+      "id": 20,
+      "type": "short_answer",
+      "question": "What kind of application of national power instruments is described as crucial for preventing aggression by bad actors?",
+      "answer": "Retaliatory application",
+      "explanation": "While proactive power builds alliances, retaliatory power (like sanctions or counterstrikes) serves as a necessary punishment and deterrent, demonstrating to adversaries that aggressive behavior will face severe consequences."
+    },
+    {
+      "id": 21,
+      "type": "multiple_response",
+      "question": "According to the Intelligence section, coherent information provides an advantage to which of the following groups?",
+      "options": {
+        "A": "Decision makers",
+        "B": "Commanders",
+        "C": "Policy makers",
+        "D": "Foreign adversaries",
+        "E": "Non-state actors"
+      },
+      "answer": ["A", "B", "C"],
+      "explanation": "The primary goal of intelligence is to dispel the 'fog of war.' By transforming ambiguous data into clear assessments, it empowers U.S. decision-makers, military commanders, and policy makers to act faster and smarter than the enemy."
+    },
+    {
+      "id": 22,
+      "type": "matching",
+      "question": "Match the defense priority to its corresponding numeric rank in the 2022 National Defense Strategy.",
+      "prompts": ["Priority 1", "Priority 2", "Priority 3", "Priority 4"],
+      "choices": [
+        "Defending the homeland, paced to the PRC",
+        "Deterring strategic attacks against the U.S., Allies, and partners",
+        "Deterring aggression, prioritizing the PRC then Russia",
+        "Building a resilient Joint Force and defense ecosystem"
+      ],
+      "answer": [
+        {
+          "prompt": "Priority 1",
+          "choices": ["Defending the homeland, paced to the PRC"]
+        },
+        {
+          "prompt": "Priority 2",
+          "choices": [
+            "Deterring strategic attacks against the U.S., Allies, and partners"
+          ]
+        },
+        {
+          "prompt": "Priority 3",
+          "choices": ["Deterring aggression, prioritizing the PRC then Russia"]
+        },
+        {
+          "prompt": "Priority 4",
+          "choices": ["Building a resilient Joint Force and defense ecosystem"]
+        }
+      ],
+      "explanation": "The priorities outline a hierarchy of defense: Homeland survival comes first; preventing major strategic (nuclear/catastrophic) attacks is second; managing regional conventional warfare is third; and maintaining the institutional health of the military is fourth."
+    },
+    {
+      "id": 23,
+      "type": "true_false",
+      "question": "The unified response to Russia's invasion of Ukraine is cited as evidence that mutually-beneficial alliances are an enduring strength for the U.S.",
+      "answer": true,
+      "explanation": "The text specifically points to the global coalition that opposed Russia's invasion of Ukraine as a real-world validation of the U.S. strategy to heavily rely on and invest in its international alliances."
+    },
+    {
+      "id": 24,
+      "type": "fill_in_the_blank",
+      "question": "Changes in global climate and dangerous transboundary threats are transforming the _____ in which the Department operates.",
+      "answer": ["context"],
+      "explanation": "Climate change and pandemics don't just act as direct enemies; they alter the fundamental 'context' or environment. This means military logistics, base locations, and operational readiness must constantly adapt to changing global conditions."
+    },
+    {
+      "id": 25,
+      "type": "multiple_choice",
+      "question": "How does the strategy of 'Integrated Deterrence' utilize the 'unmatched network of Alliances and partnerships'?",
+      "options": {
+        "A": "By replacing U.S. combat troops with allied forces entirely.",
+        "B": "By working seamlessly across warfighting domains and instruments of U.S. national power to maximize collective strength.",
+        "C": "By forcing allies to fund the U.S. nuclear deterrent.",
+        "D": "By isolating the U.S. economy from global markets to protect domestic industries."
+      },
+      "answer": "B",
+      "explanation": "Integrated Deterrence is about synergy. It combines U.S. military power across all domains (land, air, sea, cyber, space) with economic and diplomatic tools, and multiplies that effectiveness by seamlessly weaving in the capabilities of international allies."
+    }
+  ]
+}

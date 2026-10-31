@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <g transform="matrix(0.98 0 0 0.98 1.21516 1.18032)">
+    <rect
+      x="0"
+      y="10"
+      width="52"
+      height="40"
+      rx="8"
+      transform="rotate(-13 0 10)"
+      fill="#a2a2a2"
+    />
+    <rect
+      x="13"
+      y="8"
+      width="50"
+      height="40"
+      rx="8"
+      transform="rotate(9 13 8)"
+      fill="#797979"
+    />
+    <rect x="7" y="17" width="50" height="46" rx="9" fill="#171717" />
+    <path d="M18 31H46" stroke="white" stroke-width="3.5" stroke-linecap="round" />
+    <path d="M18 40H44" stroke="white" stroke-width="3.5" stroke-linecap="round" />
+    <path d="M18 49H39" stroke="white" stroke-width="3.5" stroke-linecap="round" />
+  </g>
+</svg>

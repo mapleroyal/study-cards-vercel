@@ -1,0 +1,16 @@
+Reservoir station training notes
+The station stores clean water for a demonstration garden.
+Its three components are the intake screen, reservoir, and outlet valve.
+The intake screen catches leaves before water enters the reservoir.
+The reservoir stores water. Its maximum capacity is 100 litres.
+The outlet valve controls water flowing from the reservoir to the garden.
+The amber indicator means the reservoir holds less than 20 litres.
+The red indicator means the reservoir holds more than 80 litres.
+The green indicator means the reservoir holds 20 through 80 litres.
+To start the station, inspect the intake screen first.
+Next, open the intake valve. Then fill the reservoir to 50 litres.
+Finally, open the outlet valve to send water to the garden.
+Inspect the screen every morning. Remove trapped leaves by hand.
+Keep the outlet closed whenever the amber indicator is on.
+Close the intake valve whenever the red indicator is on.
+Record the reservoir level and indicator colour in the daily log.

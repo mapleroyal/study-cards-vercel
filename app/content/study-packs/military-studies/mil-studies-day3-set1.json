@@ -1,0 +1,388 @@
+{
+  "title": "Strategic Concepts Set 1",
+  "category": "Military Studies/Day 3/Strategic Concepts",
+  "cards": [
+    {
+      "id": 1,
+      "type": "multiple_choice",
+      "question": "Which federal agency is designated as the lead agency for acts or threats of terrorism within the United States?",
+      "options": {
+        "A": "Department of Homeland Security (DHS)",
+        "B": "Federal Bureau of Investigation (FBI)",
+        "C": "Federal Emergency Management Agency (FEMA)",
+        "D": "United States Northern Command (USNORTHCOM)"
+      },
+      "answer": "B",
+      "explanation": "While local and state authorities typically manage disaster responses, acts of terrorism threaten national security and cross into federal jurisdiction. Therefore, the Department of Justice, acting specifically through the FBI, takes the lead role in domestic terrorism response."
+    },
+    {
+      "id": 2,
+      "type": "true_false",
+      "question": "Federal military involvement in domestic disaster response is automatic and immediately supersedes local authority as soon as a catastrophe occurs.",
+      "answer": false,
+      "explanation": "The 10th Amendment reserves primary authority to the states. Therefore, federal involvement is normally contingent upon a specific request for support from local and state authorities, ensuring local leaders maintain control unless a national security threat mandates federal jurisdiction."
+    },
+    {
+      "id": 3,
+      "type": "multiple_response",
+      "question": "According to the National Strategy for Homeland Security (NSHS), which of the following are strategic objectives supported by the Air Force? (Select all that apply)",
+      "options": {
+        "A": "Prevent and disrupt terrorist attacks",
+        "B": "Protect the American people, critical infrastructure, and key resources",
+        "C": "Direct and control all local law enforcement agencies",
+        "D": "Respond to and recover from incidents",
+        "E": "Ongoing process improvement"
+      },
+      "answer": ["A", "B", "D", "E"],
+      "explanation": "The NSHS is designed to secure the US from terrorist attacks. Its core framework logically flows from proactively preventing attacks and protecting infrastructure (like nuclear stockpiles), to reacting effectively if an incident occurs, and continuously improving via joint exercises."
+    },
+    {
+      "id": 4,
+      "type": "short_answer",
+      "question": "What level of authorization is required before a DoD intelligence component asset can be used for non-intelligence domestic support activities, such as monitoring floodwaters?",
+      "answer": "Secretary of Defense (SecDef) authorization",
+      "explanation": "Strict oversight rules govern domestic intelligence collection to protect civil liberties. Therefore, using intelligence assets for Incident Awareness and Assessment (IAA) inside the US requires specific Secretary of Defense approval to establish legal boundaries and mission restrictions."
+    },
+    {
+      "id": 5,
+      "type": "multiple_choice",
+      "question": "Under whose command authority do National Guard forces operate when they are in Title 32 status?",
+      "options": {
+        "A": "The President of the United States",
+        "B": "The Secretary of Defense",
+        "C": "The State's Adjutant General and Governor",
+        "D": "The Combatant Commander"
+      },
+      "answer": "C",
+      "explanation": "Unlike active-duty forces under the President's command, National Guard troops in Title 32 status serve their state. They operate under the command of the state's Adjutant General (TAG), who reports directly to the state governor."
+    },
+    {
+      "id": 6,
+      "type": "matching",
+      "question": "Match the major provision of the 1986 Goldwater-Nichols Act to its specific organizational impact.",
+      "prompts": [
+        "Reorganized DoD to strengthen civilian authority",
+        "Improved military advice to civilian leaders",
+        "Placed clear responsibility on combatant commanders",
+        "Matched combatant commander authority with responsibility"
+      ],
+      "choices": [
+        "Gave the SecDef sole and ultimate power, quashing service dominance",
+        "Appointed the Chairman of the Joint Chiefs of Staff as the principal military advisor",
+        "Removed service chiefs from the operational chain so CCDRs report directly to the President/SecDef",
+        "Defined Combatant Command (COCOM) authority, stopping service chiefs from squelching regional commanders"
+      ],
+      "answer": [
+        {
+          "prompt": "Reorganized DoD to strengthen civilian authority",
+          "choices": [
+            "Gave the SecDef sole and ultimate power, quashing service dominance"
+          ]
+        },
+        {
+          "prompt": "Improved military advice to civilian leaders",
+          "choices": [
+            "Appointed the Chairman of the Joint Chiefs of Staff as the principal military advisor"
+          ]
+        },
+        {
+          "prompt": "Placed clear responsibility on combatant commanders",
+          "choices": [
+            "Removed service chiefs from the operational chain so CCDRs report directly to the President/SecDef"
+          ]
+        },
+        {
+          "prompt": "Matched combatant commander authority with responsibility",
+          "choices": [
+            "Defined Combatant Command (COCOM) authority, stopping service chiefs from squelching regional commanders"
+          ]
+        }
+      ],
+      "explanation": "Goldwater-Nichols fundamentally restructured the military to fix command dysfunctions. It centralized civilian control under the SecDef, provided unified military advice through the CJCS, and empowered Combatant Commanders to execute missions without interference from the Service branches."
+    },
+    {
+      "id": 7,
+      "type": "ordering",
+      "question": "Order the three levels of warfare from the highest overarching policy level down to the localized conduct of forces.",
+      "unordered_items": [
+        "Tactical level",
+        "Strategic level",
+        "Operational level"
+      ],
+      "answer": ["Strategic level", "Operational level", "Tactical level"],
+      "explanation": "The Strategic level establishes national policy and goals; the Operational level links those goals to actionable theater campaigns (handled by Combatant Commanders); and the Tactical level executes those campaigns through specific battles and unit engagements."
+    },
+    {
+      "id": 8,
+      "type": "multiple_choice",
+      "question": "Which chain of command is used to recruit, train, equip, and sustain military forces before they are assigned to operational missions?",
+      "options": {
+        "A": "The Operational Branch",
+        "B": "The Administrative Branch",
+        "C": "The Joint Task Force Command",
+        "D": "The Homeland Security Council"
+      },
+      "answer": "B",
+      "explanation": "The military uses two distinct chains of command. The operational branch fights wars, while the administrative branch—running from the President to the SecDef to the Military Departments—focuses strictly on organizing, training, and equipping the forces."
+    },
+    {
+      "id": 9,
+      "type": "fill_in_the_blank",
+      "question": "Service-_______ forces are specifically designed to execute operational missions but remain assigned to their respective Military Departments until allocated to a Combatant Commander via the Global Force Management process.",
+      "answer": ["retained"],
+      "explanation": "Because Service branches do not command operations, they 'retain' these combat-ready forces solely for administrative preparation until higher authorities transfer their operational control to a Combatant Commander."
+    },
+    {
+      "id": 10,
+      "type": "true_false",
+      "question": "The United States Coast Guard resides permanently within the Department of the Navy and operates exclusively under Title 10 authority.",
+      "answer": false,
+      "explanation": "The Coast Guard is uniquely positioned within the Department of Homeland Security for daily maritime and law enforcement duties. It only transfers to the Department of the Navy (DoD) during times of declared war or by direct Presidential order."
+    },
+    {
+      "id": 11,
+      "type": "multiple_choice",
+      "question": "What term describes the nontransferable command authority of a combatant commander to organize forces, assign tasks, and give authoritative direction over all aspects of military operations?",
+      "options": {
+        "A": "Administrative Control (ADCON)",
+        "B": "Tactical Control (TACON)",
+        "C": "Combatant Command (COCOM)",
+        "D": "Incident Awareness and Assessment (IAA)"
+      },
+      "answer": "C",
+      "explanation": "COCOM is the supreme operational authority within a combatant command. It cannot be delegated because it legally ties the Combatant Commander's direct responsibility for mission success to the President and Secretary of Defense."
+    },
+    {
+      "id": 12,
+      "type": "multiple_choice",
+      "question": "Which type of joint force is established for a mission with a specific, limited objective that does not require overall centralized control of logistics?",
+      "options": {
+        "A": "Geographic Combatant Command",
+        "B": "Joint Task Force (JTF)",
+        "C": "Subordinate Unified Command",
+        "D": "Service Component Command"
+      },
+      "answer": "B",
+      "explanation": "A Joint Task Force (JTF) is designed to be highly flexible and temporary. It is spun up to handle specific crises or limited-scope missions and is dissolved once the objective is achieved, avoiding the heavy logistical footprint of a permanent command."
+    },
+    {
+      "id": 13,
+      "type": "matching",
+      "question": "Match the Geographic Combatant Command to its primary Area of Responsibility or defining mission.",
+      "prompts": ["USNORTHCOM", "USSOUTHCOM", "USINDOPACOM", "SPACECOM"],
+      "choices": [
+        "Homeland defense, civil support, and security cooperation for North America",
+        "Operations and security cooperation for Central and South America and the Caribbean",
+        "Protecting a diverse region stretching from the US west coast to the western border of India",
+        "Conducting operations to deter aggression and deliver combat power in, from, and to space"
+      ],
+      "answer": [
+        {
+          "prompt": "USNORTHCOM",
+          "choices": [
+            "Homeland defense, civil support, and security cooperation for North America"
+          ]
+        },
+        {
+          "prompt": "USSOUTHCOM",
+          "choices": [
+            "Operations and security cooperation for Central and South America and the Caribbean"
+          ]
+        },
+        {
+          "prompt": "USINDOPACOM",
+          "choices": [
+            "Protecting a diverse region stretching from the US west coast to the western border of India"
+          ]
+        },
+        {
+          "prompt": "SPACECOM",
+          "choices": [
+            "Conducting operations to deter aggression and deliver combat power in, from, and to space"
+          ]
+        }
+      ],
+      "explanation": "Geographic commands divide domains to ensure localized military focus. NORTHCOM protects the homeland, SOUTHCOM manages Latin America, INDOPACOM oversees the vast Asia-Pacific region, and SPACECOM acts as the geographic commander for the ultimate high ground: the space domain."
+    },
+    {
+      "id": 14,
+      "type": "matching",
+      "question": "Match the Functional Combatant Command to its global responsibility.",
+      "prompts": ["USCYBERCOM", "USSOCOM", "USTRANSCOM", "USSTRATCOM"],
+      "choices": [
+        "Directs and coordinates cyberspace planning and defends the DoD Information Network",
+        "Oversees covert, clandestine, and unconventional warfare missions across all service branches",
+        "Provides globally integrated mobility operations and distribution support for the Joint Force",
+        "Deters strategic attacks, manages Nuclear Operations, and oversees Missile Defense"
+      ],
+      "answer": [
+        {
+          "prompt": "USCYBERCOM",
+          "choices": [
+            "Directs and coordinates cyberspace planning and defends the DoD Information Network"
+          ]
+        },
+        {
+          "prompt": "USSOCOM",
+          "choices": [
+            "Oversees covert, clandestine, and unconventional warfare missions across all service branches"
+          ]
+        },
+        {
+          "prompt": "USTRANSCOM",
+          "choices": [
+            "Provides globally integrated mobility operations and distribution support for the Joint Force"
+          ]
+        },
+        {
+          "prompt": "USSTRATCOM",
+          "choices": [
+            "Deters strategic attacks, manages Nuclear Operations, and oversees Missile Defense"
+          ]
+        }
+      ],
+      "explanation": "Functional Combatant Commands are not restricted by geographic borders. They provide specialized capabilities—like Cyber defense, Special Operations, global Transportation, and Strategic nuclear deterrence—to support missions anywhere in the world."
+    },
+    {
+      "id": 15,
+      "type": "multiple_response",
+      "question": "Which of the following represent the four distinct areas of focus for the United States Space Command (USSPACECOM) mission? (Select exactly 4)",
+      "options": {
+        "A": "Deter Aggression",
+        "B": "Defeat our Nation's Enemies through Posture and Preparedness",
+        "C": "Regulate Commercial Space Industry",
+        "D": "Deliver Space Combat Power",
+        "E": "Defend U.S., Allied and Partner Interests",
+        "F": "Manage Ground-Based Cybersecurity Infrastructure"
+      },
+      "answer": ["A", "B", "D", "E"],
+      "explanation": "Recognizing space as a contested domain, SPACECOM's mission focuses strictly on military superiority: deterring attacks, defeating enemies if conflict arises, delivering space-based combat support to joint forces, and defending allied interests."
+    },
+    {
+      "id": 16,
+      "type": "multiple_choice",
+      "question": "Within the A-Staff structure, which directorate is responsible for overseeing manpower, personnel, services, total force accountability, and quality-of-life programs?",
+      "options": {
+        "A": "AF/A1",
+        "B": "AF/A3",
+        "C": "AF/A4",
+        "D": "AF/A8"
+      },
+      "answer": "A",
+      "explanation": "The AF/A1 directorate serves essentially as the human resources and personnel management arm of the command, ensuring troops are accounted for, fed, and supported to sustain operations."
+    },
+    {
+      "id": 17,
+      "type": "matching",
+      "question": "Match the core A-Staff numerical designation to its functional directorate.",
+      "prompts": ["AF/A2", "AF/A3", "AF/A4", "AF/A6"],
+      "choices": [
+        "Intelligence, Surveillance, and Reconnaissance (ISR)",
+        "Operations (direction and control of assigned forces)",
+        "Logistics (sustainment, munitions, maintenance)",
+        "Communications (electronics and automated systems architectures)"
+      ],
+      "answer": [
+        {
+          "prompt": "AF/A2",
+          "choices": ["Intelligence, Surveillance, and Reconnaissance (ISR)"]
+        },
+        {
+          "prompt": "AF/A3",
+          "choices": ["Operations (direction and control of assigned forces)"]
+        },
+        {
+          "prompt": "AF/A4",
+          "choices": ["Logistics (sustainment, munitions, maintenance)"]
+        },
+        {
+          "prompt": "AF/A6",
+          "choices": [
+            "Communications (electronics and automated systems architectures)"
+          ]
+        }
+      ],
+      "explanation": "The A-Staff provides a standardized organizational structure. A2 analyzes the threat (Intel), A3 fights the battle (Ops), A4 supplies the fight (Logistics), and A6 connects the forces (Comms)."
+    },
+    {
+      "id": 18,
+      "type": "fill_in_the_blank",
+      "question": "The AF/A5 directorate is responsible for all consolidated _______ and Requirements functions, including comprehensive force-level movement and campaign strategies.",
+      "answer": ["Plans"],
+      "explanation": "The A5 acts as the forward-thinking architect of operations, creating the operational plans, strategies, and force-flow requirements needed before the A3 (Operations) actually executes them."
+    },
+    {
+      "id": 19,
+      "type": "true_false",
+      "question": "During theater operations, the AF/A2 staff routinely directs the minute-by-minute collection assignments of Intelligence, Surveillance, and Reconnaissance (ISR) assets.",
+      "answer": false,
+      "explanation": "While the A2 provides high-level intelligence policy and support, the actual tactical direction and control of ISR collection assets in-theater is handed off to an Air Operations Center's ISR division chief to maintain real-time operational efficiency."
+    },
+    {
+      "id": 20,
+      "type": "multiple_choice",
+      "question": "Which A-Staff directorate handles Installations and Mission Support, meaning it oversees civil engineering, firefighting, and explosive ordnance disposal (EOD)?",
+      "options": {
+        "A": "AF/A4",
+        "B": "AF/A5",
+        "C": "AF/A7",
+        "D": "AF/A9"
+      },
+      "answer": "C",
+      "explanation": "The AF/A7 directorate focuses on the physical footprint and safety of an installation. Though sometimes merged with Logistics (creating an A4/7), its specific domain is infrastructure, civil engineering, and hazard response like EOD."
+    },
+    {
+      "id": 21,
+      "type": "short_answer",
+      "question": "As established by the Goldwater-Nichols Act, who serves as the principal military advisor to the President and Secretary of Defense?",
+      "answer": "The Chairman of the Joint Chiefs of Staff (CJCS)",
+      "explanation": "Prior to Goldwater-Nichols, military advice was compromised by inter-service rivalries among the Joint Chiefs. Making the CJCS the sole principal advisor ensured civilian leaders received clear, unified, and objective military guidance."
+    },
+    {
+      "id": 22,
+      "type": "multiple_choice",
+      "question": "If an Air Force commander needs comprehensive advice on long-term resource inputs, program objective memorandums, and Strategic Plans and Programs, which A-Staff directorate would they consult?",
+      "options": {
+        "A": "AF/A1",
+        "B": "AF/A3",
+        "C": "AF/A8",
+        "D": "AF/A10"
+      },
+      "answer": "C",
+      "explanation": "The AF/A8 directorate is explicitly responsible for Strategic Plans and Programs, focusing on the long-term assessment and resource allocation needed to build and fund the Air Force of the future."
+    },
+    {
+      "id": 23,
+      "type": "multiple_choice",
+      "question": "Which directorate acts as the institutional memory of a command, documenting campaigns and contingencies to provide studies, analyses, assessments, and lessons learned?",
+      "options": {
+        "A": "AF/A2",
+        "B": "AF/A5",
+        "C": "AF/A8",
+        "D": "AF/A9"
+      },
+      "answer": "D",
+      "explanation": "To avoid repeating past mistakes and to refine future tactics, the AF/A9 directorate rigorously analyzes ongoing and past operations, ensuring 'lessons learned' are properly documented and disseminated."
+    },
+    {
+      "id": 24,
+      "type": "multiple_choice",
+      "question": "Which specific A-Staff directorate is dedicated entirely to the direction and control of the Air Force nuclear enterprise, conventional/nuclear integration, and strategic deterrence?",
+      "options": {
+        "A": "AF/A2",
+        "B": "AF/A3",
+        "C": "AF/A10",
+        "D": "Command Section"
+      },
+      "answer": "C",
+      "explanation": "Because of the unique strategic importance and extreme sensitivity of nuclear weapons, the AF/A10 directorate was established to provide dedicated, highly specialized oversight of the nuclear force structure and deterrence policy."
+    },
+    {
+      "id": 25,
+      "type": "fill_in_the_blank",
+      "question": "According to the reading, implementing the A-Staff structure creates a deliberate crisis planning capability at the _______ echelon and reduces higher headquarters micromanagement.",
+      "answer": ["wing"],
+      "explanation": "By organizing wing-level staffs in the exact same A-Staff structure used by joint and higher headquarters, communication flows faster, local commanders gain better control, and higher echelons do not have to 'reach down' to micromanage operational squadrons."
+    }
+  ]
+}

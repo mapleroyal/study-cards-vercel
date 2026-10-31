@@ -1,0 +1,385 @@
+@import "tailwindcss" source(".");
+@import "tw-animate-css";
+@import "@fontsource/oooh-baby";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter/wght.css";
+@import "@fontsource-variable/inter/wght-italic.css";
+@import "@fontsource-variable/cascadia-code/wght.css";
+@import "@fontsource-variable/cascadia-code/wght-italic.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --app-corner-radius-scale: 1;
+  --app-corner-shape: round;
+  --radius-base: 0.625rem;
+  --radius: calc(var(--radius-base) * var(--app-corner-radius-scale));
+  --background: #ffffff;
+  --foreground: #171717;
+  --card: color-mix(in oklab, var(--background) 96%, var(--foreground));
+  --card-foreground: var(--foreground);
+  --popover: color-mix(in oklab, var(--background) 97%, var(--foreground));
+  --popover-foreground: var(--foreground);
+  --primary: var(--foreground);
+  --primary-foreground: var(--background);
+  --secondary: color-mix(in oklab, var(--foreground) 10%, var(--background));
+  --secondary-foreground: var(--foreground);
+  --muted: color-mix(in oklab, var(--foreground) 8%, var(--background));
+  --muted-foreground: color-mix(
+    in oklab,
+    var(--foreground) 62%,
+    var(--background)
+  );
+  --accent: color-mix(in oklab, var(--foreground) 11%, var(--background));
+  --accent-foreground: var(--foreground);
+  --destructive: #d00000;
+  --destructive-foreground: #ffffff;
+  --border: color-mix(in oklab, var(--foreground) 15%, transparent);
+  --input: color-mix(in oklab, var(--foreground) 12%, transparent);
+  --ring: #0000ff;
+  --chart-1: #0000ff;
+  --chart-2: #aa1111;
+  --chart-3: #770088;
+  --chart-4: #221199;
+  --chart-5: #994400;
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+.dark {
+  --background: #181818;
+  --foreground: #f5f5f5;
+  --destructive: #e06c75;
+  --destructive-foreground: #181818;
+  --ring: #61afef;
+  --chart-1: #61afef;
+  --chart-2: #98c379;
+  --chart-3: #c678dd;
+  --chart-4: #e5c07b;
+  --chart-5: #7d8799;
+}
+
+@supports (corner-shape: superellipse(1.5)) {
+  :root {
+    --app-corner-radius-scale: 1.25;
+    --app-corner-shape: superellipse(1.5);
+  }
+}
+
+@theme inline {
+  --font-oooh-baby: "Oooh Baby", cursive;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  /* Pulse MD: 6/8/10/14px before the supported corner-shape scale. */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --font-sans:
+    "Inter Variable", ui-sans-serif, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --font-mono:
+    "Cascadia Code Variable", ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
+  --text-display-lg: 2.5rem;
+  --text-display-lg--line-height: 3rem;
+  --text-display-lg--letter-spacing: -0.03em;
+  --text-display-lg--font-weight: 600;
+  --text-display-md: 2rem;
+  --text-display-md--line-height: 2.5rem;
+  --text-display-md--letter-spacing: -0.02em;
+  --text-display-md--font-weight: 600;
+  --text-display-sm: 1.75rem;
+  --text-display-sm--line-height: 2.25rem;
+  --text-display-sm--letter-spacing: -0.015em;
+  --text-display-sm--font-weight: 600;
+  --text-headline-lg: 1.5rem;
+  --text-headline-lg--line-height: 2rem;
+  --text-headline-lg--letter-spacing: -0.012em;
+  --text-headline-lg--font-weight: 600;
+  --text-headline-md: 1.25rem;
+  --text-headline-md--line-height: 1.75rem;
+  --text-headline-md--letter-spacing: -0.01em;
+  --text-headline-md--font-weight: 600;
+  --text-headline-sm: 1.125rem;
+  --text-headline-sm--line-height: 1.5rem;
+  --text-headline-sm--letter-spacing: -0.008em;
+  --text-headline-sm--font-weight: 600;
+  --text-title-lg: 1rem;
+  --text-title-lg--line-height: 1.5rem;
+  --text-title-lg--letter-spacing: 0;
+  --text-title-lg--font-weight: 500;
+  --text-title-md: 0.875rem;
+  --text-title-md--line-height: 1.25rem;
+  --text-title-md--letter-spacing: 0;
+  --text-title-md--font-weight: 500;
+  --text-title-sm: 0.8125rem;
+  --text-title-sm--line-height: 1.125rem;
+  --text-title-sm--letter-spacing: 0;
+  --text-title-sm--font-weight: 500;
+  --text-body-lg: 1rem;
+  --text-body-lg--line-height: 1.5rem;
+  --text-body-lg--letter-spacing: 0;
+  --text-body-lg--font-weight: 400;
+  --text-body-md: 0.875rem;
+  --text-body-md--line-height: 1.25rem;
+  --text-body-md--letter-spacing: 0;
+  --text-body-md--font-weight: 400;
+  --text-body-sm: 0.75rem;
+  --text-body-sm--line-height: 1rem;
+  --text-body-sm--letter-spacing: 0.002em;
+  --text-body-sm--font-weight: 400;
+  --text-label-lg: 0.875rem;
+  --text-label-lg--line-height: 1.25rem;
+  --text-label-lg--letter-spacing: 0;
+  --text-label-lg--font-weight: 500;
+  --text-label-md: 0.75rem;
+  --text-label-md--line-height: 1rem;
+  --text-label-md--letter-spacing: 0;
+  --text-label-md--font-weight: 500;
+  --text-label-sm: 0.6875rem;
+  --text-label-sm--line-height: 1rem;
+  --text-label-sm--letter-spacing: 0.02em;
+  --text-label-sm--font-weight: 600;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  @keyframes progress-indeterminate {
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(200%);
+    }
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  /* Enhance app surfaces without changing third-party or native geometry. */
+  @supports (corner-shape: superellipse(1.5)) {
+    :where(
+      [data-slot],
+      [data-corner-shape="app"],
+      .rounded-sm,
+      .rounded-md,
+      .rounded-lg,
+      .rounded-xl,
+      .rounded-2xl,
+      .rounded-3xl,
+      .rounded-4xl
+    ),
+    [data-slot]::before,
+    [data-slot]::after,
+    [data-corner-shape="app"]::before,
+    [data-corner-shape="app"]::after {
+      corner-shape: var(--app-corner-shape);
+    }
+
+    :where(
+      .rounded-full,
+      [data-corner-shape="round"],
+      input[type="radio"],
+      [data-slot="radio-group-item"],
+      [data-slot="radio-group-indicator"] span,
+      [data-slot="spinner"],
+      [data-slot="slider-track"],
+      [data-slot="slider-range"],
+      [data-slot="slider-thumb"],
+      [data-slot="switch"],
+      [data-slot="switch-thumb"],
+      [data-slot^="avatar"]
+    ),
+    .rounded-full::before,
+    .rounded-full::after,
+    [data-corner-shape="round"]::before,
+    [data-corner-shape="round"]::after {
+      corner-shape: round;
+    }
+  }
+
+  /* Native overflow (pages, textareas and popup lists): only arrows + thumb.
+     Keep scrollbar-color auto here: non-auto values override WebKit parts. */
+  @supports selector(::-webkit-scrollbar) {
+    ::-webkit-scrollbar {
+      width: 14px;
+      height: 14px;
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-track-piece,
+    ::-webkit-scrollbar-corner {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      min-width: 24px;
+      min-height: 24px;
+      border: 4px solid transparent;
+      border-radius: 999px;
+      background: var(--muted-foreground);
+      background-clip: padding-box;
+    }
+
+    ::-webkit-scrollbar-thumb:hover,
+    ::-webkit-scrollbar-thumb:active {
+      background-color: var(--foreground);
+    }
+
+    ::-webkit-scrollbar-button {
+      display: none;
+      width: 0;
+      height: 0;
+      border: 0;
+      background: transparent;
+      background-repeat: no-repeat;
+      background-position: center;
+      color: var(--muted-foreground);
+    }
+
+    ::-webkit-scrollbar-button:hover,
+    ::-webkit-scrollbar-button:active {
+      color: var(--foreground);
+    }
+
+    ::-webkit-scrollbar-button:vertical:decrement:start,
+    ::-webkit-scrollbar-button:vertical:increment:end {
+      display: block;
+      width: 14px;
+      height: 14px;
+      background-size: 8px 4px;
+    }
+
+    ::-webkit-scrollbar-button:vertical:decrement:start {
+      background-image: conic-gradient(
+        from 135deg at 50% 0,
+        currentColor 90deg,
+        transparent 0
+      );
+    }
+
+    ::-webkit-scrollbar-button:vertical:increment:end {
+      background-image: conic-gradient(
+        from -45deg at 50% 100%,
+        currentColor 90deg,
+        transparent 0
+      );
+    }
+
+    ::-webkit-scrollbar-button:horizontal:decrement:start,
+    ::-webkit-scrollbar-button:horizontal:increment:end {
+      display: block;
+      width: 14px;
+      height: 14px;
+      background-size: 4px 8px;
+    }
+
+    ::-webkit-scrollbar-button:horizontal:decrement:start {
+      background-image: conic-gradient(
+        from 45deg at 0 50%,
+        currentColor 90deg,
+        transparent 0
+      );
+    }
+
+    ::-webkit-scrollbar-button:horizontal:increment:end {
+      background-image: conic-gradient(
+        from 225deg at 100% 50%,
+        currentColor 90deg,
+        transparent 0
+      );
+    }
+  }
+
+  /* Firefox exposes thumb/track colors, but not individual arrow styling. */
+  @supports not selector(::-webkit-scrollbar) {
+    * {
+      scrollbar-color: var(--muted-foreground) transparent;
+    }
+  }
+
+  body {
+    @apply bg-background text-body-md text-foreground antialiased;
+  }
+
+  html {
+    @apply font-sans;
+    color-scheme: light;
+    background: var(--background);
+    text-rendering: optimizeLegibility;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html:fullscreen {
+    overflow-y: auto;
+    background: var(--background);
+  }
+
+  html:-webkit-full-screen {
+    overflow-y: auto;
+    background: var(--background);
+  }
+
+  code,
+  pre,
+  samp {
+    @apply font-mono;
+  }
+}
+
+@layer utilities {
+  .type-measure {
+    max-width: 68ch;
+  }
+
+  .type-numeric {
+    font-variant-numeric: tabular-nums;
+  }
+}

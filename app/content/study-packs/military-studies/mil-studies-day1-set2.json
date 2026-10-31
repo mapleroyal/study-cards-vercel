@@ -1,0 +1,383 @@
+{
+  "title": "Joint Operations Set 2",
+  "category": "Military Studies/Day 1/Joint Operations",
+  "cards": [
+    {
+      "id": 1,
+      "type": "multiple_choice",
+      "question": "Which level of warfare determines what courses of action, in what order, and for what duration forces are employed?",
+      "options": {
+        "a": "The Strategic Level",
+        "b": "The Operational Level",
+        "c": "The Tactical Level",
+        "d": "The Doctrinal Level"
+      },
+      "answer": "b",
+      "explanation": "The operational level acts as the bridge between strategy and tactics. While the strategic level answers 'why' and 'with what' a conflict occurs, and the tactical level dictates 'how' individual engagements are fought, the operational level organizes and sequences these tactical actions into campaigns to achieve strategic goals."
+    },
+    {
+      "id": 2,
+      "type": "fill_in_the_blank",
+      "question": "Air Force Doctrine defines airpower as the ability to project military power through control and exploitation in, from and through the ________.",
+      "answer": ["air", "Air"],
+      "explanation": "Airpower relies on the unique physical domain of elevation above the earth's surface. Operating in the air allows forces to bypass geographical terrain limitations, granting unmatched speed, range, and perspective over the battlefield."
+    },
+    {
+      "id": 3,
+      "type": "true_false",
+      "question": "The electromagnetic spectrum (EMS) is an optional domain that is not required for the successful conduct of operations.",
+      "answer": false,
+      "explanation": "Freedom of action within the EMS is a mandatory precursor to success. It is absolutely critical for connecting the joint force and acts as a medium for creating effects; without it, modern command, control, and weapons systems cannot function."
+    },
+    {
+      "id": 4,
+      "type": "matching",
+      "question": "Match the core principle of mission command to its description.",
+      "prompts": [
+        "Build teams through mutual trust",
+        "Create shared understanding",
+        "Provide clear commander's intent",
+        "Use mission-type orders"
+      ],
+      "choices": [
+        "Shared confidence between commanders and subordinates built over time.",
+        "A common grasp of the environment and the operation's purpose.",
+        "A concise expression of the purpose, desired outcome, and acceptable risks.",
+        "Focusing on the purpose of an operation rather than the details of how to accomplish it."
+      ],
+      "answer": [
+        {
+          "prompt": "Build teams through mutual trust",
+          "choices": [
+            "Shared confidence between commanders and subordinates built over time."
+          ]
+        },
+        {
+          "prompt": "Create shared understanding",
+          "choices": [
+            "A common grasp of the environment and the operation's purpose."
+          ]
+        },
+        {
+          "prompt": "Provide clear commander's intent",
+          "choices": [
+            "A concise expression of the purpose, desired outcome, and acceptable risks."
+          ]
+        },
+        {
+          "prompt": "Use mission-type orders",
+          "choices": [
+            "Focusing on the purpose of an operation rather than the details of how to accomplish it."
+          ]
+        }
+      ],
+      "explanation": "Mission command requires these foundational elements to work. Trust and shared understanding ensure everyone is on the same page. The commander's intent provides the 'why', and mission-type orders give subordinates the freedom to determine 'how' to best execute the mission in real-time."
+    },
+    {
+      "id": 5,
+      "type": "multiple_response",
+      "question": "According to Air Force Doctrine, through which of the following frameworks do Airmen execute mission command?",
+      "options": {
+        "a": "Centralized command",
+        "b": "Distributed control",
+        "c": "Decentralized execution",
+        "d": "Centralized execution",
+        "e": "Fragmented authority"
+      },
+      "answer": ["a", "b", "c"],
+      "explanation": "The Air Force maximizes the effectiveness of airpower by having a single commander set the priority (centralized command), delegating planning/coordination to manageable nodes (distributed control), and empowering frontline actors to make immediate tactical decisions (decentralized execution)."
+    },
+    {
+      "id": 6,
+      "type": "short_answer",
+      "question": "What is the primary purpose of decentralized execution at the tactical level?",
+      "answer": "To achieve effective span of control, foster disciplined initiative, and empower subordinates to exploit fleeting opportunities.",
+      "explanation": "By pushing decision-making authority down to the tactical level, front-line personnel (like strike package leaders or forward air controllers) can react instantly to dynamic and rapidly unfolding situations without waiting for permission from higher headquarters."
+    },
+    {
+      "id": 7,
+      "type": "multiple_choice",
+      "question": "Which tenet of airpower allows forces to visit and revisit multiple targets without occupying terrain, thereby denying an adversary the opportunity to seize the initiative?",
+      "options": {
+        "a": "Synergistic effects",
+        "b": "Persistence",
+        "c": "Concentration",
+        "d": "Balance"
+      },
+      "answer": "b",
+      "explanation": "Persistence refers to airpower's ability to maintain continuous pressure on an enemy. Because aircraft can constantly return to the operational area, they can relentlessly strike and observe, denying the enemy any safe window to regroup or maneuver."
+    },
+    {
+      "id": 8,
+      "type": "ordering",
+      "question": "Order the stages of the competition continuum from the lowest level of hostility to the highest.",
+      "unordered_items": [
+        "Competition Below Armed Conflict",
+        "Armed Conflict",
+        "Cooperation"
+      ],
+      "answer": [
+        "Cooperation",
+        "Competition Below Armed Conflict",
+        "Armed Conflict"
+      ],
+      "explanation": "The competition continuum is not a binary switch between peace and war. It ranges from cooperative engagement with partners, to adversarial competition leveraging diplomacy and posturing (without outright violence), all the way up to kinetic armed conflict."
+    },
+    {
+      "id": 9,
+      "type": "true_false",
+      "question": "A major operation is a primary building block of a campaign and often includes competition alongside or in conjunction with armed conflict.",
+      "answer": true,
+      "explanation": "Campaigns are massive, long-term endeavors made up of sequential major operations. These major operations coordinate tactical actions in time and place to achieve operational goals, and frequently blend combat actions with non-kinetic competition strategies."
+    },
+    {
+      "id": 10,
+      "type": "matching",
+      "question": "Match the Agile Combat Employment (ACE) maneuver term to its correct definition.",
+      "prompts": ["Proactive Maneuver", "Reactive Maneuver", "Agile"],
+      "choices": [
+        "Moving forces to assure allies, alter adversary understanding, and posture to deter aggression.",
+        "Moving forces in response to enemy aggression to complicate targeting and increase survivability.",
+        "Able to outpace adversary action through movement and maneuver to achieve commander's intent."
+      ],
+      "answer": [
+        {
+          "prompt": "Proactive Maneuver",
+          "choices": [
+            "Moving forces to assure allies, alter adversary understanding, and posture to deter aggression."
+          ]
+        },
+        {
+          "prompt": "Reactive Maneuver",
+          "choices": [
+            "Moving forces in response to enemy aggression to complicate targeting and increase survivability."
+          ]
+        },
+        {
+          "prompt": "Agile",
+          "choices": [
+            "Able to outpace adversary action through movement and maneuver to achieve commander's intent."
+          ]
+        }
+      ],
+      "explanation": "Proactive maneuver dictates the environment by shifting forces to deter threats before an attack happens. Reactive maneuver is the defensive response to an actual or imminent attack, dispersing forces so the enemy cannot easily target them."
+    },
+    {
+      "id": 11,
+      "type": "multiple_response",
+      "question": "According to the Joint All-Domain Operations Terminology, Information Advantage is achieved by deliberately using information to do which of the following?",
+      "options": {
+        "a": "Influence relevant actors.",
+        "b": "Inform target audiences.",
+        "c": "Attack, exploit, and defend information networks.",
+        "d": "Support decision-making.",
+        "e": "Eliminate the need for kinetic fires."
+      },
+      "answer": ["a", "b", "c", "d"],
+      "explanation": "Information Advantage focuses on dominating the narrative and data environment. It involves shaping perceptions, protecting friendly networks, attacking enemy networks, and providing commanders with superior situational awareness, though it does not replace kinetic fires entirely."
+    },
+    {
+      "id": 12,
+      "type": "short_answer",
+      "question": "What does the acronym JADC2 stand for in the context of joint operations?",
+      "answer": "Joint All-Domain Command and Control.",
+      "explanation": "JADC2 represents the military's approach to connecting sensors from all branches of the armed forces into a unified network, enabling commanders to rapidly translate decisions into actions across air, land, sea, space, and cyber domains."
+    },
+    {
+      "id": 13,
+      "type": "multiple_choice",
+      "question": "In the Air Force Planning Process (AFPP), how many operational design elements assist the commander and staff in conducting the operational design methodology?",
+      "options": {
+        "a": "5",
+        "b": "9",
+        "c": "13",
+        "d": "17"
+      },
+      "answer": "c",
+      "explanation": "There are 13 specific operational design elements (including Objective, Root Cause, Decisive Points, Operational Reach, etc.) that help commanders structure their thinking and conceptually frame a problem before detailed planning takes place."
+    },
+    {
+      "id": 14,
+      "type": "fill_in_the_blank",
+      "question": "Commanders and their staffs use ________ thinking to produce an air component approach during planning initiation and mission analysis.",
+      "answer": ["design", "Design"],
+      "explanation": "Design thinking encourages a broad, critical, and creative approach to understanding the environment and the core problem. It ensures that the planning team does not rush into creating tactical solutions before truly understanding the strategic context."
+    },
+    {
+      "id": 15,
+      "type": "multiple_choice",
+      "question": "As the global integrator, who considers and balances the demands and requirements of geographic and functional commands to prepare the best military advice for civil leaders?",
+      "options": {
+        "a": "The President of the United States",
+        "b": "The Secretary of Defense",
+        "c": "The Chairman of the Joint Chiefs of Staff",
+        "d": "The Geographic Combatant Commander"
+      },
+      "answer": "c",
+      "explanation": "The Chairman of the Joint Chiefs of Staff provides a macro-level, globally integrated perspective. By balancing risks, priorities, and resources across all combatant commands worldwide, the Chairman informs the strategic decisions made by the President and the Secretary of Defense."
+    },
+    {
+      "id": 16,
+      "type": "matching",
+      "question": "Match the Principle of Joint Operations to its specific purpose.",
+      "prompts": ["Surprise", "Simplicity", "Perseverance", "Legitimacy"],
+      "choices": [
+        "Strike at a time or place or in a manner for which the enemy is unprepared.",
+        "Increase the probability that plans will be executed as intended by preparing clear, uncomplicated orders.",
+        "Ensure the commitment necessary to attain the national strategic end state, often involving protracted operations.",
+        "Maintain legal and moral authority in the conduct of operations."
+      ],
+      "answer": [
+        {
+          "prompt": "Surprise",
+          "choices": [
+            "Strike at a time or place or in a manner for which the enemy is unprepared."
+          ]
+        },
+        {
+          "prompt": "Simplicity",
+          "choices": [
+            "Increase the probability that plans will be executed as intended by preparing clear, uncomplicated orders."
+          ]
+        },
+        {
+          "prompt": "Perseverance",
+          "choices": [
+            "Ensure the commitment necessary to attain the national strategic end state, often involving protracted operations."
+          ]
+        },
+        {
+          "prompt": "Legitimacy",
+          "choices": [
+            "Maintain legal and moral authority in the conduct of operations."
+          ]
+        }
+      ],
+      "explanation": "These principles provide guidelines for operational success. Surprise shifts the balance of combat power; Simplicity prevents confusion under the fog of war; Perseverance guarantees the stamina to reach long-term goals; and Legitimacy ensures domestic and international support."
+    },
+    {
+      "id": 17,
+      "type": "true_false",
+      "question": "According to Article II of the Code of Conduct, a service member may surrender of their own free will if the tactical situation is deemed hopeless.",
+      "answer": false,
+      "explanation": "Article II explicitly states: 'I will never surrender of my own free will.' Service members are expected to resist and exhaust all means of evasion or defense before capture, reflecting an uncompromising dedication to duty."
+    },
+    {
+      "id": 18,
+      "type": "multiple_choice",
+      "question": "Which Joint Core Value is described as the code of behavior that guides service members never to lie, cheat, or steal, and commits them to act responsibly?",
+      "options": {
+        "a": "Duty",
+        "b": "Courage",
+        "c": "Honor",
+        "d": "Selfless Service"
+      },
+      "answer": "c",
+      "explanation": "Honor is the ethical foundation of the military profession. It demands uncompromising integrity, respect for human dignity, and accountability, ensuring that service members act morally in both peacetime and war."
+    },
+    {
+      "id": 19,
+      "type": "multiple_response",
+      "question": "Which of the following pairings are examples of the crucial officer-NCO/PO relationship that serves as a hallmark of unit effectiveness in the Armed Forces?",
+      "options": {
+        "a": "Pilot and crew chief",
+        "b": "Platoon leader and platoon sergeant",
+        "c": "Company commander and first sergeant",
+        "d": "President and Secretary of Defense"
+      },
+      "answer": ["a", "b", "c"],
+      "explanation": "At every level of the military, commissioned officers partner with senior enlisted leaders to form a command team. The officer provides vision and legal command, while the NCO provides practical experience, technical expertise, and management of the enlisted force."
+    },
+    {
+      "id": 20,
+      "type": "fill_in_the_blank",
+      "question": "The United States ________ Guard has a unique dual mission that consists of both Federal and state roles.",
+      "answer": ["National", "national"],
+      "explanation": "The National Guard is highly versatile. It operates under the command of state governors to respond to local emergencies (like natural disasters), but can also be federalized by the President to serve as a combat reserve for the Army and Air Force."
+    },
+    {
+      "id": 21,
+      "type": "short_answer",
+      "question": "What keystone principle of the Profession of Arms is intrinsic to the chain of command and ensures that orders will be carried out and mission objectives achieved?",
+      "answer": "Accountability.",
+      "explanation": "Accountability means taking ownership of actions and results. It ensures that every level of the chain of command can trust the others to perform their duties, making it essential for unified and effective military operations."
+    },
+    {
+      "id": 22,
+      "type": "multiple_choice",
+      "question": "When questioned as a prisoner of war, Article V of the Code of Conduct requires a service member to provide which specific pieces of information?",
+      "options": {
+        "a": "Name, rank, and unit location.",
+        "b": "Name, rank, service number, and date of birth.",
+        "c": "Only their name and service number.",
+        "d": "Full name, home address, and unit commanders."
+      },
+      "answer": "b",
+      "explanation": "In accordance with the Geneva Conventions, POWs are only required to provide these four basic identifying details. Doing so fulfills international legal requirements while preventing the enemy from extracting useful intelligence."
+    },
+    {
+      "id": 23,
+      "type": "true_false",
+      "question": "Adaptive thinking is a skill only utilized during the initial 'Planning Initiation' step of the Air Force Planning Process (AFPP).",
+      "answer": false,
+      "explanation": "Adaptive thinking is explicitly used during *all* steps of the AFPP. Because the operational environment is dynamic, commanders and staffs must continuously think creatively and critically analyze information to solve problems as situations change."
+    },
+    {
+      "id": 24,
+      "type": "matching",
+      "question": "Match the Joint Function to its definition.",
+      "prompts": [
+        "Intelligence",
+        "Fires",
+        "Movement and Maneuver",
+        "Sustainment"
+      ],
+      "choices": [
+        "Informs commanders about adversary intentions, capabilities, and vulnerabilities.",
+        "Uses weapon systems to create specific lethal or non-lethal effects on a target.",
+        "Disposes joint forces to secure positional or informational advantages.",
+        "Provides logistics and personnel services support to maintain operations and extend operational reach."
+      ],
+      "answer": [
+        {
+          "prompt": "Intelligence",
+          "choices": [
+            "Informs commanders about adversary intentions, capabilities, and vulnerabilities."
+          ]
+        },
+        {
+          "prompt": "Fires",
+          "choices": [
+            "Uses weapon systems to create specific lethal or non-lethal effects on a target."
+          ]
+        },
+        {
+          "prompt": "Movement and Maneuver",
+          "choices": [
+            "Disposes joint forces to secure positional or informational advantages."
+          ]
+        },
+        {
+          "prompt": "Sustainment",
+          "choices": [
+            "Provides logistics and personnel services support to maintain operations and extend operational reach."
+          ]
+        }
+      ],
+      "explanation": "These functions represent the core tasks required to wage war. Intelligence maps the battlefield; Movement positions forces advantageously; Fires engages the enemy; and Sustainment keeps the military supplied with fuel, ammo, and personnel."
+    },
+    {
+      "id": 25,
+      "type": "multiple_choice",
+      "question": "Which tenet of airpower requires a commander to weigh combat opportunity and effectiveness against the associated risk to friendly forces?",
+      "options": {
+        "a": "Concentration",
+        "b": "Priority",
+        "c": "Balance",
+        "d": "Persistence"
+      },
+      "answer": "c",
+      "explanation": "Balance is the dynamic art of command. It requires a nuanced understanding to ensure operations are appropriately aggressive to accomplish the mission, without being so reckless that they expose friendly forces to unacceptable risk."
+    }
+  ]
+}

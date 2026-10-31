@@ -1,0 +1,370 @@
+{
+  "title": "Doctrine, Strategy, and Operations Set 1",
+  "category": "Military Studies/Recap",
+  "cards": [
+    {
+      "id": 1,
+      "type": "multiple_choice",
+      "question": "Which of the following is NOT one of the five Air Force core missions?",
+      "options": {
+        "A": "Global Strike",
+        "B": "Agile Combat Employment",
+        "C": "Command and Control",
+        "D": "Rapid Global Mobility"
+      },
+      "answer": "B",
+      "explanation": "Agile Combat Employment (ACE) is an operational scheme of maneuver designed to increase survivability and generate combat power, not a core mission. The actual five core missions are Air and Space Superiority, ISR, Rapid Global Mobility, Global Strike, and Command and Control."
+    },
+    {
+      "id": 2,
+      "type": "matching",
+      "question": "Match the Air Force core mission concept to its corresponding Air Force doctrine phrase.",
+      "prompts": [
+        "Intelligence, Surveillance, and Reconnaissance (ISR)",
+        "Rapid Global Mobility",
+        "Global Strike"
+      ],
+      "choices": ["Global Vigilance", "Global Reach", "Global Power"],
+      "answer": [
+        {
+          "prompt": "Intelligence, Surveillance, and Reconnaissance (ISR)",
+          "choices": ["Global Vigilance"]
+        },
+        {
+          "prompt": "Rapid Global Mobility",
+          "choices": ["Global Reach"]
+        },
+        {
+          "prompt": "Global Strike",
+          "choices": ["Global Power"]
+        }
+      ],
+      "explanation": "Air Force doctrine uses global vigilance to describe ISR (awareness and warning), global reach to describe mobility (speed and precision of projection), and global power to describe global strike (holding targets at risk anywhere)."
+    },
+    {
+      "id": 3,
+      "type": "true_false",
+      "question": "Global strike capabilities are exclusively nuclear and managed solely for strategic nuclear deterrence.",
+      "answer": false,
+      "explanation": "Global strike can be conventional or nuclear. While it heavily supports nuclear deterrence through USSTRATCOM via bombers and ICBMs, conventional long-range strikes also deter adversaries by providing the ability to respond rapidly and destroy targets globally without crossing the nuclear threshold."
+    },
+    {
+      "id": 4,
+      "type": "fill_in_the_blank",
+      "question": "The operational scheme of maneuver designed to shift operations away from large centralized infrastructure to smaller dispersed locations is abbreviated as ACE, which stands for ______ ______ ______.",
+      "answer": ["Agile", "Combat", "Employment"],
+      "explanation": "Agile Combat Employment (ACE) allows forces to be both proactive and reactive, generating combat power while complicating the enemy's targeting process in highly contested environments."
+    },
+    {
+      "id": 5,
+      "type": "multiple_response",
+      "question": "Which of the following are key purposes of Agile Combat Employment (ACE)?",
+      "options": {
+        "A": "Centralizing physical infrastructure",
+        "B": "Complicating the enemy's targeting process",
+        "C": "Creating political and operational dilemmas for the enemy",
+        "D": "Increasing survivability while still generating airpower"
+      },
+      "answer": ["B", "C", "D"],
+      "explanation": "ACE purposely decentralizes operations, shifting away from a reliance on large bases. By operating from a network of smaller locations, ACE forces an adversary to monitor and target far more locations and movements, effectively increasing friendly survivability and operational flexibility."
+    },
+    {
+      "id": 6,
+      "type": "matching",
+      "question": "Match the level of warfare to its operational focus.",
+      "prompts": ["Strategic Level", "Operational Level", "Tactical Level"],
+      "choices": [
+        "Why and with what the conflict occurs",
+        "What courses of action are used, in what order, and duration",
+        "Where battles, engagements, and immediate mission execution occur"
+      ],
+      "answer": [
+        {
+          "prompt": "Strategic Level",
+          "choices": ["Why and with what the conflict occurs"]
+        },
+        {
+          "prompt": "Operational Level",
+          "choices": [
+            "What courses of action are used, in what order, and duration"
+          ]
+        },
+        {
+          "prompt": "Tactical Level",
+          "choices": [
+            "Where battles, engagements, and immediate mission execution occur"
+          ]
+        }
+      ],
+      "explanation": "The strategic level sets national policy and strategy, the operational level links strategy to execution through campaigns (like ACE), and the tactical level represents the direct engagement and immediate mission tasks (like sorting aircraft)."
+    },
+    {
+      "id": 7,
+      "type": "ordering",
+      "question": "Order the following positions to reflect the correct operational chain of command from highest authority to lowest.",
+      "unordered_items": [
+        "Combatant Commanders (CCDRs)",
+        "Secretary of Defense",
+        "President"
+      ],
+      "answer": [
+        "President",
+        "Secretary of Defense",
+        "Combatant Commanders (CCDRs)"
+      ],
+      "explanation": "The operational branch flows directly from the President to the Secretary of Defense, who then directs the Combatant Commanders. The Military Departments and Service chiefs are part of the administrative chain, not the operational chain."
+    },
+    {
+      "id": 8,
+      "type": "multiple_choice",
+      "question": "What role does the Chairman of the Joint Chiefs of Staff play in the operational chain of command?",
+      "options": {
+        "A": "Exercises operational control (OPCON) over Combatant Commanders",
+        "B": "The Chairman is not in the operational chain of command",
+        "C": "Allocates forces through the Global Force Management process directly",
+        "D": "Serves as the administrative head of the military departments"
+      },
+      "answer": "B",
+      "explanation": "Despite being the highest-ranking military officer, the Chairman of the Joint Chiefs of Staff acts solely in an advisory capacity. The actual authority in the operational chain bypasses the Joint Chiefs entirely, moving directly from the Secretary of Defense to the Combatant Commanders."
+    },
+    {
+      "id": 9,
+      "type": "multiple_response",
+      "question": "According to the 2022 National Defense Strategy (NDS), which of the following are stated priorities?",
+      "options": {
+        "A": "Defending the homeland, paced to the growing multi-domain threat posed by the PRC",
+        "B": "Eradicating all violent extremist organizations globally",
+        "C": "Deterring strategic attacks against the United States, allies, and partners",
+        "D": "Building a resilient Joint Force and defense ecosystem"
+      },
+      "answer": ["A", "C", "D"],
+      "explanation": "The NDS prioritizes defending the homeland, deterring strategic attacks and aggression (focusing on the PRC and Russia), and building a resilient Joint Force. While violent extremist organizations remain a persistent threat, their global eradication is not listed as one of the four top-tier NDS priorities."
+    },
+    {
+      "id": 10,
+      "type": "true_false",
+      "question": "The primary goal of space superiority is strictly limited to gathering weather and navigation data.",
+      "answer": false,
+      "explanation": "Space superiority is much broader. It means protecting and utilizing a wide array of space capabilities—such as satellite command and control, secure communications, threat warning, and ballistic missile monitoring—while preventing hostile interference that could cripple joint operations."
+    },
+    {
+      "id": 11,
+      "type": "matching",
+      "question": "Match the DIME-FIL instrument of national power to its description.",
+      "prompts": ["Diplomatic", "Informational", "Economic", "Financial"],
+      "choices": [
+        "Engagement with states and foreign groups to advance U.S. values",
+        "Every planned or executed DoD action, word, or image that communicates U.S. intent",
+        "Use of markets, resources, and policy to support national welfare",
+        "Use of trade agreements, embargoes, and sanctions to affect funding access"
+      ],
+      "answer": [
+        {
+          "prompt": "Diplomatic",
+          "choices": [
+            "Engagement with states and foreign groups to advance U.S. values"
+          ]
+        },
+        {
+          "prompt": "Informational",
+          "choices": [
+            "Every planned or executed DoD action, word, or image that communicates U.S. intent"
+          ]
+        },
+        {
+          "prompt": "Economic",
+          "choices": [
+            "Use of markets, resources, and policy to support national welfare"
+          ]
+        },
+        {
+          "prompt": "Financial",
+          "choices": [
+            "Use of trade agreements, embargoes, and sanctions to affect funding access"
+          ]
+        }
+      ],
+      "explanation": "DIME-FIL represents a whole-of-government approach. Diplomacy leverages relationships, Information uses messaging and perception, Economics utilizes broad market forces and resources, and Financial specifically targets the flow of money and funding systems."
+    },
+    {
+      "id": 12,
+      "type": "fill_in_the_blank",
+      "question": "Actions integrated in planning and synchronized in execution across air, land, maritime, cyberspace, space, and the electromagnetic spectrum are known as JADO, which stands for ______ ______ ______ ______.",
+      "answer": ["Joint", "All-Domain", "Operations"],
+      "explanation": "JADO emphasizes that operations must be far more than just distinct Services deconflicting their actions; they must fight together as a single integrated team at the speed and scale required to dominate all warfighting domains."
+    },
+    {
+      "id": 13,
+      "type": "short_answer",
+      "question": "Briefly describe what defines a \"Mission Ready Airman\" (MRA) in the context of Agile Combat Employment (ACE).",
+      "answer": "MRAs are multi-skilled, expeditionary-trained Airmen who can solve complex problems and work cross-functionally in challenging conditions with minimal support.",
+      "explanation": "In dispersed ACE operations, the Air Force cannot deploy massive, highly specialized teams to every remote location. Mission Ready Airmen possess multiple skills allowing them to generate airpower even when separated from extensive logistical and personnel support."
+    },
+    {
+      "id": 14,
+      "type": "multiple_choice",
+      "question": "Which nation does the 2022 National Defense Strategy (NDS) identify as the most consequential strategic competitor and \"pacing challenge\"?",
+      "options": {
+        "A": "Russia",
+        "B": "North Korea",
+        "C": "Iran",
+        "D": "The People's Republic of China (PRC)"
+      },
+      "answer": "D",
+      "explanation": "The NDS explicitly names the PRC as the most consequential strategic competitor and pacing challenge for the U.S. military. Russia, by contrast, is described as an acute threat, while nations like North Korea and Iran represent persistent threats."
+    },
+    {
+      "id": 15,
+      "type": "multiple_response",
+      "question": "Through which three foundational mechanisms do Airmen execute mission command?",
+      "options": {
+        "A": "Centralized command",
+        "B": "Distributed execution",
+        "C": "Distributed control",
+        "D": "Decentralized execution"
+      },
+      "answer": ["A", "C", "D"],
+      "explanation": "Air Force mission command marries Centralized Command (one commander oversees airpower strategy), Distributed Control (planning tasks are pushed to subordinate echelons), and Decentralized Execution (delegating authority so frontline forces can make immediate tactical decisions)."
+    },
+    {
+      "id": 16,
+      "type": "ordering",
+      "question": "Order the elements of the competition continuum from the most cooperative relationship to the most hostile interaction.",
+      "unordered_items": [
+        "Armed conflict/war",
+        "Cooperation",
+        "Adversarial competition below armed conflict"
+      ],
+      "answer": [
+        "Cooperation",
+        "Adversarial competition below armed conflict",
+        "Armed conflict/war"
+      ],
+      "explanation": "The competition continuum models global relationships. States might engage in cooperation (like joint exercises), shift into competition below armed conflict (like cyber intrusions), and escalate to armed conflict/war. War does not erase the other elements; they often occur simultaneously."
+    },
+    {
+      "id": 17,
+      "type": "true_false",
+      "question": "Command and Control (C2) consists entirely of the communication equipment and computers used to transmit orders.",
+      "answer": false,
+      "explanation": "C2 is fundamentally about authority and direction. While communications gear is vital, true C2 includes the commander, the legal act of exercising authority, the decision-making framework, and the supporting systems. It is the central joint function that integrates all others."
+    },
+    {
+      "id": 18,
+      "type": "multiple_choice",
+      "question": "What is the primary purpose of the National Security Council (NSC)?",
+      "options": {
+        "A": "To organize, train, and equip the Armed Forces",
+        "B": "To coordinate foreign and defense policy and advise the President",
+        "C": "To manage the Global Force Management process for Combatant Commanders",
+        "D": "To directly exercise tactical control (TACON) over joint task forces"
+      },
+      "answer": "B",
+      "explanation": "Chaired by the President, the NSC serves as the principal arm for coordinating interagency national security policy. It reconciles diplomatic and military strategies to ensure a unified, whole-of-government approach to global threats."
+    },
+    {
+      "id": 19,
+      "type": "fill_in_the_blank",
+      "question": "The three levels of warfare that link tactical actions to overarching national objectives are ______, operational, and tactical.",
+      "answer": ["strategic"],
+      "explanation": "The strategic level dictates the 'why' and determines national policy. The operational level figures out the 'what' through campaigns, and the tactical level executes the 'how' via direct battles and engagements."
+    },
+    {
+      "id": 20,
+      "type": "matching",
+      "question": "Match the Joint Function to its definition.",
+      "prompts": [
+        "Movement and Maneuver",
+        "Protection",
+        "Sustainment",
+        "Intelligence"
+      ],
+      "choices": [
+        "Positioning forces to gain positional or informational advantage",
+        "Efforts to secure and defend personnel, equipment, and facilities",
+        "Logistics and personnel support that maintains operations",
+        "Information about adversary intentions, capabilities, and vulnerabilities"
+      ],
+      "answer": [
+        {
+          "prompt": "Movement and Maneuver",
+          "choices": [
+            "Positioning forces to gain positional or informational advantage"
+          ]
+        },
+        {
+          "prompt": "Protection",
+          "choices": [
+            "Efforts to secure and defend personnel, equipment, and facilities"
+          ]
+        },
+        {
+          "prompt": "Sustainment",
+          "choices": [
+            "Logistics and personnel support that maintains operations"
+          ]
+        },
+        {
+          "prompt": "Intelligence",
+          "choices": [
+            "Information about adversary intentions, capabilities, and vulnerabilities"
+          ]
+        }
+      ],
+      "explanation": "Joint Functions represent common activities forces must execute. In dispersed concepts like ACE, functions like Sustainment (logistics) and Protection (defense) become highly complex when forces operate away from major bases."
+    },
+    {
+      "id": 21,
+      "type": "true_false",
+      "question": "Once a state enters armed conflict, operations involving cooperation and competition below armed conflict completely cease.",
+      "answer": false,
+      "explanation": "The competition continuum is not a simple binary switch between peace and war. Even during major campaigns of armed conflict, the U.S. may still engage in competition and cooperation with various actors simultaneously across different regions or domains."
+    },
+    {
+      "id": 22,
+      "type": "multiple_choice",
+      "question": "In the context of Agile Combat Employment (ACE), what defines \"proactive maneuver\"?",
+      "options": {
+        "A": "Moving forces in response to observed enemy aggression",
+        "B": "Moving forces before enemy action to assure allies or deter aggression",
+        "C": "Delegating authority to subordinates for on-scene decisions",
+        "D": "Centralizing command at a single physical base"
+      },
+      "answer": "B",
+      "explanation": "Proactive maneuver takes the initiative, positioning forces before an enemy acts in order to shape the battlefield, deter threats, and signal support to allies. Reactive maneuver occurs after an adversary has initiated aggression."
+    },
+    {
+      "id": 23,
+      "type": "multiple_response",
+      "question": "While Air Force mission command favors decentralized execution, which of the following operations generally require highly centralized execution?",
+      "options": {
+        "A": "Offensive cyberspace operations",
+        "B": "Routine humanitarian airlift",
+        "C": "Nuclear employment",
+        "D": "Base security patrols"
+      },
+      "answer": ["A", "C"],
+      "explanation": "Missions that carry massive strategic implications, political sensitivities, or the potential for extreme global escalation—such as nuclear weapons employment and offensive cyberspace operations—require tight, centralized control rather than decentralized execution."
+    },
+    {
+      "id": 24,
+      "type": "short_answer",
+      "question": "How does Agile Combat Employment (ACE) directly support Joint All-Domain Operations (JADO)?",
+      "answer": "ACE positions airpower across multiple dispersed locations, complicating enemy targeting and allowing the Joint Force to survive and integrate actions across all domains even when bases and communications are threatened.",
+      "explanation": "JADO is the overarching philosophy of fighting across all domains (air, land, cyber, space, etc.) simultaneously. ACE is the physical execution method that keeps Air Force assets alive and unpredictable, ensuring they can actively participate in the larger JADO fight."
+    },
+    {
+      "id": 25,
+      "type": "multiple_choice",
+      "question": "How does Rapid Global Mobility directly support strategic deterrence?",
+      "options": {
+        "A": "By launching intercontinental ballistic missiles at high-value targets",
+        "B": "By ensuring the U.S. can quickly forward-deploy forces and demonstrate credible capability",
+        "C": "By conducting globally integrated cyberspace offensive operations",
+        "D": "By permanently eliminating the adversary's airpower capabilities"
+      },
+      "answer": "B",
+      "explanation": "Deterrence is built on capability and intent. Rapid Global Mobility provides the literal 'global reach' needed to position massive combat power anywhere in the world on short notice, sending a clear, deterring message to adversaries that the U.S. is capable of an immediate response."
+    }
+  ]
+}

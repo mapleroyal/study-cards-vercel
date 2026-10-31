@@ -1,0 +1,358 @@
+{
+  "title": "Strategic Concepts Set 2",
+  "category": "Military Studies/Day 3/Strategic Concepts",
+  "cards": [
+    {
+      "id": 1,
+      "type": "true_false",
+      "question": "The National Response Framework (NRF) is only activated when a localized event escalates into a catastrophic natural disaster or terrorist attack.",
+      "answer": false,
+      "explanation": "The NRF is designed to be highly scalable and adaptable. Rather than waiting for a specific threshold of catastrophe to be triggered, its coordinating structures are always in effect and can be scaled up or down as needed to manage any size of hazard."
+    },
+    {
+      "id": 2,
+      "type": "multiple_choice",
+      "question": "According to the 2018 Department of Defense Cyber Strategy, what is the DoD's primary approach to cyberspace operations in terms of homeland defense?",
+      "options": {
+        "A": "Restricting internet access during national emergencies",
+        "B": "Defending forward by stopping threats before they reach their targets",
+        "C": "Handing all cyber jurisdiction exclusively to local law enforcement",
+        "D": "Operating entirely within the administrative chain of command"
+      },
+      "answer": "B",
+      "explanation": "Instead of waiting for malicious cyber activity to breach domestic networks, the DoD utilizes a proactive strategy. By projecting focus outward to preempt and defeat threats at their source, they protect US critical infrastructure from significant cyber incidents."
+    },
+    {
+      "id": 3,
+      "type": "fill_in_the_blank",
+      "question": "To rapidly open and sustain an airbase during a domestic emergency or contingency, the Air Force utilizes pre-packaged capabilities called air expeditionary task force (______) modules.",
+      "answer": ["AETF"],
+      "explanation": "AETF modules are designed as deployable building blocks. They allow the Air Force to quickly establish command and control, operate runways, and generate missions even at remote, abandoned, or heavily damaged airfields."
+    },
+    {
+      "id": 4,
+      "type": "multiple_choice",
+      "question": "Executive Order 12333 and DoD Directive 5240.01 primarily govern which sensitive aspect of Defense Support of Civil Authorities (DSCA)?",
+      "options": {
+        "A": "The distribution of medical and humanitarian supplies",
+        "B": "The use of intelligence, surveillance, and reconnaissance assets domestically",
+        "C": "The activation of the Air National Guard under Title 32",
+        "D": "The construction management of emergency repair activities"
+      },
+      "answer": "B",
+      "explanation": "Because using military intelligence assets to collect data inside the US poses serious civil liberty concerns, strict oversight rules and SecDef authorizations are required before assets like overhead sensors can be used for non-intelligence domestic support."
+    },
+    {
+      "id": 5,
+      "type": "short_answer",
+      "question": "Which Air Force organization provides specialized investigative expertise to support criminal investigations and counterintelligence services during homeland operations?",
+      "answer": "Air Force Office of Special Investigations (AFOSI)",
+      "explanation": "AFOSI acts as the Air Force's premier federal law enforcement agency, bringing critical investigative and counterintelligence capabilities to support domestic security and criminal inquiries during Defense Support of Civil Authorities (DSCA) missions."
+    },
+    {
+      "id": 6,
+      "type": "ordering",
+      "question": "Order the sequence of how a request for DoD assistance from a civilian agency is processed, from initial submission to final approval.",
+      "unordered_items": [
+        "Office of the Assistant Secretary of Defense (Homeland Defense & GS) staffs the request",
+        "Joint Staff/J33 receives and forwards the request",
+        "Civilian agency submits the request for assistance",
+        "Secretary of Defense (SecDef) exercises decision authority"
+      ],
+      "answer": [
+        "Civilian agency submits the request for assistance",
+        "Joint Staff/J33 receives and forwards the request",
+        "Office of the Assistant Secretary of Defense (Homeland Defense & GS) staffs the request",
+        "Secretary of Defense (SecDef) exercises decision authority"
+      ],
+      "explanation": "To ensure military resources are allocated properly and legally, civilian requests are channeled systematically up the military hierarchy. The Joint Staff intially processes it, the OASD staffs it, and the SecDef grants the final legal approval."
+    },
+    {
+      "id": 7,
+      "type": "multiple_choice",
+      "question": "Which watershed 1947 legislative act created the National Security Council (NSC) to coordinate foreign and defense policy?",
+      "options": {
+        "A": "The Posse Comitatus Act",
+        "B": "The National Security Act",
+        "C": "The Goldwater-Nichols Act",
+        "D": "The USA PATRIOT Act"
+      },
+      "answer": "B",
+      "explanation": "Following World War II, the US realized it needed a reliable executive institution to manage its expanding global role. The National Security Act of 1947 established the NSC to reconcile diplomatic aims with military commitments under the President's chairmanship."
+    },
+    {
+      "id": 8,
+      "type": "multiple_choice",
+      "question": "The National Defense Strategy (NDS) specifically describes how the Department of Defense will contribute to the execution of which broader presidential document?",
+      "options": {
+        "A": "The National Response Framework (NRF)",
+        "B": "The National Security Strategy (NSS)",
+        "C": "The Goldwater-Nichols Act",
+        "D": "The Homeland Defense Plan"
+      },
+      "answer": "B",
+      "explanation": "The NSS is the President's overarching vision for advancing all national interests. The NDS is a subordinate, military-focused document that aligns the DoD's specific warfare and defense capabilities to achieve the goals set out in the NSS."
+    },
+    {
+      "id": 9,
+      "type": "matching",
+      "question": "Match the military branch to its primary role and defining characteristic as outlined in the text.",
+      "prompts": [
+        "Army",
+        "Air Force and Space Force",
+        "Navy and Marine Corps",
+        "Coast Guard"
+      ],
+      "choices": [
+        "The Nation's principal land force, preparing to conduct prompt and sustained combat on land",
+        "Provides global vigilance, global reach, and global power through air and space domains",
+        "The Nation's principal maritime force, employing persistent presence and forward-stationed forces",
+        "A unique Military Service residing within DHS that provides direct support to the DoD"
+      ],
+      "answer": [
+        {
+          "prompt": "Army",
+          "choices": [
+            "The Nation's principal land force, preparing to conduct prompt and sustained combat on land"
+          ]
+        },
+        {
+          "prompt": "Air Force and Space Force",
+          "choices": [
+            "Provides global vigilance, global reach, and global power through air and space domains"
+          ]
+        },
+        {
+          "prompt": "Navy and Marine Corps",
+          "choices": [
+            "The Nation's principal maritime force, employing persistent presence and forward-stationed forces"
+          ]
+        },
+        {
+          "prompt": "Coast Guard",
+          "choices": [
+            "A unique Military Service residing within DHS that provides direct support to the DoD"
+          ]
+        }
+      ],
+      "explanation": "Each branch is statutorily organized to dominate a specific domain: the Army on land, the Navy/Marines at sea, the Air Force/Space force in the air and space, and the Coast Guard functioning as a hybrid maritime/law enforcement asset under DHS."
+    },
+    {
+      "id": 10,
+      "type": "multiple_response",
+      "question": "According to the reading, the Department of the Air Force provides the Nation with which three core capabilities? (Select 3)",
+      "options": {
+        "A": "Global vigilance",
+        "B": "Global logistics",
+        "C": "Global reach",
+        "D": "Global maritime dominance",
+        "E": "Global power"
+      },
+      "answer": ["A", "C", "E"],
+      "explanation": "The fundamental mission of the Air Force and Space Force is summarized by these three pillars: keeping constant watch (vigilance), the ability to travel rapidly anywhere in the world (reach), and the ability to strike or influence outcomes effectively (power)."
+    },
+    {
+      "id": 11,
+      "type": "true_false",
+      "question": "Like a Joint Task Force, a subordinate unified command is temporary and dissolves immediately after a specific limited objective is achieved.",
+      "answer": false,
+      "explanation": "Subordinate unified commands (like US Forces Korea) are established on a continuing basis to manage enduring regional or functional missions, whereas a Joint Task Force is explicitly temporary and dissolves once its specific crisis or objective is resolved."
+    },
+    {
+      "id": 12,
+      "type": "fill_in_the_blank",
+      "question": "The United States Space Force is a separate and distinct branch of the armed services organized under the Department of the _______.",
+      "answer": ["Air Force"],
+      "explanation": "Similar to how the Marine Corps operates distinctly but is housed within the Department of the Navy, the Space Force relies on the administrative framework of the Department of the Air Force to organize, train, and equip its Guardians."
+    },
+    {
+      "id": 13,
+      "type": "multiple_choice",
+      "question": "Which of the following leaders is NOT considered a Joint Force Commander (JFC) authorized to exercise operational control over joint forces?",
+      "options": {
+        "A": "Combatant Commander (CCDR)",
+        "B": "Subordinate Unified Commander",
+        "C": "Joint Task Force (JTF) Commander",
+        "D": "Service Chief (e.g., Chief of Staff of the Air Force)"
+      },
+      "answer": "D",
+      "explanation": "The Goldwater-Nichols Act explicitly removed the Service Chiefs from the operational chain of command. Therefore, Service Chiefs only administer and train forces, while JFCs (CCDRs, Sub-unified commanders, and JTF commanders) actually command them in operations."
+    },
+    {
+      "id": 14,
+      "type": "multiple_choice",
+      "question": "To foster interagency efforts and negate the drivers of conflict in its AOR, USAFRICOM employs a broad approach combining which three elements?",
+      "options": {
+        "A": "Diplomacy, development, and defense",
+        "B": "Deterrence, destruction, and diplomacy",
+        "C": "Defense, deployment, and division",
+        "D": "Disruption, development, and diplomacy"
+      },
+      "answer": "A",
+      "explanation": "Recognizing that military force alone cannot solve complex African security issues, AFRICOM focuses heavily on building partner capacity and stability through diplomatic outreach, infrastructure development, and defensive security cooperation."
+    },
+    {
+      "id": 15,
+      "type": "short_answer",
+      "question": "Which geographic combatant command is responsible for US military relations with NATO and 51 countries across two continents?",
+      "answer": "US European Command (USEUCOM)",
+      "explanation": "USEUCOM manages operations across Europe, parts of Asia, and the Middle East. Its most prominent ongoing strategic relationship is integrating US forces with the North Atlantic Treaty Organization (NATO) alliance to defend transatlantic security."
+    },
+    {
+      "id": 16,
+      "type": "true_false",
+      "question": "When USNORTHCOM provides civil support during a domestic disaster, military forces are fully authorized to directly engage in civilian law enforcement activities.",
+      "answer": false,
+      "explanation": "The Posse Comitatus Act legally prohibits federal military forces from acting as domestic police. Therefore, while NORTHCOM can provide logistical, medical, and emergency relief support, they cannot directly enforce civilian laws or make civilian arrests."
+    },
+    {
+      "id": 17,
+      "type": "multiple_choice",
+      "question": "USSOUTHCOM is responsible for contingency planning, security cooperation, and ensuring the defense of which critical strategic waterway?",
+      "options": {
+        "A": "The Suez Canal",
+        "B": "The Panama Canal",
+        "C": "The Strait of Hormuz",
+        "D": "The English Channel"
+      },
+      "answer": "B",
+      "explanation": "Located within its area of responsibility in Central America, the Panama Canal is a vital artery for global and US maritime logistics. SOUTHCOM is tasked specifically with ensuring its continued defense and security."
+    },
+    {
+      "id": 18,
+      "type": "matching",
+      "question": "Match the Functional Combatant Command to its headquarters location.",
+      "prompts": ["USCYBERCOM", "USSOCOM", "USTRANSCOM", "USSTRATCOM"],
+      "choices": [
+        "Fort George G. Meade, Maryland",
+        "MacDill AFB, Florida",
+        "Scott AFB, Illinois",
+        "Offutt AFB, Nebraska"
+      ],
+      "answer": [
+        {
+          "prompt": "USCYBERCOM",
+          "choices": ["Fort George G. Meade, Maryland"]
+        },
+        {
+          "prompt": "USSOCOM",
+          "choices": ["MacDill AFB, Florida"]
+        },
+        {
+          "prompt": "USTRANSCOM",
+          "choices": ["Scott AFB, Illinois"]
+        },
+        {
+          "prompt": "USSTRATCOM",
+          "choices": ["Offutt AFB, Nebraska"]
+        }
+      ],
+      "explanation": "These headquarters locations are strategically chosen. For example, CYBERCOM shares its Fort Meade location with the NSA for intelligence synergy, while STRATCOM operates securely out of Offutt AFB in the Midwest for nuclear command and control."
+    },
+    {
+      "id": 19,
+      "type": "multiple_response",
+      "question": "Within the A-Staff structure, which of the following roles operate strictly as 'Personal Staff' outside the standard numbered A-Staff directorates? (Select all that apply)",
+      "options": {
+        "A": "Legal advisors",
+        "B": "Public affairs advisors",
+        "C": "Director of Operations (A3)",
+        "D": "Director of Logistics (A4)",
+        "E": "Chaplain"
+      },
+      "answer": ["A", "B", "E"],
+      "explanation": "While numbered directorates (A1-A10) handle massive functional domains like Operations and Logistics, Personal Staff members like lawyers, chaplains, and public affairs officers work directly with the commander to provide specific, technical, or personal advisory services."
+    },
+    {
+      "id": 20,
+      "type": "multiple_choice",
+      "question": "Within the Command Section of an A-Staff, who is primarily responsible for coordinating the daily activities of the staff and ensuring the commander's decisions are implemented?",
+      "options": {
+        "A": "The Command Chief Master Sergeant",
+        "B": "The Chief of Staff",
+        "C": "The AF/A5 Director",
+        "D": "The Executive Assistant"
+      },
+      "answer": "B",
+      "explanation": "The Chief of Staff acts as the central traffic cop and manager of the A-Staff. They direct the staff's workflow, approve lower-level actions, and ensure all directorates align to execute the air component commander's operational vision."
+    },
+    {
+      "id": 21,
+      "type": "fill_in_the_blank",
+      "question": "The AF/A4 directorate is a broad, multi-disciplined organization responsible for _______ and sustainment, encompassing munitions, vehicle management, and maintenance.",
+      "answer": ["logistics"],
+      "explanation": "Forces cannot fight without supplies, fuel, and functional equipment. The A4 handles all logistics required to sustain the combat effectiveness of assigned forces over time."
+    },
+    {
+      "id": 22,
+      "type": "short_answer",
+      "question": "What deployment data document, prepared and refined by the AF/A5 in coordination with A4, is referred to by the acronym TPFD (pronounced \"tip-fid\")?",
+      "answer": "Time-phased force and deployment data",
+      "explanation": "The TPFD is a critical planning document that meticulously schedules exactly when and where specific units, troops, and equipment will deploy into a theater, preventing logistical bottlenecks and ensuring a smooth flow of combat power."
+    },
+    {
+      "id": 23,
+      "type": "multiple_choice",
+      "question": "Which A-Staff directorate is specifically focused on establishing secure communications electronics and automated systems architectures to support command operations?",
+      "options": {
+        "A": "AF/A2",
+        "B": "AF/A6",
+        "C": "AF/A8",
+        "D": "AF/A10"
+      },
+      "answer": "B",
+      "explanation": "Modern warfare requires a reliable flow of digital and voice information. The AF/A6 directorate focuses exclusively on providing the communications and IT infrastructure necessary for commanders to control their forces globally."
+    },
+    {
+      "id": 24,
+      "type": "true_false",
+      "question": "The AF/A9 directorate is responsible for managing the Air Force nuclear enterprise and maintaining strategic deterrence readiness data.",
+      "answer": false,
+      "explanation": "The AF/A10 is the dedicated directorate for Strategic Deterrence and Nuclear Integration. The AF/A9 focuses on analyzing past and present operations to compile studies, assessments, and lessons learned."
+    },
+    {
+      "id": 25,
+      "type": "matching",
+      "question": "Match the joint organizational command structure to its appropriate definition.",
+      "prompts": [
+        "Combatant Command",
+        "Subordinate Unified Command",
+        "Joint Task Force",
+        "Service Component Command"
+      ],
+      "choices": [
+        "A command with a broad continuing mission under a single commander involving forces of two or more Military Departments",
+        "Established on a geographical or functional basis to conduct operations continuingly under a unified CCDR",
+        "Established for a specific limited objective and dissolved when the purpose is achieved",
+        "Consists of all individuals, units, and installations from a specific branch assigned to a unified command"
+      ],
+      "answer": [
+        {
+          "prompt": "Combatant Command",
+          "choices": [
+            "A command with a broad continuing mission under a single commander involving forces of two or more Military Departments"
+          ]
+        },
+        {
+          "prompt": "Subordinate Unified Command",
+          "choices": [
+            "Established on a geographical or functional basis to conduct operations continuingly under a unified CCDR"
+          ]
+        },
+        {
+          "prompt": "Joint Task Force",
+          "choices": [
+            "Established for a specific limited objective and dissolved when the purpose is achieved"
+          ]
+        },
+        {
+          "prompt": "Service Component Command",
+          "choices": [
+            "Consists of all individuals, units, and installations from a specific branch assigned to a unified command"
+          ]
+        }
+      ],
+      "explanation": "Joint structures are tailored to the scope of the mission. Combatant Commands are permanent and broad; Sub-unified commands are permanent but smaller; JTFs are strictly temporary; and Service Components provide branch-specific administration within the joint environment."
+    }
+  ]
+}

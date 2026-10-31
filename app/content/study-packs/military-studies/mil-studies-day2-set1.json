@@ -1,0 +1,351 @@
+{
+  "title": "NDS & Power Set 1",
+  "category": "Military Studies/Day 2/NDS & Instruments of National Power",
+  "cards": [
+    {
+      "id": 1,
+      "type": "multiple_choice",
+      "question": "What is the primary focus of the first defense priority in the 2022 National Defense Strategy?",
+      "options": {
+        "A": "Deterring strategic attacks against U.S. Allies",
+        "B": "Defending the homeland, paced to the growing multi-domain threat posed by the PRC",
+        "C": "Building a resilient Joint Force and defense ecosystem",
+        "D": "Collaborating with NATO to reinforce deterrence against Russia"
+      },
+      "answer": "B",
+      "explanation": "The Department of Defense identifies defending the United States homeland as its top priority, specifically emphasizing the need to pace this defense against the comprehensive, multi-domain threats emerging from the People's Republic of China (PRC)."
+    },
+    {
+      "id": 2,
+      "type": "true_false",
+      "question": "The 2022 National Defense Strategy was developed independently from other strategic reviews like the Nuclear Posture Review.",
+      "answer": false,
+      "explanation": "For the first time, the DoD integrated its strategic reviews. By officially incorporating the Nuclear Posture Review and Missile Defense Review directly into the NDS, the Department ensured a seamless link between strategic goals and available resources."
+    },
+    {
+      "id": 3,
+      "type": "short_answer",
+      "question": "Which nation is identified as the pacing challenge and most consequential strategic competitor for the Department of Defense?",
+      "answer": "The People's Republic of China (PRC)",
+      "explanation": "The PRC is recognized as the primary strategic competitor. Labeling it the 'pacing challenge' means its rapidly growing military capabilities dictate the speed at which the U.S. military must modernize to maintain a competitive edge."
+    },
+    {
+      "id": 4,
+      "type": "fill_in_the_blank",
+      "question": "Russia poses an _____ threat to the United States and its allies, as demonstrated by its unprovoked invasion of Ukraine.",
+      "answer": ["acute"],
+      "explanation": "While China is viewed as a long-term 'pacing challenge,' Russia is described as an 'acute' threat—meaning it presents an immediate, severe, and sharp danger to global stability, evidenced by its aggressive military actions in Europe."
+    },
+    {
+      "id": 5,
+      "type": "multiple_choice",
+      "question": "In the context of defending against growing kinetic and non-kinetic threats, how does the Department of Defense define resilience?",
+      "options": {
+        "A": "The ability to deploy forces globally within 24 hours.",
+        "B": "The capacity to permanently deter all adversary attacks.",
+        "C": "The elimination of all vulnerabilities in military infrastructure.",
+        "D": "The ability to withstand, fight through, and recover quickly from disruption."
+      },
+      "answer": "D",
+      "explanation": "Resilience acknowledges that disruptions or attacks may inevitably occur. Instead of just preventing attacks, resilience focuses on endurance—ensuring the Joint Force can absorb a strike, continue operations, and rapidly restore normal functions."
+    },
+    {
+      "id": 6,
+      "type": "multiple_response",
+      "question": "Besides China and Russia, which of the following are identified as persistent threats the Department of Defense must manage?",
+      "options": {
+        "A": "North Korea",
+        "B": "Iran",
+        "C": "Violent extremist organizations",
+        "D": "NATO",
+        "E": "South Korea"
+      },
+      "answer": ["A", "B", "C"],
+      "explanation": "While the NDS primarily focuses on the PRC and Russia, it acknowledges that the DoD must maintain capabilities to handle ongoing global security risks, specifically naming North Korea, Iran, and violent extremist groups as persistent threats."
+    },
+    {
+      "id": 7,
+      "type": "multiple_choice",
+      "question": "What are the three primary ways the Department of Defense intends to advance its strategic goals?",
+      "options": {
+        "A": "Integrated deterrence, campaigning, and building enduring advantages",
+        "B": "Economic sanctions, diplomatic engagement, and military force",
+        "C": "Nuclear proliferation, cyber warfare, and space exploration",
+        "D": "Homeland defense, alliance building, and counter-terrorism"
+      },
+      "answer": "A",
+      "explanation": "The NDS operationalizes its goals through three core pillars: Integrated deterrence (combining multi-domain strengths), Campaigning (synchronizing daily activities to complicate adversary plans), and Building enduring advantages (investing long-term in technology and personnel)."
+    },
+    {
+      "id": 8,
+      "type": "matching",
+      "question": "Match the primary method of advancing DoD goals to its corresponding description.",
+      "prompts": [
+        "Integrated deterrence",
+        "Campaigning",
+        "Building enduring advantages"
+      ],
+      "choices": [
+        "Working seamlessly across warfighting domains, theaters, and instruments of national power.",
+        "Operating forces and aligning activities to undermine competitor coercion and complicate their military preparations.",
+        "Undertaking reforms to accelerate force development, acquire technology, and invest in personnel."
+      ],
+      "answer": [
+        {
+          "prompt": "Integrated deterrence",
+          "choices": [
+            "Working seamlessly across warfighting domains, theaters, and instruments of national power."
+          ]
+        },
+        {
+          "prompt": "Campaigning",
+          "choices": [
+            "Operating forces and aligning activities to undermine competitor coercion and complicate their military preparations."
+          ]
+        },
+        {
+          "prompt": "Building enduring advantages",
+          "choices": [
+            "Undertaking reforms to accelerate force development, acquire technology, and invest in personnel."
+          ]
+        }
+      ],
+      "explanation": "Integrated deterrence relies on a united front across all domains; campaigning is the active synchronization of operations to outmaneuver adversaries; and building enduring advantages focuses on institutional improvements in tech and human capital."
+    },
+    {
+      "id": 9,
+      "type": "multiple_choice",
+      "question": "What ultimate capability backstops the strategy of integrated deterrence?",
+      "options": {
+        "A": "A robust cyber-defense network",
+        "B": "A safe, secure, and effective nuclear deterrent",
+        "C": "An impenetrable missile defense shield",
+        "D": "A global network of law enforcement agencies"
+      },
+      "answer": "B",
+      "explanation": "While integrated deterrence leverages all forms of national power and global alliances, its foundational guarantee is the U.S. nuclear arsenal. This ensures adversaries understand that extreme escalation will be met with overwhelming strategic consequences."
+    },
+    {
+      "id": 10,
+      "type": "multiple_response",
+      "question": "Which of the following are considered core 'vital interests' of the United States?",
+      "options": {
+        "A": "Security of the homeland",
+        "B": "Safety of Americans at home and abroad",
+        "C": "Economic prosperity",
+        "D": "Preservation of the American way of life",
+        "E": "Expansion of territorial borders"
+      },
+      "answer": ["A", "B", "C", "D"],
+      "explanation": "Vital interests are foundational goals necessary for national survival and are ideals the Nation is willing to sacrifice for. The text defines these as protecting the homeland, keeping citizens safe, maintaining economic prosperity, and preserving the nation's democratic way of life."
+    },
+    {
+      "id": 11,
+      "type": "true_false",
+      "question": "Under the whole of government approach, the instruments of national power are most effective when executed independently by siloed departments.",
+      "answer": false,
+      "explanation": "The instruments of national power (DIME-FIL) are most effective when they operate harmoniously. A 'whole of government' approach requires interagency coordination so that diplomatic, military, and economic efforts reinforce rather than contradict one another."
+    },
+    {
+      "id": 12,
+      "type": "matching",
+      "question": "Match the instrument of national power (DIME-FIL) with its function.",
+      "prompts": ["Diplomatic", "Information", "Economic", "Financial"],
+      "choices": [
+        "The principal instrument for foreign engagement and soliciting support.",
+        "Communicates intent through every DoD action, word, and image.",
+        "Encourages growth and prevents crises by maintaining free access to global markets.",
+        "Denies specified groups access to formal funding networks via sanctions or tariffs."
+      ],
+      "answer": [
+        {
+          "prompt": "Diplomatic",
+          "choices": [
+            "The principal instrument for foreign engagement and soliciting support."
+          ]
+        },
+        {
+          "prompt": "Information",
+          "choices": [
+            "Communicates intent through every DoD action, word, and image."
+          ]
+        },
+        {
+          "prompt": "Economic",
+          "choices": [
+            "Encourages growth and prevents crises by maintaining free access to global markets."
+          ]
+        },
+        {
+          "prompt": "Financial",
+          "choices": [
+            "Denies specified groups access to formal funding networks via sanctions or tariffs."
+          ]
+        }
+      ],
+      "explanation": "Each instrument targets a specific lever of influence: Diplomacy builds relationships; Information shapes perceptions; Economics builds foundational wealth and stability; and Finance acts as a targeted tool to restrict adversary funding and resources."
+    },
+    {
+      "id": 13,
+      "type": "short_answer",
+      "question": "What acronym is used to describe the primary activities and instruments of national power?",
+      "answer": "DIME-FIL",
+      "explanation": "DIME-FIL stands for Diplomatic, Informational, Military, Economic, Financial, Intelligence, and Law Enforcement. This framework categorizes the various interconnected tools the U.S. government uses to achieve its strategic objectives."
+    },
+    {
+      "id": 14,
+      "type": "fill_in_the_blank",
+      "question": "The _____ instrument of national power collects ambiguous data and translates it into coherent information about the environment and future capabilities of actors.",
+      "answer": ["Intelligence"],
+      "explanation": "The Intelligence sector acts as the nation's sensory system, taking raw, unstructured data from various mediums and synthesizing it into actionable insights to give commanders and policymakers a strategic advantage."
+    },
+    {
+      "id": 15,
+      "type": "multiple_choice",
+      "question": "Which U.S. Government department is specifically noted for working with international institutions to encourage economic growth and prevent financial crises?",
+      "options": {
+        "A": "Department of Defense",
+        "B": "Department of State",
+        "C": "Department of the Treasury",
+        "D": "Department of Homeland Security"
+      },
+      "answer": "C",
+      "explanation": "The Department of the Treasury takes the lead in the 'Economic' instrument of national power, partnering with foreign governments and financial institutions to ensure a strong global economy, which inherently enables a strong national defense."
+    },
+    {
+      "id": 16,
+      "type": "short_answer",
+      "question": "Which historical conflict is cited as a prime example of the U.S. successfully employing the instruments of national power to achieve strategic effects?",
+      "answer": "The first Gulf War",
+      "explanation": "During the first Gulf War, President George H. W. Bush effectively combined diplomacy to build a broad international coalition with measured military force to expel Saddam Hussein's forces from Kuwait while minimizing casualties."
+    },
+    {
+      "id": 17,
+      "type": "true_false",
+      "question": "The Military instrument of national power is strictly limited to fighting and winning wars.",
+      "answer": false,
+      "explanation": "While fighting and winning wars is its ultimate purpose, the military instrument is also heavily involved in peacetime and stabilizing operations, including humanitarian aid, disaster assistance, and building the capacities of partner nation militaries."
+    },
+    {
+      "id": 18,
+      "type": "multiple_choice",
+      "question": "How are transboundary threats, such as climate change and pandemics, affecting the Department of Defense?",
+      "options": {
+        "A": "They are forcing a reduction in the size of the active-duty military.",
+        "B": "They are transforming the operational context and placing increased pressure on the Joint Force.",
+        "C": "They are shifting focus entirely away from traditional kinetic threats.",
+        "D": "They have minimal impact on military operations."
+      },
+      "answer": "B",
+      "explanation": "Transboundary threats alter the environments in which troops operate and can strain logistics and readiness. The DoD must adapt to these pressures to ensure the Joint Force remains capable despite evolving environmental and biological challenges."
+    },
+    {
+      "id": 19,
+      "type": "ordering",
+      "question": "Order the four Defense priorities as they are listed sequentially in the 2022 National Defense Strategy.",
+      "unordered_items": [
+        "Building a resilient Joint Force and defense ecosystem.",
+        "Deterring aggression, while being prepared to prevail in conflict when necessary.",
+        "Defending the homeland, paced to the growing multi-domain threat posed by the PRC.",
+        "Deterring strategic attacks against the United States, Allies, and partners."
+      ],
+      "answer": [
+        "Defending the homeland, paced to the growing multi-domain threat posed by the PRC.",
+        "Deterring strategic attacks against the United States, Allies, and partners.",
+        "Deterring aggression, while being prepared to prevail in conflict when necessary.",
+        "Building a resilient Joint Force and defense ecosystem."
+      ],
+      "explanation": "The DoD prioritizes its defense goals sequentially: first securing the homeland (specifically against China), second deterring major strategic attacks, third deterring regional aggression (focusing on China then Russia), and fourth ensuring the long-term resilience of the force itself."
+    },
+    {
+      "id": 20,
+      "type": "multiple_choice",
+      "question": "When preparing to deter aggression and prevail in conflict, which region and competitor does the Department of Defense prioritize first?",
+      "options": {
+        "A": "The Russia challenge in Europe",
+        "B": "The Iran challenge in the Middle East",
+        "C": "The PRC challenge in the Indo-Pacific",
+        "D": "Violent extremist organizations in Africa"
+      },
+      "answer": "C",
+      "explanation": "The NDS explicitly prioritizes the challenge posed by the People's Republic of China in the Indo-Pacific region as its primary focus for deterring aggression, followed subsequently by the Russian challenge in Europe."
+    },
+    {
+      "id": 21,
+      "type": "multiple_response",
+      "question": "Which of the following are required characteristics of the future Joint Force, linking operational concepts to strategic objectives?",
+      "options": {
+        "A": "Lethal",
+        "B": "Resilient",
+        "C": "Stationary",
+        "D": "Agile",
+        "E": "Independent"
+      },
+      "answer": ["A", "B", "D"],
+      "explanation": "To successfully achieve strategic objectives against modern threats, the DoD requires a Joint Force that is highly adaptable and robust. The specific traits outlined in the text are lethal, resilient, sustainable, survivable, agile, and responsive."
+    },
+    {
+      "id": 22,
+      "type": "true_false",
+      "question": "The instruments of national power are only used in a proactive manner to shape the behavior of foreign nations.",
+      "answer": false,
+      "explanation": "DIME-FIL instruments are applied both proactively (e.g., investing in alliances) and retaliatorily. Retaliatory applications, such as economic sanctions or military force, are crucial for punishing bad actors and preventing further aggression."
+    },
+    {
+      "id": 23,
+      "type": "short_answer",
+      "question": "What does the Department of Defense consider to be its most valuable resource?",
+      "answer": "The extraordinary people of the Department",
+      "explanation": "When building enduring advantages, the DoD emphasizes that beyond acquiring advanced technology or developing new tactics, investing in its personnel is paramount, as human capital ultimately drives all operational success."
+    },
+    {
+      "id": 24,
+      "type": "multiple_choice",
+      "question": "What is the relationship between the National Security Strategy (NSS) and individual agency strategies?",
+      "options": {
+        "A": "The NSS replaces all individual agency strategies.",
+        "B": "Agencies refine the broad objectives of the NSS into more detailed guidance for their own organizations.",
+        "C": "Agencies create the NSS based on their independent strategies.",
+        "D": "The NSS dictates tactical day-to-day operations for every agency."
+      },
+      "answer": "B",
+      "explanation": "The President establishes overarching national goals in the NSS. Individual departments, like the DoD, then take these high-level objectives and translate them into specific, actionable strategies (like the NDS) tailored to their unique capabilities."
+    },
+    {
+      "id": 25,
+      "type": "matching",
+      "question": "Match the broad objective to the overarching strategy or framework that mandates it.",
+      "prompts": [
+        "National Security Strategy (NSS)",
+        "National Defense Strategy (NDS)",
+        "DIME-FIL"
+      ],
+      "choices": [
+        "Emphasizes broad objectives to address enduring and emerging threats to U.S. vital interests.",
+        "Sets out how the DoD will contribute to safeguarding vital interests and outlines four defense priorities.",
+        "The spectrum of instruments employed by the U.S. government to achieve strategic objectives."
+      ],
+      "answer": [
+        {
+          "prompt": "National Security Strategy (NSS)",
+          "choices": [
+            "Emphasizes broad objectives to address enduring and emerging threats to U.S. vital interests."
+          ]
+        },
+        {
+          "prompt": "National Defense Strategy (NDS)",
+          "choices": [
+            "Sets out how the DoD will contribute to safeguarding vital interests and outlines four defense priorities."
+          ]
+        },
+        {
+          "prompt": "DIME-FIL",
+          "choices": [
+            "The spectrum of instruments employed by the U.S. government to achieve strategic objectives."
+          ]
+        }
+      ],
+      "explanation": "The NSS provides the President's overarching vision for national security. The NDS is the DoD's specific plan for military contribution to that vision. DIME-FIL represents the actual tools and levers of power the government uses to execute these strategies."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+work/
+.env*
+!.env.example
+.git/
+node_modules/
+build/
+.nitro/
+.data/
+.swc/
+test-results/
+playwright-report/
+coverage/

@@ -1,0 +1,10 @@
+{
+  "title": "Military Studies",
+  "revision": 1,
+  "defaultFavorites": [
+    {
+      "type": "category",
+      "path": "Military Studies"
+    }
+  ]
+}

@@ -1,0 +1,322 @@
+{
+  "title": "Doctrine, Strategy, and Operations Set 2",
+  "category": "Military Studies/Recap",
+  "cards": [
+    {
+      "id": 1,
+      "type": "true_false",
+      "question": "Control of the air is generally considered an optional advantage rather than a necessary precondition for controlling the surface domains.",
+      "answer": false,
+      "explanation": "Air superiority is a necessary precondition for control of the surface. Defeating or neutralizing enemy airpower is the first mission of an air force because friendly operations in all other domains (land, maritime) are highly vulnerable if the enemy has freedom of action in the air."
+    },
+    {
+      "id": 2,
+      "type": "multiple_choice",
+      "question": "In the context of Agile Combat Employment (ACE), what are 'threat timelines' based on?",
+      "options": {
+        "A": "The time it takes for allied forces to deploy from the continental United States",
+        "B": "How long an adversary needs to find, fix, track, target, engage, and assess",
+        "C": "The time required to establish a major centralized air base",
+        "D": "The expiration of a diplomatic treaty or agreement"
+      },
+      "answer": "B",
+      "explanation": "Threat timelines act as planning factors based on the adversary's 'kill chain.' By understanding how long it takes an enemy to find, target, and assess a strike, friendly forces can maneuver proactively or reactively within that window to survive and generate combat power."
+    },
+    {
+      "id": 3,
+      "type": "fill_in_the_blank",
+      "question": "The 2022 National Defense Strategy (NDS) advances its goals through three primary methods: integrated deterrence, campaigning, and building enduring ______.",
+      "answer": ["advantages"],
+      "explanation": "Building enduring advantages involves developing the future Joint Force by investing in new technologies, force development, and personnel, ensuring the military outpaces strategic competitors in the long term."
+    },
+    {
+      "id": 4,
+      "type": "matching",
+      "question": "Match the joint mission command attribute to its definition.",
+      "prompts": ["Trust", "Understanding", "Intent"],
+      "choices": [
+        "Reliance on integrity, strength, and ability across the chain of command",
+        "Built through dialogue, feedback, relationships, and awareness of partner capabilities",
+        "The desired end state and unified focus that lets subordinates act with disciplined initiative"
+      ],
+      "answer": [
+        {
+          "prompt": "Trust",
+          "choices": [
+            "Reliance on integrity, strength, and ability across the chain of command"
+          ]
+        },
+        {
+          "prompt": "Understanding",
+          "choices": [
+            "Built through dialogue, feedback, relationships, and awareness of partner capabilities"
+          ]
+        },
+        {
+          "prompt": "Intent",
+          "choices": [
+            "The desired end state and unified focus that lets subordinates act with disciplined initiative"
+          ]
+        }
+      ],
+      "explanation": "Mission command requires these three attributes to function. Commanders must trust their subordinates, build a shared operational understanding, and provide clear intent so that isolated or dispersed units can make independent decisions that still achieve the overall goal."
+    },
+    {
+      "id": 5,
+      "type": "multiple_response",
+      "question": "Depending on their current activation status, Air National Guard forces may operate under which of the following authorities?",
+      "options": {
+        "A": "Title 10 federal status under military commanders up to the President",
+        "B": "Administrative Control (ADCON) of the United States Space Force",
+        "C": "Title 32 state active duty under the state's Adjutant General and governor",
+        "D": "Direct Combatant Command (COCOM) authority assigned by the UN Security Council"
+      },
+      "answer": ["A", "C"],
+      "explanation": "The National Guard has a unique dual-mission status. They operate under Title 10 when federalized (reporting up to the President) and under Title 32 or state active duty when responding to state-level missions (reporting to the governor via the Adjutant General)."
+    },
+    {
+      "id": 6,
+      "type": "ordering",
+      "question": "Order the following steps of an adversary's threat timeline (kill chain) from the first action to the final action.",
+      "unordered_items": ["Assess", "Find", "Engage", "Track"],
+      "answer": ["Find", "Track", "Engage", "Assess"],
+      "explanation": "An adversary's targeting process generally follows the sequence of finding a target, fixing/tracking its movement, targeting and engaging it with a weapon, and finally assessing the battle damage. ACE maneuvers forces inside this timeline to break the chain."
+    },
+    {
+      "id": 7,
+      "type": "short_answer",
+      "question": "How does Intelligence, Surveillance, and Reconnaissance (ISR) specifically support Agile Combat Employment (ACE)?",
+      "answer": "ISR provides vital force protection intelligence and counterintelligence to safeguard dispersed forces.",
+      "explanation": "Because ACE relies on dispersing smaller teams to numerous locations with minimal dedicated base defense, commanders heavily depend on ISR to detect local threats and enemy surveillance, ensuring these vulnerable outposts are not compromised."
+    },
+    {
+      "id": 8,
+      "type": "multiple_choice",
+      "question": "Which instrument of national power is being utilized when the Armed Forces conduct humanitarian assistance and build partner capacity abroad?",
+      "options": {
+        "A": "Diplomatic",
+        "B": "Informational",
+        "C": "Military",
+        "D": "Economic"
+      },
+      "answer": "C",
+      "explanation": "While it may involve diplomacy, the physical use of the Armed Forces to distribute aid or train foreign militaries falls under the Military instrument of national power. The military instrument goes beyond simply fighting wars; it actively supports shaping environments and assuring partners."
+    },
+    {
+      "id": 9,
+      "type": "true_false",
+      "question": "Combatant Commanders (CCDRs) exercise Administrative Control (ADCON) over their assigned forces to ensure they are properly organized, trained, and equipped.",
+      "answer": false,
+      "explanation": "Combatant Commanders exercise operational control (COCOM/OPCON) to execute missions. Administrative Control (ADCON)—which handles organizing, training, and equipping—remains with the Secretaries of the Military Departments and their respective Service chiefs."
+    },
+    {
+      "id": 10,
+      "type": "multiple_response",
+      "question": "Which of the following are considered core Air Force principles of mission command?",
+      "options": {
+        "A": "Provide clear commander's intent",
+        "B": "Accept prudent risk",
+        "C": "Centralize all tactical decision-making",
+        "D": "Exercise disciplined initiative"
+      },
+      "answer": ["A", "B", "D"],
+      "explanation": "Mission command thrives on decentralizing execution, not centralizing it. It relies on commanders providing clear intent and accepting prudent risk, which empowers subordinates to exercise disciplined initiative when circumstances change or communications fail."
+    },
+    {
+      "id": 11,
+      "type": "matching",
+      "question": "Match the specific DIME-FIL instrument to its associated action or definition.",
+      "prompts": ["Intelligence", "Law Enforcement", "Economic"],
+      "choices": [
+        "Collection and interpretation of data about the environment, capabilities, and relevant actors",
+        "Securing the homeland, detaining criminals, and supporting partners through intergovernmental agencies",
+        "Use of markets, resources, and policy to support national welfare and defense"
+      ],
+      "answer": [
+        {
+          "prompt": "Intelligence",
+          "choices": [
+            "Collection and interpretation of data about the environment, capabilities, and relevant actors"
+          ]
+        },
+        {
+          "prompt": "Law Enforcement",
+          "choices": [
+            "Securing the homeland, detaining criminals, and supporting partners through intergovernmental agencies"
+          ]
+        },
+        {
+          "prompt": "Economic",
+          "choices": [
+            "Use of markets, resources, and policy to support national welfare and defense"
+          ]
+        }
+      ],
+      "explanation": "DIME-FIL tools address different aspects of national power. Intelligence provides decision-makers with crucial data advantages, Law Enforcement enforces legal frameworks domestically and internationally, and Economics leverages broader resource bases and market forces."
+    },
+    {
+      "id": 12,
+      "type": "fill_in_the_blank",
+      "question": "Mission command is defined in joint doctrine as the conduct of military operations through decentralized execution based on ______-______ orders.",
+      "answer": ["mission", "type"],
+      "explanation": "Mission-type orders tell a subordinate *what* needs to be achieved (the goal and intent) rather than *how* to achieve it, giving them the flexibility to adapt their tactics based on the ground reality."
+    },
+    {
+      "id": 13,
+      "type": "short_answer",
+      "question": "Define 'Information advantage' within the context of Joint All-Domain Operations (JADO).",
+      "answer": "Information advantage is a favorable condition in the information environment that supports the commander's objectives.",
+      "explanation": "In modern operations, controlling the narrative, protecting friendly data, and disrupting adversary networks creates a strategic upper hand. This favorable condition allows commanders to make faster, better decisions while degrading the enemy's ability to do the same."
+    },
+    {
+      "id": 14,
+      "type": "multiple_choice",
+      "question": "On the competition continuum, what is a primary focus of 'Cooperation'?",
+      "options": {
+        "A": "Establishing, shaping, and refining relationships to pursue policy objectives",
+        "B": "Gaining leverage to defeat a peer adversary's global influence",
+        "C": "Imposing will through direct kinetic strikes",
+        "D": "Conducting unacknowledged offensive cyberspace operations"
+      },
+      "answer": "A",
+      "explanation": "Cooperation occurs when the U.S. works with partners and allies to build security, conduct joint exercises, or provide humanitarian aid. It is heavily focused on assurance and building relationships, rather than adversarial leveraging or armed conflict."
+    },
+    {
+      "id": 15,
+      "type": "true_false",
+      "question": "The nuclear enterprise relies exclusively on the military instrument of national power to achieve strategic deterrence.",
+      "answer": false,
+      "explanation": "Nuclear deterrence requires a whole-of-government approach using multiple DIME-FIL instruments. While the military provides the actual weapons, deterrence also heavily depends on diplomatic signaling, intelligence, economic pressure, and messaging (informational) to effectively convince adversaries that aggression is too costly."
+    },
+    {
+      "id": 16,
+      "type": "multiple_response",
+      "question": "According to the documents, which of the following are capabilities provided by space systems that act as force multipliers?",
+      "options": {
+        "A": "Weather and navigation data",
+        "B": "Direct kinetic anti-aircraft fires",
+        "C": "Ballistic missile launch monitoring",
+        "D": "Secure communications"
+      },
+      "answer": ["A", "C", "D"],
+      "explanation": "Space assets multiply the effectiveness of the entire Joint Force by providing critical support functions like GPS navigation, secure communications, threat warning, and satellite C2. Space systems do not currently provide direct kinetic anti-aircraft fires."
+    },
+    {
+      "id": 17,
+      "type": "ordering",
+      "question": "Order the three levels of warfare from the most localized, specific execution to the broadest policy and strategy level.",
+      "unordered_items": [
+        "Operational Level",
+        "Strategic Level",
+        "Tactical Level"
+      ],
+      "answer": ["Tactical Level", "Operational Level", "Strategic Level"],
+      "explanation": "The tactical level focuses on specific battles and immediate engagements (localized execution). The operational level links those tactics into broader campaigns. The strategic level integrates those campaigns into overarching national policy and global objectives."
+    },
+    {
+      "id": 18,
+      "type": "multiple_choice",
+      "question": "How does Rapid Global Mobility support domestic missions?",
+      "options": {
+        "A": "By conducting offensive cyber defense on domestic networks",
+        "B": "Through capabilities like airlift and aeromedical evacuation during crises",
+        "C": "By enforcing domestic laws through posse comitatus exceptions",
+        "D": "By establishing a permanent defensive perimeter around the homeland"
+      },
+      "answer": "B",
+      "explanation": "Rapid global mobility isn't just for projecting power overseas. In domestic scenarios, such as natural disasters or national emergencies, mobility forces provide critical logistical support, airlift supplies, and perform aeromedical evacuations."
+    },
+    {
+      "id": 19,
+      "type": "matching",
+      "question": "Match the ACE-related term to its definition.",
+      "prompts": ["Agile", "Proactive maneuver", "Reactive maneuver"],
+      "choices": [
+        "Able to outpace adversary action through movement and maneuver to achieve commander's intent",
+        "Moving forces before enemy action to assure allies, shape perceptions, or gain advantage",
+        "Moving forces in response to observed, anticipated, or realized enemy aggression"
+      ],
+      "answer": [
+        {
+          "prompt": "Agile",
+          "choices": [
+            "Able to outpace adversary action through movement and maneuver to achieve commander's intent"
+          ]
+        },
+        {
+          "prompt": "Proactive maneuver",
+          "choices": [
+            "Moving forces before enemy action to assure allies, shape perceptions, or gain advantage"
+          ]
+        },
+        {
+          "prompt": "Reactive maneuver",
+          "choices": [
+            "Moving forces in response to observed, anticipated, or realized enemy aggression"
+          ]
+        }
+      ],
+      "explanation": "Understanding these definitions is key to the ACE concept. Agility is the overarching ability to outpace the enemy, which is applied through either acting first (proactive) to shape the environment or acting in response (reactive) to survive an incoming threat."
+    },
+    {
+      "id": 20,
+      "type": "fill_in_the_blank",
+      "question": "JADC2, which translates decisions into action across all domains with mission partners, stands for Joint All-Domain ______ and ______.",
+      "answer": ["Command", "Control"],
+      "explanation": "JADC2 represents the technological and operational modernization of Command and Control (C2), linking sensors from all branches and domains to any shooter, speeding up the military's ability to act inside an adversary's decision cycle."
+    },
+    {
+      "id": 21,
+      "type": "true_false",
+      "question": "The Joint Chiefs of Staff, including the Chairman, have direct operational control over the Combatant Commanders.",
+      "answer": false,
+      "explanation": "The Joint Chiefs of Staff serve as high-level military advisors. They are explicitly not in the operational chain of command, which flows directly from the President, to the Secretary of Defense, directly down to the Combatant Commanders."
+    },
+    {
+      "id": 22,
+      "type": "multiple_choice",
+      "question": "According to the 2022 National Defense Strategy (NDS), what is the definition of 'campaigning'?",
+      "options": {
+        "A": "Running public affairs initiatives to increase military recruitment",
+        "B": "The exclusive use of kinetic fires to degrade enemy forces during war",
+        "C": "Persistent operations, activities, and investments that align military action with other instruments of national power",
+        "D": "The administrative process of assigning forces to Combatant Commanders"
+      },
+      "answer": "C",
+      "explanation": "Campaigning refers to continuous, deliberate actions taken across the competition continuum—not just in wartime. It synchronizes military maneuvers, exercises, and presence with diplomatic and economic efforts to steadily outcompete adversaries over time."
+    },
+    {
+      "id": 23,
+      "type": "multiple_response",
+      "question": "Which of the following activities are examples of 'Cooperation' on the competition continuum?",
+      "options": {
+        "A": "Arms control operations",
+        "B": "Nuclear deterrence posturing",
+        "C": "National Guard Bureau State Partnership Programs",
+        "D": "Foreign internal defense"
+      },
+      "answer": ["A", "C", "D"],
+      "explanation": "Cooperation involves working with other actors toward shared policy goals. Arms control, foreign internal defense, and State Partnership Programs build and refine relationships. Nuclear deterrence, however, falls under adversarial competition below armed conflict."
+    },
+    {
+      "id": 24,
+      "type": "short_answer",
+      "question": "Why does Agile Combat Employment (ACE) intentionally shift operations away from large, centralized physical infrastructure?",
+      "answer": "To make enemy planning much harder by presenting them with a dispersed network that forces them to track multiple locations, targets, and timelines simultaneously.",
+      "explanation": "Large, centralized bases are highly vulnerable to modern long-range precision fires because their static nature makes them easy to target. By dispersing forces across many smaller locations, ACE drastically complicates the enemy's kill chain and increases the survivability of U.S. forces."
+    },
+    {
+      "id": 25,
+      "type": "multiple_choice",
+      "question": "What is the primary purpose of the National Security Strategy (NSS)?",
+      "options": {
+        "A": "To outline how the Department of Defense organizes and equips its forces",
+        "B": "To express the President's broad national security objectives",
+        "C": "To serve as the operational plan for a specific regional combatant command",
+        "D": "To provide tactical doctrine for Joint All-Domain Operations"
+      },
+      "answer": "B",
+      "explanation": "The National Security Strategy (NSS) is the top-level document issued by the President that sets the nation's broad security goals. The National Defense Strategy (NDS) then takes those broad goals and translates them into a strategic plan for the Department of Defense."
+    }
+  ]
+}
