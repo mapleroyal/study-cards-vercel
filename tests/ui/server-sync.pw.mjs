@@ -339,7 +339,10 @@ test("reader refreshes server edits and leaves a deleted set", async ({
   );
   await expect(page).toHaveURL(/\/$/);
   await expect(
-    page.getByRole("heading", { name: "Study sets", exact: true }),
+    page.getByRole("link", { name: "Generate cards", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Import set", exact: true }),
   ).toBeVisible();
 });
 

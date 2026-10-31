@@ -84,8 +84,11 @@ export function createApplication({ runtime = getRuntime } = {}) {
   let routerPromise;
   app.use(async (req, res, next) => {
     routerPromise ??= Promise.resolve(runtime())
-      .then(({ store, sources, generation, settings }) => {
+      .then(({ store, sources, generation, settings, models }) => {
         const router = express.Router();
+        router.get("/api/models", async (_request, response) =>
+          response.json(await models.list()),
+        );
         router.get("/api/settings", async (_request, response) =>
           response.json(await settings.read()),
         );

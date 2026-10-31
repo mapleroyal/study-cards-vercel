@@ -1,6 +1,9 @@
 import * as React from "react";
 import { toast } from "sonner";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
+import { PlusIcon } from "@primer/octicons-react";
+import { OpenRouterKeyDialog } from "@/components/study/openrouter-key-dialog";
+import { ModelPicker } from "@/components/study/model-picker";
 import { StudyAppHeader } from "@/components/study/study-app-header";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,6 +37,8 @@ export function meta() {
 }
 export default function GenerateRoute() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [keyDialogOpen, setKeyDialogOpen] = React.useState(false);
   const [params, setParams] = useSearchParams();
   const jobId = params.get("job");
   const [mode, setMode] = React.useState("file");
@@ -49,23 +54,31 @@ export default function GenerateRoute() {
   const [error, setError] = React.useState(null);
   const [ready, setReady] = React.useState(false);
   const [settings, setSettings] = React.useState(null);
+  const [modelBusy, setModelBusy] = React.useState(false);
   const requestRef = React.useRef(null);
   const preparedRef = React.useRef(null);
   const fileInput = React.useRef(null);
+  const librarySignature = useStudySetsStore((state) =>
+    JSON.stringify(state.records.map(({ id, revision }) => [id, revision])),
+  );
+  const visibleJobs = jobs.filter(
+    (item) => item.status !== "completed" || item.resultRecord?.slug,
+  );
   const active = activeJobStatuses.has(job?.status);
   const selectedSource = sources.find((source) => source.id === sourceId);
 
   React.useEffect(() => {
+    if (ready && settings?.openRouterConfigured === false && !jobId) {
+      setKeyDialogOpen(true);
+    }
+  }, [ready, settings?.openRouterConfigured, jobId, location.key]);
+
+  React.useEffect(() => {
     let stopped = false;
-    Promise.all([
-      apiRequest("/api/sources"),
-      apiRequest("/api/generation/jobs"),
-      apiRequest("/api/settings"),
-    ])
-      .then(([sourceResult, jobResult, nextSettings]) => {
+    Promise.all([apiRequest("/api/sources"), apiRequest("/api/settings")])
+      .then(([sourceResult, nextSettings]) => {
         if (!stopped) {
           setSources(sourceResult.sources);
-          setJobs(jobResult.jobs);
           setSettings(nextSettings);
           setReady(true);
         }
@@ -79,6 +92,24 @@ export default function GenerateRoute() {
       stopped = true;
     };
   }, []);
+
+  React.useEffect(() => {
+    let stopped = false;
+    apiRequest("/api/generation/jobs")
+      .then((result) => {
+        if (!stopped) {
+          setJobs(result.jobs);
+        }
+      })
+      .catch((cause) => {
+        if (!stopped) {
+          setError(cause.message);
+        }
+      });
+    return () => {
+      stopped = true;
+    };
+  }, [librarySignature]);
 
   React.useEffect(() => {
     if (!jobId) {
@@ -101,9 +132,21 @@ export default function GenerateRoute() {
           ...current.filter((item) => item.id !== next.id),
         ]);
         if (next.status === "completed" && next.resultRecord?.slug) {
-          await useStudySetsStore.getState().load();
+          const records = await useStudySetsStore.getState().load();
           if (!stopped) {
-            navigate(`/sets/${next.resultRecord.slug}`, { replace: true });
+            const currentRecord = records.find(
+              (record) => record.id === next.resultRecord.id,
+            );
+            if (currentRecord) {
+              navigate(`/sets/${currentRecord.slug}`, { replace: true });
+            } else {
+              setJob({ ...next, resultRecord: null });
+              setJobs((current) =>
+                current.map((item) =>
+                  item.id === next.id ? { ...item, resultRecord: null } : item,
+                ),
+              );
+            }
           }
           return;
         }
@@ -123,6 +166,22 @@ export default function GenerateRoute() {
       clearTimeout(timer);
     };
   }, [jobId, navigate]);
+
+  async function saveModel(selection) {
+    setModelBusy(true);
+    setError(null);
+    try {
+      const next = await apiRequest("/api/settings", {
+        method: "PUT",
+        body: selection,
+      });
+      setSettings(next);
+    } catch (cause) {
+      setError(cause.message);
+    } finally {
+      setModelBusy(false);
+    }
+  }
 
   function chooseFile(next) {
     if (next && !/\.(pdf|txt|md)$/i.test(next.name)) {
@@ -173,6 +232,7 @@ export default function GenerateRoute() {
         questionCount: Number(count),
         cardTypes: types,
         model: settings?.model,
+        reasoningEffort: settings?.reasoningEffort,
       };
       const signature = JSON.stringify(body);
       if (requestRef.current?.signature !== signature) {
@@ -263,7 +323,11 @@ export default function GenerateRoute() {
             <div className="flex items-center gap-3">
               {active && <Spinner />}
               <p className="text-title-lg">
-                {job ? jobLabels[job.status] || job.status : "Loading…"}
+                {job?.status === "completed" && !job.resultRecord
+                  ? "Set deleted"
+                  : job
+                    ? jobLabels[job.status] || job.status
+                    : "Loading…"}
               </p>
             </div>
             {job?.error && (
@@ -283,7 +347,9 @@ export default function GenerateRoute() {
               ) : (
                 job && (
                   <>
-                    <Button onClick={retry}>Try again</Button>
+                    {job.status !== "completed" && (
+                      <Button onClick={retry}>Try again</Button>
+                    )}
                     <Button
                       variant="ghost"
                       onClick={() => {
@@ -300,7 +366,10 @@ export default function GenerateRoute() {
           </section>
         ) : (
           <form onSubmit={submit} className="flex flex-col gap-6">
-            <fieldset disabled={Boolean(busy) || !ready} className="contents">
+            <fieldset
+              disabled={Boolean(busy) || modelBusy || !ready}
+              className="contents"
+            >
               <div className="flex flex-col gap-3">
                 <ToggleGroup
                   type="single"
@@ -497,19 +566,41 @@ export default function GenerateRoute() {
                   required
                 />
               </div>
+              {settings && (
+                <section
+                  aria-label="Generation model"
+                  className="flex flex-col gap-3"
+                >
+                  <h2 className="text-title-md">Model</h2>
+                  <ModelPicker
+                    value={{
+                      model: settings.model,
+                      reasoningEffort: settings.reasoningEffort,
+                    }}
+                    onChange={saveModel}
+                    disabled={Boolean(busy) || modelBusy}
+                  />
+                </section>
+              )}
               {settings && !settings.openRouterConfigured && (
-                <p className="text-body-sm text-muted-foreground">
-                  <Link className="underline underline-offset-4" to="/settings">
-                    Add your OpenRouter key
-                  </Link>{" "}
-                  to generate cards.
-                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="self-start"
+                  onClick={() => setKeyDialogOpen(true)}
+                >
+                  Add API key
+                </Button>
               )}
               <Button
                 className="self-end"
-                disabled={!canSubmit || Boolean(busy)}
+                disabled={!canSubmit || Boolean(busy) || modelBusy}
               >
-                {busy && <Spinner />}
+                {busy ? (
+                  <Spinner />
+                ) : (
+                  <PlusIcon aria-hidden="true" />
+                )}
                 {busy || "Generate"}
               </Button>
             </fieldset>
@@ -520,10 +611,10 @@ export default function GenerateRoute() {
             {error}
           </p>
         )}
-        {jobs.length > 0 && (
+        {visibleJobs.length > 0 && (
           <section className="flex flex-col gap-2 border-t pt-5">
             <h2 className="text-title-md">Recent generations</h2>
-            {jobs.slice(0, 8).map((item) => (
+            {visibleJobs.slice(0, 8).map((item) => (
               <div
                 key={item.id}
                 className="flex items-center justify-between gap-3 py-1"
@@ -552,6 +643,11 @@ export default function GenerateRoute() {
           </section>
         )}
       </main>
+      <OpenRouterKeyDialog
+        open={keyDialogOpen}
+        onOpenChange={setKeyDialogOpen}
+        onSaved={setSettings}
+      />
     </div>
   );
 }

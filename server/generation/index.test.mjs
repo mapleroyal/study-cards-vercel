@@ -1,11 +1,15 @@
+import express from "express";
 import { randomUUID } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createGenerationService } from "./index.mjs";
 import { createSourceService } from "../sources.mjs";
 import { createTestStore } from "../test-helpers/store.mjs";
 import { createTestBlob } from "../test-helpers/blob.mjs";
+import { createTestModelCatalog } from "../test-helpers/models.mjs";
+import { DEFAULT_SELECTION } from "../models.mjs";
 
 const stores = [];
+const servers = [];
 const set = {
   title: "Aircraft",
   category: "Training",
@@ -46,6 +50,8 @@ async function setup(overrides = {}) {
     startWorkflow,
     cancelWorkflow,
     fetchImpl,
+    models: createTestModelCatalog(),
+    getSelection: async () => DEFAULT_SELECTION,
     ...overrides,
   });
   return {
@@ -65,10 +71,105 @@ async function setup(overrides = {}) {
   };
 }
 afterEach(async () => {
+  await Promise.all(
+    servers
+      .splice(0)
+      .map((server) => new Promise((resolve) => server.close(resolve))),
+  );
   await Promise.all(stores.splice(0).map((store) => store.close()));
 });
+async function requestJobs(generation) {
+  const app = express();
+  app.use(express.json());
+  app.use(generation.router);
+  const server = app.listen(0, "127.0.0.1");
+  servers.push(server);
+  await new Promise((resolve) => server.once("listening", resolve));
+  return async (path = "/jobs", body) => {
+    const httpResponse = await fetch(
+      `http://127.0.0.1:${server.address().port}${path}`,
+      {
+        method: body ? "POST" : "GET",
+        headers: { "Content-Type": "application/json" },
+        ...(body ? { body: JSON.stringify(body) } : {}),
+      },
+    );
+    expect(httpResponse.ok).toBe(true);
+    return httpResponse.json();
+  };
+}
 
 describe("durable generation jobs", () => {
+  it("snapshots the remembered model and effort so later setting changes cannot alter queued generation", async () => {
+    let selection = { ...DEFAULT_SELECTION };
+    const { generation, input, fetchImpl } = await setup({
+      getSelection: async () => selection,
+    });
+    const job = await generation.create(input);
+    expect(job).toMatchObject({
+      ...DEFAULT_SELECTION,
+      modelSnapshot: { maxCompletionTokens: 128000, reasoning: true },
+    });
+    selection = { model: "fixture/plain-text", reasoningEffort: "" };
+    await generation.runPrepareAndGenerate(job.id);
+    const payload = JSON.parse(fetchImpl.mock.calls[0][1].body);
+    expect(payload.model).toBe(DEFAULT_SELECTION.model);
+    expect(payload.reasoning).toEqual({ effort: "xhigh", exclude: true });
+    const next = await generation.create({
+      ...input,
+      mutationId: randomUUID(),
+    });
+    expect(next).toMatchObject({
+      ...selection,
+      modelSnapshot: { maxCompletionTokens: 8000, reasoning: false },
+    });
+  });
+
+  it("rejects unavailable models and unsupported efforts before queueing or spending", async () => {
+    const { generation, input, store, fetchImpl, startWorkflow } =
+      await setup();
+    for (const selection of [
+      { model: "fixture/missing" },
+      { model: "fixture/plain-text", reasoningEffort: "xhigh" },
+      { model: DEFAULT_SELECTION.model, reasoningEffort: "none" },
+    ]) {
+      await expect(
+        generation.create({ ...input, ...selection }),
+      ).rejects.toMatchObject({ status: 422 });
+    }
+    expect(await store.listRecords("jobs")).toHaveLength(0);
+    expect(startWorkflow).not.toHaveBeenCalled();
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("returns the original receipt after catalog failure, changed defaults or disconnected credentials", async () => {
+    const models = createTestModelCatalog();
+    const getSelection = vi.fn(async () => DEFAULT_SELECTION);
+    const getApiKey = vi.fn(async () => "fixture-only");
+    const { generation, input, startWorkflow } = await setup({
+      models,
+      getSelection,
+      getApiKey,
+    });
+    const first = await generation.create(input);
+    vi.spyOn(models, "resolve").mockRejectedValue(
+      new Error("Catalog unavailable"),
+    );
+    getSelection.mockResolvedValue({
+      model: "fixture/plain-text",
+      reasoningEffort: "",
+    });
+    getApiKey.mockResolvedValue(null);
+    expect(await generation.create(input)).toEqual(first);
+    expect(models.resolve).not.toHaveBeenCalled();
+    expect(getSelection).toHaveBeenCalledTimes(1);
+    expect(getApiKey).toHaveBeenCalledTimes(1);
+    expect(startWorkflow).toHaveBeenCalledTimes(1);
+    await expect(
+      generation.create({ ...input, model: "fixture/plain-text" }),
+    ).rejects.toMatchObject({ status: 409 });
+  });
+
   it("deduplicates retried requests and rejects conflicting reuse without imposing a 100-card cap", async () => {
     const { generation, store, input, startWorkflow } = await setup();
     const first = await generation.create({ ...input, questionCount: 101 });
@@ -133,6 +234,66 @@ describe("durable generation jobs", () => {
     await sources.remove(source.id);
     expect((await generation.runSave(job.id)).status).toBe("canceled");
     expect(await store.listStudySets()).toHaveLength(0);
+  });
+
+  it("projects completed job links from current sets after rename, deletion and Undo without changing audit history", async () => {
+    const { generation, input, store } = await setup();
+    const job = await generation.create(input);
+    await generation.runPrepareAndGenerate(job.id);
+    const completed = await generation.runSave(job.id);
+    const history = await store.getRecord("jobs", job.id);
+    const request = await requestJobs(generation);
+    const setId = completed.resultRecord.id;
+    const renamed = (
+      await store.updateStudySet(setId, {
+        title: "Flight controls",
+        category: "Aviation",
+      })
+    ).record;
+    expect((await request()).jobs[0].resultRecord).toEqual(renamed);
+    expect((await request(`/jobs/${job.id}`)).job.resultRecord).toEqual(
+      renamed,
+    );
+
+    const deletion = await store.deleteStudySet(setId);
+    expect((await request()).jobs[0]).toMatchObject({
+      status: "completed",
+      resultRecord: null,
+    });
+    expect((await request(`/jobs/${job.id}`)).job.resultRecord).toBeNull();
+    expect((await request("/jobs", input)).job.resultRecord).toBeNull();
+    expect(
+      (await request(`/jobs/${job.id}/cancel`, {})).job.resultRecord,
+    ).toBeNull();
+    expect(await store.getRecord("jobs", job.id)).toEqual(history);
+
+    await store.undoChange(deletion.mutationId);
+    const restored = await store.getStudySet(setId);
+    expect((await request()).jobs[0].resultRecord).toEqual(restored);
+    expect((await request(`/jobs/${job.id}`)).job.resultRecord).toEqual(
+      restored,
+    );
+    expect(restored.rawSet.title).toBe("Flight controls");
+    expect(await store.getRecord("jobs", job.id)).toEqual(history);
+  });
+
+  it("does not revive a deleted generation link when another set reuses its slug or ID-shaped slug", async () => {
+    const { generation, input, store } = await setup();
+    const job = await generation.create(input);
+    await generation.runPrepareAndGenerate(job.id);
+    const completed = await generation.runSave(job.id);
+    await store.deleteStudySet(completed.resultRecord.id);
+    const replacement = await store.createStudySet(set, {
+      slug: completed.resultRecord.slug,
+    });
+    expect(replacement.record.id).not.toBe(completed.resultRecord.id);
+    await store.createStudySet(
+      { ...set, title: "ID-shaped slug" },
+      { slug: completed.resultRecord.id },
+    );
+    const request = await requestJobs(generation);
+    expect((await request()).jobs[0].resultRecord).toBeNull();
+    expect((await request(`/jobs/${job.id}`)).job.resultRecord).toBeNull();
   });
 
   it("allows only one simultaneous worker to make a paid request", async () => {

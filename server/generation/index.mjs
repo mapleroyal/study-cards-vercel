@@ -5,10 +5,7 @@ import {
   supportedCardTypes,
   validateGeneratedStudySet,
 } from "../../shared/study-set-validation.js";
-import {
-  DEFAULT_GENERATION_MODEL,
-  generateWithOpenRouter,
-} from "./openrouter.mjs";
+import { generateWithOpenRouter } from "./openrouter.mjs";
 
 const terminal = new Set(["completed", "failed", "canceled"]);
 const now = () => new Date().toISOString();
@@ -25,6 +22,7 @@ const inputSchema = z
       .default(25),
     cardTypes: z.array(z.enum(supportedCardTypes)).min(1),
     model: z.string().trim().min(1).optional(),
+    reasoningEffort: z.string().trim().optional(),
     category: z.string().trim().optional(),
     mutationId: z.string().uuid().optional(),
   })
@@ -46,7 +44,8 @@ export function createGenerationService({
   startWorkflow,
   cancelWorkflow = async () => {},
   fetchImpl = fetch,
-  defaultModel = DEFAULT_GENERATION_MODEL,
+  models,
+  getSelection,
 }) {
   async function inspect(id) {
     const job = await store.getRecord("jobs", id);
@@ -79,47 +78,86 @@ export function createGenerationService({
   }
   async function create(input) {
     const options = inputSchema.parse(input);
-    if (options.model && options.model !== defaultModel) {
-      throw problem("The model is configured by this deployment.");
-    }
-    options.model = defaultModel;
     options.cardTypes = [...new Set(options.cardTypes)];
     const { mutationId, ...settings } = options;
     const id = mutationId || randomUUID();
-    const requestHash = createHash("sha256")
-      .update(JSON.stringify(settings))
-      .digest("hex");
-    const source = await sources.inspect(settings.sourceId);
-    if (source.status === "uploading") {
-      throw problem("Wait for the document upload to finish.", 409);
-    }
-    if (!(await getApiKey())) {
-      throw problem("Connect an OpenRouter key in Settings.", 409);
-    }
-    let job = await store.updateRecord("jobs", id, (current) => {
-      if (current) {
-        if (current.requestHash !== requestHash) {
-          throw problem(
-            "This generation request was already used with different settings.",
-            409,
-          );
-        }
-        return undefined;
+    const existing = mutationId ? await store.getRecord("jobs", id) : null;
+    const hashSettings = (value) =>
+      createHash("sha256")
+        .update(
+          JSON.stringify({
+            sourceId: value.sourceId,
+            questionCount: value.questionCount,
+            cardTypes: value.cardTypes,
+            model: value.model,
+            reasoningEffort: value.reasoningEffort,
+            category: value.category,
+          }),
+        )
+        .digest("hex");
+    let job;
+    if (existing) {
+      // A lost response must remain retryable after preferences, credentials or
+      // the public catalog change. Compare against the original job's choices.
+      settings.model ??= existing.model;
+      settings.reasoningEffort ??=
+        settings.model === existing.model
+          ? existing.reasoningEffort
+          : undefined;
+      if (hashSettings(existing) !== hashSettings(settings)) {
+        throw problem(
+          "This generation request was already used with different settings.",
+          409,
+        );
       }
-      return {
-        id,
-        ...settings,
-        sourceName: source.name,
-        requestHash,
-        status: "queued",
-        createdAt: now(),
-        updatedAt: now(),
-        error: null,
-        resultRecord: null,
-        usage: [],
-        totalCost: 0,
-      };
-    });
+      job = existing;
+    } else {
+      const remembered = await getSelection();
+      const requestedModel = settings.model ?? remembered.model;
+      const selected = await models.resolve({
+        model: requestedModel,
+        reasoningEffort:
+          settings.reasoningEffort ??
+          (requestedModel === remembered.model
+            ? remembered.reasoningEffort
+            : undefined),
+      });
+      settings.model = selected.model;
+      settings.reasoningEffort = selected.reasoningEffort;
+      const requestHash = hashSettings(settings);
+      const source = await sources.inspect(settings.sourceId);
+      if (source.status === "uploading") {
+        throw problem("Wait for the document upload to finish.", 409);
+      }
+      if (!(await getApiKey())) {
+        throw problem("Connect an OpenRouter key in Settings.", 409);
+      }
+      job = await store.updateRecord("jobs", id, (current) => {
+        if (current) {
+          if (hashSettings(current) !== requestHash) {
+            throw problem(
+              "This generation request was already used with different settings.",
+              409,
+            );
+          }
+          return undefined;
+        }
+        return {
+          id,
+          ...settings,
+          sourceName: source.name,
+          modelSnapshot: selected.modelSnapshot,
+          requestHash,
+          status: "queued",
+          createdAt: now(),
+          updatedAt: now(),
+          error: null,
+          resultRecord: null,
+          usage: [],
+          totalCost: 0,
+        };
+      });
+    }
     if (job.status === "queued" && !job.runId) {
       try {
         const run = await startWorkflow(id);
@@ -260,22 +298,44 @@ export function createGenerationService({
     });
     return publicJob(await inspect(id));
   }
+  // Job snapshots are audit history. Browser links and display names follow the
+  // current canonical set, including deletion and Undo, without rewriting jobs.
+  function clientJob(job, currentResult) {
+    return {
+      ...publicJob(job),
+      resultRecord:
+        currentResult?.id && currentResult.id === job.resultRecord?.id
+          ? currentResult
+          : null,
+    };
+  }
+  async function readClientJob(job) {
+    const currentResult = job.resultRecord?.id
+      ? await store.getStudySet(job.resultRecord.id)
+      : null;
+    return clientJob(job, currentResult);
+  }
   const router = Router();
-  router.get("/jobs", async (_req, res) =>
+  router.get("/jobs", async (_req, res) => {
+    const [jobs, records] = await Promise.all([
+      store.listRecords("jobs"),
+      store.listStudySets(),
+    ]);
+    const recordsById = new Map(records.map((record) => [record.id, record]));
     res.json({
-      jobs: (await store.listRecords("jobs"))
+      jobs: jobs
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-        .map(publicJob),
-    }),
-  );
+        .map((job) => clientJob(job, recordsById.get(job.resultRecord?.id))),
+    });
+  });
   router.post("/jobs", async (req, res) =>
-    res.status(202).json({ job: await create(req.body) }),
+    res.status(202).json({ job: await readClientJob(await create(req.body)) }),
   );
   router.get("/jobs/:id", async (req, res) =>
-    res.json({ job: publicJob(await inspect(req.params.id)) }),
+    res.json({ job: await readClientJob(await inspect(req.params.id)) }),
   );
   router.post("/jobs/:id/cancel", async (req, res) =>
-    res.json({ job: await cancel(req.params.id) }),
+    res.json({ job: await readClientJob(await cancel(req.params.id)) }),
   );
   return {
     router,

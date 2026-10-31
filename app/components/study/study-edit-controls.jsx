@@ -42,6 +42,7 @@ import {
   refreshRuntimeState,
   getRuntimeSyncSnapshot,
 } from "@/lib/runtime-sync";
+import { downloadStudySet } from "@/lib/study-set-export";
 import { validateStudySetImport } from "@/lib/study-set-validation";
 import { useStudySetsStore } from "@/stores/use-study-sets-store";
 
@@ -138,6 +139,17 @@ export function SetEditMenu({ set }) {
             Rename
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => open("move")}>Move</DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              try {
+                downloadStudySet(record);
+              } catch (cause) {
+                toast.error(cause.message || "Could not export this set.");
+              }
+            }}
+          >
+            Export
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <Dialog

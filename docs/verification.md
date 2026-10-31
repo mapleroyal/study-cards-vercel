@@ -76,3 +76,23 @@ npm run build:vercel
 Use the Playwright project's light/dark desktop/narrow configurations for the retained interface. `PLAYWRIGHT_BASE_URL` targets an already-running app and `PLAYWRIGHT_STORAGE_STATE` may point to an ignored authenticated session file. The ordinary browser fixtures mock generation endpoints. Record real-provider tests separately.
 
 For disposable live checks, use the supplied synthetic source, create identifiable temporary sets, record results and cost, then delete test sets/sources through the application. Keep private uploads private and revoke the experimental provider key when qualification is finished.
+
+## Follow-up: study controls and first use (2026-10-31)
+
+- Export is available beside Rename and Move in both the reader and library. Downloads contain the saved study-set JSON, with the original card order and answers and without database metadata or progress.
+- Shuffle defaults on. Proportional scheduling plus a continuation-capacity bound spreads types while guaranteeing the smallest feasible maximum run of one type. Cards within each type are randomized. Global changes clear per-set overrides; local changes affect one set. Orders, overrides, answers and visible-card position survive the covered reload/tab scenarios.
+- The live OpenRouter catalog supplies compatible models and their supported reasoning levels. The initial selection is `anthropic/claude-sonnet-5.5` with `xhigh`; model/effort choices persist in owner settings, while jobs retain their original selection.
+- Generation history resolves results from current library IDs. Rename updates the result, deletion removes its Open set entry, Undo restores it, and an old generation URL does not navigate to a deleted or replacement set.
+- The empty library presents only two centered main actions: Generate cards and Import set. Generate actions share a + icon. First use opens a compact key dialog, then continues to the generation form. Settings can remove a key without losing model preferences or reactivating an environment fallback.
+
+Validation on the server:
+
+- Lint and production builds passed.
+- 254 unit/integration tests passed across 36 files.
+- All 72 application browser scenarios and 64 shared-component scenarios passed across light/dark desktop/narrow viewports. Focused final reruns covered first-use entry/removal, pending-state labels, and deleted-generation navigation.
+- First-use credential writes and removal were verified with fixtures; the owner's connected key was not removed or replaced.
+- A real Vercel generation with Sonnet 5.5/xhigh produced seven valid cards covering all seven types in one provider call. Reported cost: **$0.030006**. Its synthetic verification set and source were removed afterward.
+- The live history API passed Rename, Delete and Undo checks against that generated set. Both list and detail omit its result after deletion; the existing provider connection remained configured.
+
+
+The final deployed browser check also passed model/effort changes across Settings, reload and Generate; per-set/global shuffle with answer preservation; exact JSON downloads from both menus; and the deleted-generation URL. It wrote no key fields and made no inference calls. Only its own temporary study set was deleted afterward.

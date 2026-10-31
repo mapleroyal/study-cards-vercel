@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router";
 
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { SetChooser } from "@/components/study/set-chooser";
-import { Button } from "@/components/ui/button";
+import { GenerateCardsButton } from "@/components/study/generate-cards-button";
 import { cn } from "@/lib/utils";
 
 export const STUDY_APP_HEADER_HEIGHT = 56;
@@ -32,9 +32,7 @@ export function StudyAppHeader({
         </Link>
         <div className="flex items-center gap-1">
           {pathname !== "/" && pathname !== "/generate" && (
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/generate">Generate cards</Link>
-            </Button>
+            <GenerateCardsButton variant="ghost" size="sm" />
           )}
           <SetChooser activeSlug={activeSlug} onOpenChange={onMenuOpenChange} />
         </div>

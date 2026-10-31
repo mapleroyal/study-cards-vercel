@@ -18,6 +18,7 @@ import {
   SidebarRightIcon,
 } from "@hugeicons/core-free-icons";
 
+import { GenerateCardsButton } from "@/components/study/generate-cards-button";
 import { SetBrowserTree } from "@/components/study/set-browser-tree";
 import { StudySetImportDropzone } from "@/components/study/study-set-import-dropzone";
 import { ThemeModeSwitcher } from "@/components/theme/theme-mode-switcher";
@@ -281,11 +282,7 @@ export function SetChooser({ activeSlug, onOpenChange }) {
       ) : null}
       <div className="grid grid-cols-2 gap-2">
         <StudySetImportDropzone variant="compact" onImported={handleImported} />
-        <Button asChild variant="outline" size="sm">
-          <Link to="/generate" onClick={closePanel}>
-            Generate cards
-          </Link>
-        </Button>
+        <GenerateCardsButton variant="outline" size="sm" onClick={closePanel} />
       </div>
       {storageError ? (
         <p className="px-1 text-body-sm text-destructive">{storageError}</p>

@@ -59,7 +59,8 @@ export default defineConfig({
     ? undefined
     : [
         {
-          command: "npm run build && npm start",
+          command:
+            "npm run build && node --env-file-if-exists=.env.local build/server/index.mjs",
           env: {
             PORT: "4180",
             HOST: "127.0.0.1",

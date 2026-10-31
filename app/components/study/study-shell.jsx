@@ -6,21 +6,21 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ShuffleIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
-import { useStudyReaderStore } from "@/stores/use-study-reader-store";
+import {
+  isShuffleEnabled,
+  useStudyReaderStore,
+} from "@/stores/use-study-reader-store";
 import { getSetCategoryPath } from "@/lib/study-sets";
 import { useScrollCollapseProgress } from "@/hooks/use-scroll-collapse-progress";
 import * as React from "react";
 
 export function StudyShell({ set, children }) {
   const [menuPanelOpen, setMenuPanelOpen] = React.useState(false);
-  const questionOrder = useStudyReaderStore(
-    (state) => state.questionOrders[set.slug],
+  const shuffleEnabled = useStudyReaderStore((state) =>
+    isShuffleEnabled(state, set.slug),
   );
-  const shuffleQuestions = useStudyReaderStore(
-    (state) => state.shuffleQuestions,
-  );
-  const resetQuestionOrder = useStudyReaderStore(
-    (state) => state.resetQuestionOrder,
+  const setShuffleEnabled = useStudyReaderStore(
+    (state) => state.setShuffleEnabled,
   );
   const brandRowCollapseProgress = useScrollCollapseProgress({
     collapseDistance: STUDY_APP_HEADER_HEIGHT,
@@ -71,26 +71,19 @@ export function StudyShell({ set, children }) {
                 {set.cards.length} {set.cards.length === 1 ? "card" : "cards"}
               </span>
               {set.cards.length > 1 ? (
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label="Shuffle questions"
-                    onClick={() => shuffleQuestions(set.slug, set.cards)}
-                  >
-                    <HugeiconsIcon icon={ShuffleIcon} aria-hidden="true" />
-                    Shuffle
-                  </Button>
-                  {questionOrder ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => resetQuestionOrder(set.slug)}
-                    >
-                      Original order
-                    </Button>
-                  ) : null}
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Shuffle questions"
+                  aria-pressed={shuffleEnabled}
+                  className="aria-pressed:bg-muted aria-pressed:text-foreground"
+                  onClick={() =>
+                    setShuffleEnabled(set.slug, !shuffleEnabled, set.cards)
+                  }
+                >
+                  <HugeiconsIcon icon={ShuffleIcon} aria-hidden="true" />
+                  Shuffle
+                </Button>
               ) : null}
             </div>
           </div>

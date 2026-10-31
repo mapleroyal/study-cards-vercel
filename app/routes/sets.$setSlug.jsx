@@ -6,6 +6,8 @@ import { StudyCard } from "@/components/study/study-card";
 import { StudySetEndCap } from "@/components/study/study-set-end-cap";
 import {
   getOrderedStudyCards,
+  getQuestionOrder,
+  isShuffleEnabled,
   useStudyReaderStore,
 } from "@/stores/use-study-reader-store";
 import { formatPageTitle } from "@/lib/app-config";
@@ -38,6 +40,9 @@ export async function clientLoader({ params, request }) {
     records = await listStudySetRecords();
   } catch {
     const fallbackSet = getFallbackStudySet();
+    useStudyReaderStore
+      .getState()
+      .ensureQuestionOrder(fallbackSet.slug, fallbackSet.cards);
 
     return {
       records: [],
@@ -51,6 +56,9 @@ export async function clientLoader({ params, request }) {
   const localSet = selectLocalSetBySlug(records, params.setSlug);
 
   if (localSet) {
+    useStudyReaderStore
+      .getState()
+      .ensureQuestionOrder(localSet.slug, localSet.cards);
     return {
       records,
       setSlug: localSet.slug,
@@ -62,6 +70,9 @@ export async function clientLoader({ params, request }) {
 
   if (params.setSlug === fallbackSetSlug) {
     const fallbackSet = getFallbackStudySet();
+    useStudyReaderStore
+      .getState()
+      .ensureQuestionOrder(fallbackSet.slug, fallbackSet.cards);
 
     return {
       records,
@@ -81,6 +92,63 @@ export async function clientLoader({ params, request }) {
   throw redirect("/");
 }
 
+// Cards keep their React keys and answer state. Preserve the visible card's
+// position as well when this tab or another tab changes the shuffle preference.
+function usePreserveCardPosition(setSlug, cards) {
+  const anchor = React.useRef(null);
+  React.useEffect(() => {
+    anchor.current = null;
+    return useStudyReaderStore.subscribe((next, previous) => {
+      const orderFor = (state) =>
+        isShuffleEnabled(state, setSlug)
+          ? getQuestionOrder(state, setSlug)
+          : null;
+      if (orderFor(next) === orderFor(previous)) {
+        return;
+      }
+      const elements = [...document.querySelectorAll("[data-study-card-id]")];
+      const focused = document.activeElement?.closest("[data-study-card-id]");
+      const midpoint = window.innerHeight / 2;
+      const visible = elements
+        .map((element) => ({
+          element,
+          bounds: element.getBoundingClientRect(),
+        }))
+        .filter(
+          ({ bounds }) => bounds.bottom > 0 && bounds.top < window.innerHeight,
+        )
+        .sort((left, right) => {
+          const distance = ({ bounds }) =>
+            Math.max(bounds.top - midpoint, midpoint - bounds.bottom, 0);
+          return distance(left) - distance(right);
+        });
+      const current = focused || visible[0]?.element;
+      anchor.current = current
+        ? {
+            id: current.dataset.studyCardId,
+            top: current.getBoundingClientRect().top,
+          }
+        : null;
+    });
+  }, [setSlug]);
+  React.useLayoutEffect(() => {
+    if (!anchor.current) {
+      return;
+    }
+    const previous = anchor.current;
+    anchor.current = null;
+    const current = [...document.querySelectorAll("[data-study-card-id]")].find(
+      (element) => element.dataset.studyCardId === previous.id,
+    );
+    if (current) {
+      window.scrollBy({
+        top: current.getBoundingClientRect().top - previous.top,
+        behavior: "instant",
+      });
+    }
+  }, [cards]);
+}
+
 export default function SetRoute() {
   const loaderData = useLoaderData();
   const hydratedLoader = React.useRef(null);
@@ -94,13 +162,25 @@ export default function SetRoute() {
     ? getFallbackStudySet()
     : selectLocalSetBySlug(localRecords, loaderData.setSlug);
   const set = liveSet ?? loaderSet ?? getFallbackStudySet();
-  const questionOrder = useStudyReaderStore(
-    (state) => state.questionOrders[set.slug],
+  const shuffleEnabled = useStudyReaderStore((state) =>
+    isShuffleEnabled(state, set.slug),
+  );
+  const questionOrder = useStudyReaderStore((state) =>
+    getQuestionOrder(state, set.slug),
   );
   const cards = React.useMemo(
-    () => getOrderedStudyCards(set.cards, questionOrder),
-    [set.cards, questionOrder],
+    () =>
+      getOrderedStudyCards(
+        set.cards,
+        shuffleEnabled ? questionOrder : undefined,
+      ),
+    [set.cards, questionOrder, shuffleEnabled],
   );
+
+  usePreserveCardPosition(set.slug, cards);
+  React.useLayoutEffect(() => {
+    useStudyReaderStore.getState().ensureQuestionOrder(set.slug, set.cards);
+  }, [set.slug, set.cards, shuffleEnabled]);
 
   useHydrateStudySetsStore(loaderData.records, loaderData.storageError);
   React.useEffect(() => {

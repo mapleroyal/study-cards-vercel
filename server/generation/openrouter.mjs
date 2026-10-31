@@ -3,7 +3,9 @@ import {
   supportedCardTypes,
 } from "../../shared/study-set-validation.js";
 
-export const DEFAULT_GENERATION_MODEL = "anthropic/claude-haiku-5.5";
+import { DEFAULT_MODEL } from "../models.mjs";
+
+export const DEFAULT_GENERATION_MODEL = DEFAULT_MODEL;
 const endpoint = "https://openrouter.ai/api/v1/chat/completions";
 const string = { type: "string" };
 const strings = { type: "array", items: string };
@@ -57,6 +59,15 @@ Use instructional headings, body prose and narrative lists. Ignore images, diagr
 Reason about quality while writing. Do not add a cleanup audit, separate answer-review pass, or approval step. Return the complete study-set JSON only. Card IDs must be unique integers starting at 1. Multiple-choice answers use option keys A/B/C/D; ordering answers contain the exact supplied items in correct order; matching answers refer to the exact prompt and choice strings. Do not silently omit source material when it exceeds capacity.`;
 
 export function buildGenerationPayload({ document, job }) {
+  const usesReasoning = job.reasoningEffort
+    ? job.reasoningEffort !== "none"
+    : Boolean(job.modelSnapshot?.reasoning);
+  const visibleBudget = Math.max(4096, job.questionCount * 600);
+  // Reasoning and visible JSON share the model's output budget. Leave room for
+  // both, while respecting the selected model's advertised completion limit.
+  const outputBudget = usesReasoning
+    ? Math.max(32768, visibleBudget * 2)
+    : visibleBudget;
   const content = [
     {
       type: "text",
@@ -85,7 +96,18 @@ export function buildGenerationPayload({ document, job }) {
     },
     provider: { require_parameters: true },
     // This bounds response cost; a truncated response is an explicit failure.
-    max_tokens: Math.min(128000, Math.max(4096, job.questionCount * 600)),
+    max_tokens: Math.min(
+      job.modelSnapshot?.maxCompletionTokens || 128000,
+      outputBudget,
+    ),
+    ...(job.reasoningEffort || usesReasoning
+      ? {
+          reasoning: {
+            ...(job.reasoningEffort ? { effort: job.reasoningEffort } : {}),
+            exclude: true,
+          },
+        }
+      : {}),
     stream: false,
     ...(document.fileData
       ? { plugins: [{ id: "file-parser", pdf: { engine: "cloudflare-ai" } }] }
@@ -172,7 +194,7 @@ export async function generateWithOpenRouter({
     const choice = result.choices?.[0];
     if (choice?.finish_reason === "length") {
       throw new GenerationRequestError(
-        "The response exceeded the model's output limit. Request fewer cards.",
+        "The response exceeded the model's output limit. Request fewer cards or lower reasoning effort.",
         422,
       );
     }
@@ -205,6 +227,9 @@ export async function generateWithOpenRouter({
           role: "assistant",
           content,
           ...(annotations.length ? { annotations } : {}),
+          ...(choice?.message?.reasoning_details
+            ? { reasoning_details: choice.message.reasoning_details }
+            : {}),
         },
         {
           role: "user",

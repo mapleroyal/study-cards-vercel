@@ -13,6 +13,8 @@ const job = {
   questionCount: 1,
   cardTypes: ["short_answer"],
   model: DEFAULT_GENERATION_MODEL,
+  reasoningEffort: "xhigh",
+  modelSnapshot: { maxCompletionTokens: 128000, reasoning: true },
 };
 const set = {
   title: "Aircraft",
@@ -49,6 +51,8 @@ describe("OpenRouter generation", () => {
     });
     expect(payload.model).toBe(DEFAULT_GENERATION_MODEL);
     expect(payload.provider).toEqual({ require_parameters: true });
+    expect(payload.reasoning).toEqual({ effort: "xhigh", exclude: true });
+    expect(payload.max_tokens).toBe(32768);
     expect(payload.messages[1].content[1].text).toBe(
       `Complete source:\n\n${text}`,
     );
@@ -58,6 +62,28 @@ describe("OpenRouter generation", () => {
     expect(payload).not.toHaveProperty("plugins");
     expect(payload).not.toHaveProperty("tools");
     expect(payload).not.toHaveProperty("models");
+  });
+
+  it("uses the selected model's completion limit and omits reasoning for a non-reasoning model", () => {
+    const plainJob = {
+      ...job,
+      model: "fixture/plain-text",
+      reasoningEffort: "",
+      modelSnapshot: { maxCompletionTokens: 8000, reasoning: false },
+    };
+    const payload = buildGenerationPayload({
+      document,
+      job: { ...plainJob, questionCount: 25 },
+    });
+    expect(payload.model).toBe("fixture/plain-text");
+    expect(payload.max_tokens).toBe(8000);
+    expect(payload).not.toHaveProperty("reasoning");
+    const disabled = buildGenerationPayload({
+      document,
+      job: { ...job, reasoningEffort: "none" },
+    });
+    expect(disabled.reasoning).toEqual({ effort: "none", exclude: true });
+    expect(disabled.max_tokens).toBe(4096);
   });
 
   it("pins raw PDFs to Cloudflare text parsing with no native or OCR fallback", () => {
@@ -73,9 +99,30 @@ describe("OpenRouter generation", () => {
   });
 
   it("allows one concrete schema repair retaining full source and accounts for both calls", async () => {
+    const reasoningDetails = [
+      {
+        type: "reasoning.encrypted",
+        data: "opaque-signature",
+        id: "reasoning-one",
+        format: "anthropic-claude-v1",
+        index: 0,
+      },
+    ];
     const fetchImpl = vi
       .fn()
-      .mockResolvedValueOnce(response({ ...set, cards: [] }))
+      .mockResolvedValueOnce(
+        response(null, {
+          choices: [
+            {
+              finish_reason: "stop",
+              message: {
+                content: JSON.stringify({ ...set, cards: [] }),
+                reasoning_details: reasoningDetails,
+              },
+            },
+          ],
+        }),
+      )
       .mockResolvedValueOnce(response(set));
     const onUsage = vi.fn();
     expect(
@@ -100,6 +147,8 @@ describe("OpenRouter generation", () => {
       /at least one card|exactly 1 card/i,
     );
     expect(repair.model).toBe(DEFAULT_GENERATION_MODEL);
+    expect(repair.reasoning).toEqual({ effort: "xhigh", exclude: true });
+    expect(repair.messages.at(-2).reasoning_details).toEqual(reasoningDetails);
   });
 
   it("does not retry provider failures or truncate and accept incomplete output", async () => {

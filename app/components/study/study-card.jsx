@@ -119,6 +119,7 @@ export function StudyCard({ card, index, setSlug }) {
   return (
     <Card
       role="article"
+      data-study-card-id={card.id}
       aria-labelledby={questionId}
       size="sm"
       className="gap-0 rounded-xl py-0 data-[size=sm]:gap-0 data-[size=sm]:py-0"

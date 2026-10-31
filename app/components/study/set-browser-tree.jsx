@@ -288,21 +288,19 @@ function SetLeafNode({
             {node.set.title}
           </span>
         </button>
-        {canDelete || canReset ? (
-          <div className="flex shrink-0 items-center gap-0.5 self-center">
-            <SetEditMenu set={node.set} />
-            {canDelete ? (
-              <StudySetDeleteControl
-                set={node.set}
-                onDelete={() => onDeleteSet(node.set.slug)}
-              />
-            ) : null}
-            <StudyResetControl
-              visible={canReset}
-              onReset={() => onResetSet(node.set.slug)}
+        <div className="flex shrink-0 items-center gap-0.5 self-center">
+          <SetEditMenu set={node.set} />
+          {canDelete ? (
+            <StudySetDeleteControl
+              set={node.set}
+              onDelete={() => onDeleteSet(node.set.slug)}
             />
-          </div>
-        ) : null}
+          ) : null}
+          <StudyResetControl
+            visible={canReset}
+            onReset={() => onResetSet(node.set.slug)}
+          />
+        </div>
       </div>
     </div>
   );

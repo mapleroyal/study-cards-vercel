@@ -70,8 +70,13 @@ Repeat for production when ready. `BLOB_READ_WRITE_TOKEN` normally comes from th
 | `BLOB_READ_WRITE_TOKEN` | Token for its private Blob store.                                                                                                    |
 | `APP_SECRET`            | Random secret of at least 32 characters, used for session encryption and provider-key encryption. Keep it stable across deployments. |
 | `APP_PASSWORD`          | Owner login password. Use a different password for each deployment.                                                                  |
-| `OPENROUTER_API_KEY`    | Optional deployment key. Alternatively, sign in and save a key in Settings.                                                          |
-| `OPENROUTER_MODEL`      | Deployment model, initially `anthropic/claude-haiku-5.5`; no user-facing model picker.                                               |
+| `OPENROUTER_API_KEY`    | Optional initial key. A key saved in Settings takes precedence; removing the connection explicitly disables this fallback.                                                          |
+| `OPENROUTER_MODEL`      | Initial model, default `anthropic/claude-sonnet-5.5`. The owner's saved choice takes precedence. |
+| `OPENROUTER_REASONING_EFFORT` | Initial reasoning effort, default `xhigh` for Sonnet 5.5. The saved choice takes precedence. |
+
+The empty library offers Generate cards and Import set. Generate cards prompts for an OpenRouter key when needed. Settings can replace or remove the connection; removing it clears the saved key and keeps it disconnected even if an environment fallback exists. It does not revoke the key at OpenRouter.
+
+Model and reasoning selections can be changed in Settings or Generate cards and persist in Postgres. The picker reads the maintained OpenRouter catalog and offers supported reasoning levels for each model. Generation jobs keep a snapshot of the selection made when they were started; later preference changes do not alter running jobs.
 
 Login attempts share a Postgres-backed limit of 20 attempts per IP in 15 minutes across Vercel instances. Successful login clears that IP’s counter. The maintained `rate-limiter-flexible` adapter creates `lumina_login_limits`; database errors fail closed rather than falling back to per-process counters.
 
@@ -101,7 +106,7 @@ npm run build
 npm run test:ui
 ```
 
-Tests use provider fixtures and embedded PostgreSQL through PGlite. Browser suites named `hosted-flow` still mock inference; those tests do not establish real-model quality. Use [the verification record](verification.md) to distinguish mocked, hosted-service, and paid-inference checks.
+Tests use provider fixtures and embedded PostgreSQL through PGlite. Browser checks also start the built app and use the configured development database for owner login; pull the development environment first. Their ordinary library and generation scenarios use fixture API responses. Browser suites named `hosted-flow` still mock inference; those tests do not establish real-model quality. Use [the verification record](verification.md) to distinguish mocked, hosted-service, and paid-inference checks.
 
 For a regular production-mode Node preview using ignored development environment values:
 

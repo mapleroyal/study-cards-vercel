@@ -5,6 +5,8 @@ import { createSessionCookie } from "./auth.mjs";
 import { createSourceService } from "./sources.mjs";
 import { createLoginLimiter } from "./login-rate-limit.mjs";
 import { createTestStore } from "./test-helpers/store.mjs";
+import { createTestModelCatalog } from "./test-helpers/models.mjs";
+import { DEFAULT_SELECTION } from "./models.mjs";
 
 // The injected runtime below exercises real PostgreSQL library and rate-limit
 // adapters without loading Workflow or connecting to paid services.
@@ -60,6 +62,7 @@ async function fixture({ consumeError } = {}) {
     sources,
     generation,
     settings,
+    models: createTestModelCatalog(),
   }));
   const server = createApplication({ runtime }).listen(0, "127.0.0.1");
   await new Promise((resolve) => server.once("listening", resolve));
@@ -85,7 +88,13 @@ async function fixture({ consumeError } = {}) {
 
 it("keeps library, settings, sources and jobs private before runtime initialization", async () => {
   const { request, runtime, settings } = await fixture();
-  for (const path of ["/library", "/settings", "/sources", "/generation"]) {
+  for (const path of [
+    "/library",
+    "/settings",
+    "/sources",
+    "/generation",
+    "/models",
+  ]) {
     expect((await request(path)).status).toBe(401);
   }
   expect(
@@ -126,6 +135,10 @@ it("logs in with a private owner cookie, serves the canonical library and clears
     openRouterConfigured: false,
     model: "fixture",
   });
+  const catalog = await request("/models", { headers });
+  expect(catalog.status).toBe(200);
+  expect(catalog.data.defaultSelection).toEqual(DEFAULT_SELECTION);
+  expect(catalog.data.models).toHaveLength(2);
   const logout = await request("/session", { method: "DELETE", headers });
   expect(logout.status).toBe(200);
   expect(logout.headers.get("set-cookie")).toContain("Max-Age=0");

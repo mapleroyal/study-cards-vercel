@@ -1,7 +1,7 @@
 import * as React from "react";
-import { Button } from "@/components/ui/button";
+import { GenerateCardsButton } from "@/components/study/generate-cards-button";
 import { getCapabilities, useCapabilities } from "@/lib/runtime-client";
-import { Link, redirect, useLoaderData, useNavigate } from "react-router";
+import { redirect, useLoaderData, useNavigate } from "react-router";
 
 import { SetBrowserTree } from "@/components/study/set-browser-tree";
 import {
@@ -122,29 +122,29 @@ export default function IndexRoute() {
         className="mx-auto flex w-full max-w-3xl flex-1 items-center px-4 py-8 sm:px-6"
         style={{ alignItems: "safe center" }}
       >
-        {capabilities?.server ? (
+        {sets.length === 0 ? (
+          <div className="flex w-full flex-wrap items-center justify-center gap-3">
+            <GenerateCardsButton size="sm" />
+            <StudySetImportDropzone
+              variant="compact"
+              onImported={(record) => navigate(`/sets/${record.slug}`)}
+            />
+          </div>
+        ) : capabilities?.server ? (
           <section className="flex w-full flex-col gap-7">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h1 className="text-headline-lg">Study sets</h1>
-              <Button asChild>
-                <Link to="/generate">Generate cards</Link>
-              </Button>
+              <GenerateCardsButton />
             </div>
-            {sets.length ? (
-              <SetBrowserTree
-                sets={sets}
-                activeSlug={null}
-                onSelect={(slug) => navigate(`/sets/${slug}`)}
-                favoriteItems={favoriteItems}
-                onFavoriteItem={addFavorite}
-                onUnfavoriteItem={removeFavorite}
-                className="w-full"
-              />
-            ) : (
-              <p className="text-muted-foreground">
-                Add a source to create your first study set.
-              </p>
-            )}
+            <SetBrowserTree
+              sets={sets}
+              activeSlug={null}
+              onSelect={(slug) => navigate(`/sets/${slug}`)}
+              favoriteItems={favoriteItems}
+              onFavoriteItem={addFavorite}
+              onUnfavoriteItem={removeFavorite}
+              className="w-full"
+            />
             <StudySetImportDropzone
               variant="compact"
               onImported={(record) => navigate(`/sets/${record.slug}`)}

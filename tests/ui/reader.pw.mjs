@@ -3,7 +3,17 @@ import { signInToPreview } from "./owner-session.mjs";
 test.beforeEach(async ({ page }) => signInToPreview(page));
 
 test.use({ serviceWorkers: "block" });
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page }, testInfo) => {
+  if (!testInfo.title.startsWith("question shuffle")) {
+    await page.addInitScript(() => {
+      if (!globalThis.localStorage.getItem("lumina:study-reader")) {
+        globalThis.localStorage.setItem(
+          "lumina:study-reader",
+          JSON.stringify({ defaultShuffleEnabled: false }),
+        );
+      }
+    });
+  }
   await page.route("**/api/capabilities", (route) =>
     route.fulfill({
       contentType: "application/json",
@@ -183,49 +193,44 @@ test("all seven prompt types preserve answers, keyboard order and menu matching"
   expect(errors).toEqual([]);
 });
 
-test("question shuffle preserves answers and order across reloads and can restore source order", async ({
+test("question shuffle is on by default and toggles saved order without losing answers", async ({
   page,
 }, testInfo) => {
   await importStudySet(page);
   const cards = page.getByRole("article");
   const headings = cards.getByRole("heading", { level: 2 });
-  const originalOrder = await headings.allTextContents();
+  const originalOrder = studySet.cards.map((card) => card.question);
+  const shuffledOrder = await headings.allTextContents();
+  const shuffle = page.getByRole("button", {
+    name: "Shuffle questions",
+    exact: true,
+  });
+  await expect(shuffle).toHaveAttribute("aria-pressed", "true");
+  expect([...shuffledOrder].sort()).toEqual([...originalOrder].sort());
   const answeredCard = page.getByRole("article", {
     name: source.cards[0].question,
     exact: true,
   });
   await answeredCard.getByRole("radio", { name: "True", exact: true }).check();
   await answeredCard.getByRole("button", { name: "Show answer" }).click();
-
-  await page.getByRole("button", { name: "Shuffle questions" }).click();
-  const shuffledOrder = await headings.allTextContents();
-  expect(shuffledOrder).not.toEqual(originalOrder);
-  expect([...shuffledOrder].sort()).toEqual([...originalOrder].sort());
-  await expect(
-    answeredCard.getByRole("radio", { name: "True", exact: true }),
-  ).toBeChecked();
-  await expect(
-    answeredCard.getByRole("button", { name: "Hide answer" }),
-  ).toBeVisible();
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await capture(page, testInfo, "shuffled-reader");
-
   await page.reload();
   await expect(headings).toHaveText(shuffledOrder);
   await expect(
     answeredCard.getByRole("radio", { name: "True", exact: true }),
   ).toBeChecked();
-  await page.getByRole("button", { name: "Shuffle questions" }).click();
-  expect(await headings.allTextContents()).not.toEqual(shuffledOrder);
-  await page
-    .getByRole("button", { name: "Original order", exact: true })
-    .click();
+  await shuffle.click();
+  await expect(shuffle).toHaveAttribute("aria-pressed", "false");
   await expect(headings).toHaveText(originalOrder);
+  await shuffle.click();
+  await expect(shuffle).toHaveAttribute("aria-pressed", "true");
+  await expect(headings).toHaveText(shuffledOrder);
   await expect(
-    page.getByRole("button", { name: "Original order", exact: true }),
-  ).toHaveCount(0);
+    answeredCard.getByRole("button", { name: "Hide answer" }),
+  ).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await capture(page, testInfo, "shuffled-reader");
   await page.reload();
-  await expect(headings).toHaveText(originalOrder);
+  await expect(headings).toHaveText(shuffledOrder);
   await expect(
     answeredCard.getByRole("radio", { name: "True", exact: true }),
   ).toBeChecked();
@@ -283,7 +288,7 @@ test("set browser, theme preference, reset and deletion remain usable", async ({
   await expect(page.getByRole("article")).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(
-    page.getByRole("button", { name: "Add a study set", exact: true }),
+    page.getByRole("button", { name: "Import set", exact: true }),
   ).toBeVisible();
   await capture(page, testInfo, "empty");
 });

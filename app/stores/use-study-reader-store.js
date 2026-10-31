@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 import { STUDY_READER_STORAGE_KEY } from "@/lib/app-config";
-import { randomizeValues } from "@/lib/study-set-answer-order";
+import { createBalancedQuestionOrder } from "@/lib/study-card-order";
 
 function readPreferences(storage) {
   try {
@@ -15,18 +15,48 @@ function readPreferences(storage) {
   }
 }
 
-function normalizeQuestionOrders(value) {
+function normalizeMap(value, valid) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return {};
   }
   return Object.fromEntries(
-    Object.entries(value)
-      .filter(([, ids]) => Array.isArray(ids))
-      .map(([slug, ids]) => [
-        slug,
-        [...new Set(ids.filter((id) => Number.isSafeInteger(id) && id >= 0))],
-      ]),
+    Object.entries(value).filter(([, item]) => valid(item)),
   );
+}
+
+function normalizePreferences(value) {
+  return {
+    matchingMode: value?.matchingMode === "menus" ? "menus" : "drag",
+    defaultShuffleEnabled: value?.defaultShuffleEnabled !== false,
+    shuffleOverrides: normalizeMap(
+      value?.shuffleOverrides,
+      (enabled) => typeof enabled === "boolean",
+    ),
+    questionOrders: Object.fromEntries(
+      Object.entries(normalizeMap(value?.questionOrders, Array.isArray)).map(
+        ([slug, ids]) => [
+          slug,
+          [...new Set(ids.filter((id) => Number.isSafeInteger(id) && id >= 0))],
+        ],
+      ),
+    ),
+    questionOrderSignatures: normalizeMap(
+      value?.questionOrderSignatures,
+      (signature) => typeof signature === "string",
+    ),
+  };
+}
+
+export function isShuffleEnabled(state, setSlug) {
+  return Object.hasOwn(state.shuffleOverrides, setSlug)
+    ? state.shuffleOverrides[setSlug]
+    : state.defaultShuffleEnabled;
+}
+
+export function getQuestionOrder(state, setSlug) {
+  return Object.hasOwn(state.questionOrders, setSlug)
+    ? state.questionOrders[setSlug]
+    : undefined;
 }
 
 export function getOrderedStudyCards(cards, questionOrder) {
@@ -45,53 +75,122 @@ export function getOrderedStudyCards(cards, questionOrder) {
   return [...orderedCards, ...remainingCards.values()];
 }
 
-export function createStudyReaderStore({ storage, random = Math.random } = {}) {
-  const preferences = readPreferences(storage);
-  return create((set, get) => {
+function cardSignature(cards) {
+  // Text edits and source-order changes do not reshuffle existing cards.
+  return JSON.stringify(
+    cards.map(({ id, type }) => [id, type]).sort((a, b) => a[0] - b[0]),
+  );
+}
+
+export function createStudyReaderStore({
+  storage,
+  random = Math.random,
+  eventTarget = globalThis.window,
+} = {}) {
+  const store = create((set, get) => {
     function updatePreferences(patch) {
       set(patch);
-      const { matchingMode, questionOrders } = get();
+      const {
+        matchingMode,
+        defaultShuffleEnabled,
+        shuffleOverrides,
+        questionOrders,
+        questionOrderSignatures,
+      } = get();
       try {
         (storage ?? globalThis.window?.localStorage)?.setItem(
           STUDY_READER_STORAGE_KEY,
-          JSON.stringify({ matchingMode, questionOrders }),
+          JSON.stringify({
+            matchingMode,
+            defaultShuffleEnabled,
+            shuffleOverrides,
+            questionOrders,
+            questionOrderSignatures,
+          }),
         );
       } catch {
         // Reading and studying remain available without browser storage.
       }
     }
 
+    function orderPatch(setSlug, cards) {
+      const { questionOrders, questionOrderSignatures } = get();
+      const signature = cardSignature(cards);
+      const previousOrder = getQuestionOrder(get(), setSlug);
+      if (
+        questionOrderSignatures[setSlug] === signature &&
+        previousOrder?.length === cards.length
+      ) {
+        return {};
+      }
+      return {
+        questionOrders: {
+          ...questionOrders,
+          [setSlug]: createBalancedQuestionOrder(cards, random, previousOrder),
+        },
+        questionOrderSignatures: {
+          ...questionOrderSignatures,
+          [setSlug]: signature,
+        },
+      };
+    }
+
     return {
-      matchingMode: preferences?.matchingMode === "menus" ? "menus" : "drag",
-      questionOrders: normalizeQuestionOrders(preferences?.questionOrders),
+      ...normalizePreferences(readPreferences(storage)),
       setMatchingMode: (matchingMode) => {
         if (matchingMode === "drag" || matchingMode === "menus") {
           updatePreferences({ matchingMode });
         }
       },
-      shuffleQuestions: (setSlug, cards) => {
-        const { questionOrders } = get();
-        const orderedCards = getOrderedStudyCards(
-          cards,
-          questionOrders[setSlug],
-        );
+      setDefaultShuffleEnabled: (enabled) => {
+        if (typeof enabled === "boolean") {
+          updatePreferences({
+            defaultShuffleEnabled: enabled,
+            shuffleOverrides: {},
+          });
+        }
+      },
+      setShuffleEnabled: (setSlug, enabled, cards) => {
+        if (typeof enabled !== "boolean") {
+          return;
+        }
         updatePreferences({
-          questionOrders: {
-            ...questionOrders,
-            [setSlug]: randomizeValues(
-              orderedCards.map((card) => card.id),
-              random,
-            ),
-          },
+          shuffleOverrides: { ...get().shuffleOverrides, [setSlug]: enabled },
+          ...(enabled ? orderPatch(setSlug, cards) : {}),
         });
       },
+      ensureQuestionOrder: (setSlug, cards) => {
+        if (isShuffleEnabled(get(), setSlug)) {
+          const patch = orderPatch(setSlug, cards);
+          if (Object.keys(patch).length) {
+            updatePreferences(patch);
+          }
+        }
+      },
       resetQuestionOrder: (setSlug) => {
-        const questionOrders = { ...get().questionOrders };
-        delete questionOrders[setSlug];
-        updatePreferences({ questionOrders });
+        const { questionOrders, questionOrderSignatures, shuffleOverrides } =
+          get();
+        const withoutSet = (values) =>
+          Object.fromEntries(
+            Object.entries(values).filter(([slug]) => slug !== setSlug),
+          );
+        updatePreferences({
+          questionOrders: withoutSet(questionOrders),
+          questionOrderSignatures: withoutSet(questionOrderSignatures),
+          shuffleOverrides: withoutSet(shuffleOverrides),
+        });
       },
     };
   });
+  const onStorage = (event) => {
+    if (event.key === STUDY_READER_STORAGE_KEY || event.key === null) {
+      store.setState(normalizePreferences(readPreferences(storage)));
+    }
+  };
+  eventTarget?.addEventListener("storage", onStorage);
+  store.stopStorageSync = () =>
+    eventTarget?.removeEventListener("storage", onStorage);
+  return store;
 }
 
 export const useStudyReaderStore = createStudyReaderStore();
