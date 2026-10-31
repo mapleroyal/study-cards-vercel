@@ -2,6 +2,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
 import { PlusIcon } from "@primer/octicons-react";
+import { GenerationInstructions } from "@/components/study/generation-instructions";
 import { GenerateCardsButton } from "@/components/study/generate-cards-button";
 import { OpenRouterKeyDialog } from "@/components/study/openrouter-key-dialog";
 import { ModelPicker } from "@/components/study/model-picker";
@@ -68,6 +69,8 @@ export default function GenerateRoute() {
   const [mode, setMode] = React.useState("file");
   const [file, setFile] = React.useState(null);
   const [text, setText] = React.useState("");
+  const [instructions, setInstructions] = React.useState("");
+  const retryInstructionsRef = React.useRef("");
   const [sourceId, setSourceId] = React.useState("");
   const [sources, setSources] = React.useState([]);
   const [highlightedSourceId, setHighlightedSourceId] = React.useState(null);
@@ -95,6 +98,11 @@ export default function GenerateRoute() {
   const active = activeJobStatuses.has(job?.status);
   const hasActiveJobs = jobs.some((item) => activeJobStatuses.has(item.status));
   const selectedSource = sources.find((source) => source.id === sourceId);
+
+  React.useEffect(() => {
+    setInstructions(retryInstructionsRef.current);
+    retryInstructionsRef.current = "";
+  }, [location.key]);
 
   React.useEffect(() => {
     if (
@@ -284,6 +292,7 @@ export default function GenerateRoute() {
         cardTypes: types,
         model: settings?.model,
         reasoningEffort: settings?.reasoningEffort,
+        ...(instructions.trim() ? { instructions: instructions.trim() } : {}),
       };
       const signature = JSON.stringify(body);
       if (requestRef.current?.signature !== signature) {
@@ -364,6 +373,7 @@ export default function GenerateRoute() {
     setText("");
     setTypes(job.cardTypes);
     setCount(String(job.questionCount));
+    retryInstructionsRef.current = job.instructions || "";
     preparedRef.current = null;
     requestRef.current = null;
     setParams({});
@@ -597,8 +607,10 @@ export default function GenerateRoute() {
                                 key={id}
                                 open={highlightedSourceId === id}
                               >
-                                <TooltipTrigger asChild>
-                                  <ComboboxItem value={id}>{name}</ComboboxItem>
+                                <TooltipTrigger
+                                  render={<ComboboxItem value={id} />}
+                                >
+                                  {name}
                                 </TooltipTrigger>
                                 <TooltipContent side="top">
                                   <span className="min-w-0 [overflow-wrap:anywhere]">
@@ -712,13 +724,17 @@ export default function GenerateRoute() {
                   Add API key
                 </Button>
               )}
-              <Button
-                className="self-end"
-                disabled={!canSubmit || Boolean(busy) || modelBusy}
-              >
-                {busy ? <Spinner /> : <PlusIcon aria-hidden="true" />}
-                {busy || "Generate"}
-              </Button>
+              <div className="flex items-center justify-end gap-2">
+                <GenerationInstructions
+                  value={instructions}
+                  onChange={setInstructions}
+                  disabled={Boolean(busy) || modelBusy}
+                />
+                <Button disabled={!canSubmit || Boolean(busy) || modelBusy}>
+                  {busy ? <Spinner /> : <PlusIcon aria-hidden="true" />}
+                  {busy || "Generate"}
+                </Button>
+              </div>
             </fieldset>
           </form>
         ) : null}

@@ -71,8 +71,8 @@ Repeat for production when ready. `BLOB_READ_WRITE_TOKEN` normally comes from th
 | `APP_SECRET`                  | Random secret of at least 32 characters, used for session encryption and provider-key encryption. Keep it stable across deployments. |
 | `APP_PASSWORD`                | Owner login password. Use a different password for each deployment.                                                                  |
 | `OPENROUTER_API_KEY`          | Optional initial key. A key saved in Settings takes precedence; removing the connection explicitly disables this fallback.           |
-| `OPENROUTER_MODEL`            | Initial model, default `anthropic/claude-sonnet-5.5`. The owner's saved choice takes precedence.                                     |
-| `OPENROUTER_REASONING_EFFORT` | Initial reasoning effort, default `xhigh` for Sonnet 5.5. The saved choice takes precedence.                                         |
+| `OPENROUTER_MODEL`            | Initial model, default `anthropic/claude-haiku-5.5`. The owner's saved choice takes precedence.                                      |
+| `OPENROUTER_REASONING_EFFORT` | Initial reasoning effort, default `high` for Haiku 5.5. The saved choice takes precedence.                                           |
 
 The empty library offers Generate cards and Import set. Generate cards prompts for an OpenRouter key when needed. Settings can replace or remove the connection; removing it clears the saved key and keeps it disconnected even if an environment fallback exists. It does not revoke the key at OpenRouter.
 

@@ -28,7 +28,7 @@
 - Use the tuned `@/components/ui/*` wrappers. Prefer Base UI where equivalent primitives exist; retain Radix only where an intentional wrapper requires it.
 - Do not regenerate tuned wrappers with a different Shadcn style. Compose existing components before introducing new ones.
 - Product dropdowns use the tuned Select or Combobox, never raw `select` elements or NativeSelect. The native wrapper exists only for its test-gallery fixture.
-- Select, Dialog, Popover, Combobox, Sheet, Drawer, AlertDialog, DropdownMenu, and ContextMenu use Base UI `render`. Retained Radix wrappers use `asChild`.
+- Select, Dialog, Popover, Combobox, Tooltip, Sheet, Drawer, AlertDialog, DropdownMenu, and ContextMenu use Base UI `render`. Retained Radix wrappers use `asChild`.
 
 # Styling
 

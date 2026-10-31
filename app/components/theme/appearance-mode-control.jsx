@@ -134,24 +134,26 @@ function ExpandedAppearanceControl({ value, onValueChange }) {
 
       {APPEARANCE_OPTIONS.map((option) => (
         <Tooltip key={option.value}>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              aria-checked={value === option.value}
-              aria-label={option.label}
-              className={cn(
-                "relative z-10 flex h-full w-full items-center justify-center rounded-full bg-transparent text-muted-foreground transition-colors duration-200 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50",
-                value === option.value &&
-                  "text-foreground hover:text-foreground",
-              )}
-              data-appearance-value={option.value}
-              role="radio"
-              tabIndex={value === option.value ? 0 : -1}
-              onClick={() => onValueChange(option.value)}
-            >
-              <AppearanceGlyph option={option} />
-            </button>
-          </TooltipTrigger>
+          <TooltipTrigger
+            render={
+              <button
+                type="button"
+                aria-checked={value === option.value}
+                aria-label={option.label}
+                className={cn(
+                  "relative z-10 flex h-full w-full items-center justify-center rounded-full bg-transparent text-muted-foreground transition-colors duration-200 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50",
+                  value === option.value &&
+                    "text-foreground hover:text-foreground",
+                )}
+                data-appearance-value={option.value}
+                role="radio"
+                tabIndex={value === option.value ? 0 : -1}
+                onClick={() => onValueChange(option.value)}
+              >
+                <AppearanceGlyph option={option} />
+              </button>
+            }
+          />
           <TooltipContent>{option.label}</TooltipContent>
         </Tooltip>
       ))}
@@ -167,20 +169,22 @@ function CompactAppearanceControl({ value, onValueChange }) {
   return (
     <DropdownMenu>
       <Tooltip>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                type="button"
-                aria-label={`Appearance: ${selected.label}`}
-                size="icon-sm"
-                variant="ghost"
-              >
-                <AppearanceGlyph option={selected} />
-              </Button>
-            }
-          />
-        </TooltipTrigger>
+        <TooltipTrigger
+          render={
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  type="button"
+                  aria-label={`Appearance: ${selected.label}`}
+                  size="icon-sm"
+                  variant="ghost"
+                >
+                  <AppearanceGlyph option={selected} />
+                </Button>
+              }
+            />
+          }
+        />
         <TooltipContent side="bottom">Appearance</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="w-40">

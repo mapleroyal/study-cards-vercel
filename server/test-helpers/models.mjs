@@ -4,7 +4,7 @@ import { createModelCatalog, DEFAULT_MODEL } from "../models.mjs";
 export const modelFixtures = [
   {
     id: DEFAULT_MODEL,
-    name: "Anthropic: Claude Sonnet 5.5",
+    name: "Anthropic: Claude Haiku 5.5",
     context_length: 1000000,
     architecture: {
       input_modalities: ["text", "image", "file"],
@@ -19,9 +19,9 @@ export const modelFixtures = [
       "max_tokens",
     ],
     reasoning: {
-      mandatory: true,
-      supported_efforts: ["max", "xhigh", "high", "medium", "low"],
-      default_effort: "high",
+      mandatory: false,
+      supported_efforts: ["max", "xhigh", "high", "medium", "low", "none"],
+      default_effort: "medium",
     },
   },
   {

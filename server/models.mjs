@@ -1,5 +1,5 @@
-export const DEFAULT_MODEL = "anthropic/claude-sonnet-5.5";
-export const DEFAULT_REASONING_EFFORT = "xhigh";
+export const DEFAULT_MODEL = "anthropic/claude-haiku-5.5";
+export const DEFAULT_REASONING_EFFORT = "high";
 export const DEFAULT_SELECTION = {
   model: DEFAULT_MODEL,
   reasoningEffort: DEFAULT_REASONING_EFFORT,

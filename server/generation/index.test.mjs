@@ -114,7 +114,7 @@ describe("durable generation jobs", () => {
     await generation.runPrepareAndGenerate(job.id);
     const payload = JSON.parse(fetchImpl.mock.calls[0][1].body);
     expect(payload.model).toBe(DEFAULT_SELECTION.model);
-    expect(payload.reasoning).toEqual({ effort: "xhigh", exclude: true });
+    expect(payload.reasoning).toEqual({ effort: "high", exclude: true });
     const next = await generation.create({
       ...input,
       mutationId: randomUUID(),
@@ -131,7 +131,7 @@ describe("durable generation jobs", () => {
     for (const selection of [
       { model: "fixture/missing" },
       { model: "fixture/plain-text", reasoningEffort: "xhigh" },
-      { model: DEFAULT_SELECTION.model, reasoningEffort: "none" },
+      { model: DEFAULT_SELECTION.model, reasoningEffort: "minimal" },
     ]) {
       await expect(
         generation.create({ ...input, ...selection }),
@@ -182,6 +182,57 @@ describe("durable generation jobs", () => {
     await expect(
       generation.create({ ...input, questionCount: 2 }),
     ).rejects.toMatchObject({ status: 409 });
+  });
+
+  it("snapshots complete one-off instructions and rejects conflicting receipt reuse", async () => {
+    const instructions =
+      "Use concise applied questions with careful explanations.\n".repeat(1000);
+    const { generation, input, store, fetchImpl, startWorkflow } =
+      await setup();
+    const first = await generation.create({
+      ...input,
+      instructions: `  ${instructions}  `,
+    });
+    expect(first.instructions).toBe(instructions.trim());
+    expect((await store.getRecord("jobs", first.id)).instructions).toBe(
+      instructions.trim(),
+    );
+    expect(
+      await generation.create({ ...input, instructions: instructions.trim() }),
+    ).toEqual(first);
+    await expect(
+      generation.create({
+        ...input,
+        instructions: "Use a different emphasis.",
+      }),
+    ).rejects.toMatchObject({ status: 409 });
+    expect(startWorkflow).toHaveBeenCalledOnce();
+    await generation.runPrepareAndGenerate(first.id);
+    const payload = JSON.parse(fetchImpl.mock.calls[0][1].body);
+    expect(payload.messages.at(-1)).toEqual({
+      role: "user",
+      content: `Owner instructions for this generation:\n\n${instructions.trim()}`,
+    });
+    expect(payload.messages[1].content[1].text).toBe(
+      "Complete source:\n\nAilerons control roll.",
+    );
+  });
+
+  it("treats blank instructions like omitted instructions for existing receipts and future jobs", async () => {
+    const { generation, input, store } = await setup();
+    const existing = await generation.create(input);
+    expect(existing).not.toHaveProperty("instructions");
+    const before = await store.getRecord("jobs", existing.id);
+    expect(
+      await generation.create({ ...input, instructions: "  \n\t " }),
+    ).toEqual(existing);
+    expect(await store.getRecord("jobs", existing.id)).toEqual(before);
+    const next = await generation.create({
+      ...input,
+      mutationId: randomUUID(),
+      instructions: "\n  ",
+    });
+    expect(next).not.toHaveProperty("instructions");
   });
 
   it("persists generation, usage and exactly one saved set through repeated save delivery", async () => {

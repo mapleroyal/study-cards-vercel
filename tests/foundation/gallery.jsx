@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Combobox,
@@ -132,6 +138,37 @@ function FormatSelect({ grouped = false }) {
         )}
       </SelectContent>
     </Select>
+  );
+}
+
+function TooltipExamples() {
+  const [actions, setActions] = useState(0);
+  return (
+    <TooltipProvider delay={0}>
+      <div className="foundation-row">
+        <Tooltip>
+          <TooltipTrigger render={<Button variant="outline" />}>
+            Passive tooltip
+          </TooltipTrigger>
+          <TooltipContent>Plain tooltip content</TooltipContent>
+        </Tooltip>
+        <Tooltip disableHoverablePopup={false}>
+          <TooltipTrigger render={<Button variant="outline" />}>
+            Hoverable tooltip
+          </TooltipTrigger>
+          <TooltipContent>
+            <button
+              type="button"
+              className="underline"
+              onClick={() => setActions((count) => count + 1)}
+            >
+              Tooltip action
+            </button>
+          </TooltipContent>
+        </Tooltip>
+        <output aria-label="Tooltip actions">{actions}</output>
+      </div>
+    </TooltipProvider>
   );
 }
 
@@ -360,6 +397,9 @@ function Gallery() {
             ))}
           </SelectContent>
         </Select>
+      </Section>
+      <Section title="Tooltips">
+        <TooltipExamples />
       </Section>
       <Section title="Native reference">
         <NativeSelect aria-label="Native reference" defaultValue="markdown">

@@ -110,3 +110,15 @@ the full product suite, including mixed-library overlays. Preserve newer app
 framework versions and app-owned runtime/data policies. Update this record and
 the provenance record so future agents can distinguish template source, app
 source, built payload, and deployed version.
+
+## Tooltip and combobox follow-up
+
+Tooltip now follows [Pulse MD 7152d271](https://github.com/mapleroyal/pulse-md/blob/7152d271dd630213bbda8df076a2a78c46193ac3/src/components/ui/tooltip.tsx)
+through Base UI, preserving the app's semantic typography and viewport bounds.
+Appearance controls, sidebar triggers, and saved-source options use its render
+contract. Non-hoverable tooltips ignore pointer hit testing across the popup and arrow; source
+options still expose full filenames on pointer and keyboard highlight.
+
+Combobox text labels truncate visually with 12 px padding on both sides.
+Only selected items reserve 32 px on the right for the existing 16 px checkmark.
+Full values and search labels remain unchanged.

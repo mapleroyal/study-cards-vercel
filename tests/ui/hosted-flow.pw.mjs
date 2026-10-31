@@ -998,24 +998,64 @@ test("saved source names stay within the picker and remain available by tooltip 
         listScrollWidth: listElement.scrollWidth,
         optionRight: element.getBoundingClientRect().right,
         listRight: listElement.getBoundingClientRect().right,
+        paddingLeft: globalThis.getComputedStyle(element).paddingLeft,
+        paddingRight: globalThis.getComputedStyle(element).paddingRight,
       };
     });
     expect(metrics.textWidth).toBeGreaterThan(metrics.labelWidth);
     expect(metrics.overflow).toBe("ellipsis");
     expect(metrics.listScrollWidth).toBeLessThanOrEqual(metrics.listWidth);
     expect(metrics.optionRight).toBeLessThanOrEqual(metrics.listRight);
+    expect(metrics.paddingLeft).toBe("12px");
+    expect(metrics.paddingRight).toBe("12px");
     await option.hover();
     await expect(
-      page.getByRole("tooltip", { name: source.name, exact: true }),
+      page
+        .locator('[data-slot="tooltip-content"]')
+        .filter({ hasText: source.name }),
     ).toHaveText(source.name);
     await capture(page, testInfo, `${source.id}-tooltip`);
+  }
+  const secondTooltip = page
+    .locator('[data-slot="tooltip-content"]')
+    .filter({ hasText: sources[1].name });
+  for (const target of [
+    secondTooltip,
+    secondTooltip.locator('[data-slot="tooltip-arrow"]'),
+  ]) {
+    expect(
+      await target.evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return Boolean(
+          document
+            .elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)
+            ?.closest('[data-slot="tooltip-positioner"]'),
+        );
+      }),
+    ).toBe(false);
+  }
+  // Move upward through the tooltip arrow/body, then downward again.
+  for (const source of [sources[0], sources[1]]) {
+    const option = page.getByRole("option", { name: source.name, exact: true });
+    const rect = await option.boundingBox();
+    await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2, {
+      steps: 12,
+    });
+    await expect(option).toHaveAttribute("data-highlighted", "");
+    await expect(
+      page
+        .locator('[data-slot="tooltip-content"]')
+        .filter({ hasText: source.name }),
+    ).toBeVisible();
   }
   await page.getByLabel("Search sources", { exact: true }).fill("uniquetail");
   await expect(page.getByRole("option")).toHaveCount(1);
   await page.mouse.move(0, 0);
   await page.getByLabel("Search sources", { exact: true }).press("ArrowDown");
   await expect(
-    page.getByRole("tooltip", { name: sources[1].name, exact: true }),
+    page
+      .locator('[data-slot="tooltip-content"]')
+      .filter({ hasText: sources[1].name }),
   ).toHaveText(sources[1].name);
   await page.getByLabel("Search sources", { exact: true }).press("Enter");
   await expect(popup).toBeHidden();
@@ -1023,9 +1063,149 @@ test("saved source names stay within the picker and remain available by tooltip 
   await expect(
     page.locator("span[title]").filter({ hasText: sources[1].name }),
   ).toHaveAttribute("title", sources[1].name);
+  await page
+    .getByRole("combobox", { name: "Show options", exact: true })
+    .click();
+  await page.getByLabel("Search sources", { exact: true }).fill("");
+  const selected = page.getByRole("option", {
+    name: sources[1].name,
+    exact: true,
+  });
+  await expect(selected).toHaveAttribute("aria-selected", "true");
+  const selectedMetrics = await selected.evaluate((element) => {
+    const label = element.querySelector('[data-slot="combobox-item-label"]');
+    const check = element.querySelector("svg");
+    const style = globalThis.getComputedStyle(element);
+    return {
+      left: style.paddingLeft,
+      right: style.paddingRight,
+      gap:
+        check.getBoundingClientRect().left -
+        label.getBoundingClientRect().right,
+    };
+  });
+  expect(selectedMetrics.left).toBe("12px");
+  expect(selectedMetrics.right).toBe("32px");
+  expect(selectedMetrics.gap).toBeGreaterThan(0);
+  await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Generate", exact: true }).click();
   await expect.poll(() => generation?.sourceId).toBe(sources[1].id);
   await expect(page).toHaveURL(/job=long-source-job$/);
+});
+
+test("one-off instructions persist in the dialog and retry, clear for a fresh set, and omit blank requests", async ({
+  page,
+}, testInfo) => {
+  const source = {
+    id: "instructions-source",
+    name: "Pasted text",
+    status: "ready",
+  };
+  const jobs = [];
+  const payloads = [];
+  await mockApp(page, ({ path, request }) => {
+    if (path === "/api/sources") {
+      return { sources: [source] };
+    }
+    if (path === "/api/sources/text") {
+      return { source };
+    }
+    if (path === "/api/generation/jobs") {
+      if (request.method() === "POST") {
+        const payload = request.postDataJSON();
+        payloads.push(payload);
+        const job = {
+          ...payload,
+          id: `instructions-${payloads.length}`,
+          sourceName: source.name,
+          status: "failed",
+          error: "Fixture failure",
+        };
+        jobs.unshift(job);
+        return { job };
+      }
+      return { jobs };
+    }
+    if (path.startsWith("/api/generation/jobs/")) {
+      return { job: jobs.find((job) => path.endsWith(`/${job.id}`)) };
+    }
+  });
+  await page.goto("/generate");
+  await page.getByRole("radio", { name: "Paste text", exact: true }).click();
+  await page
+    .getByLabel("Source text", { exact: true })
+    .fill("The exact source section for these cards.");
+  const instructions = "Focus on applications.\nUse concise wording.";
+  await page.getByRole("button", { name: "Instructions", exact: true }).click();
+  const dialog = page.getByRole("dialog", {
+    name: "Instructions",
+    exact: true,
+  });
+  const input = dialog.getByRole("textbox", {
+    name: "Instructions",
+    exact: true,
+  });
+  await expect(input).toHaveAttribute(
+    "placeholder",
+    "Add instructions for these cards…",
+  );
+  await input.fill(`  ${instructions}\n  `);
+  await capture(page, testInfo, "generation-instructions");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await page
+    .getByRole("button", { name: "Instructions added", exact: true })
+    .click();
+  await expect(input).toHaveValue(`  ${instructions}\n  `);
+  await dialog.getByRole("button", { name: "Done", exact: true }).click();
+  await page.getByRole("button", { name: "Generate", exact: true }).click();
+  await expect(page).toHaveURL(/job=instructions-1$/);
+  expect(payloads[0].instructions).toBe(instructions);
+  await page.reload();
+  await page.getByRole("button", { name: "New set", exact: true }).click();
+  await page.getByRole("button", { name: "Instructions", exact: true }).click();
+  await expect(input).toHaveValue("");
+  await dialog.getByRole("button", { name: "Done", exact: true }).click();
+  await page
+    .getByRole("link", { name: "View details for Pasted text", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Instructions added", exact: true })
+    .click();
+  await expect(input).toHaveValue(instructions);
+  await dialog.getByRole("button", { name: "Clear", exact: true }).click();
+  await expect(input).toHaveValue("");
+  await input.fill(" \n ");
+  await dialog.getByRole("button", { name: "Done", exact: true }).click();
+  await page.getByRole("button", { name: "Generate", exact: true }).click();
+  await expect(page).toHaveURL(/job=instructions-2$/);
+  expect(payloads).toHaveLength(2);
+  expect(payloads[1]).not.toHaveProperty("instructions");
+  expect(payloads[1].sourceId).toBe(source.id);
+});
+
+test("fresh Haiku high preferences supplied by the server appear in Generate and Settings", async ({
+  page,
+}) => {
+  await mockApp(page, ({ path }) =>
+    path === "/api/settings"
+      ? {
+          openRouterConfigured: true,
+          model: "anthropic/claude-haiku-5.5",
+          reasoningEffort: "high",
+        }
+      : undefined,
+  );
+  for (const path of ["/generate", "/settings"]) {
+    await page.goto(path);
+    await expect(page.getByLabel("Model", { exact: true })).toContainText(
+      "Claude Haiku 5.5",
+    );
+    await expect(
+      page.getByLabel("Reasoning effort", { exact: true }),
+    ).toHaveText("high");
+  }
 });
 
 test("Settings opens live generations with row cancellation, retry and active detail cancellation", async ({

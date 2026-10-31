@@ -25,7 +25,7 @@ afterEach(async () => {
 });
 
 describe("owner model preferences", () => {
-  it("defaults to Sonnet 5.5 xhigh, persists choice across service instances and returns no secret material", async () => {
+  it("defaults to Haiku 5.5 high, persists choice across service instances and returns no secret material", async () => {
     const { store, settings, unseal } = fixture();
     expect(await settings.read()).toEqual({
       ...DEFAULT_SELECTION,
@@ -55,6 +55,26 @@ describe("owner model preferences", () => {
     expect(await store.getRecord("settings", "owner")).toMatchObject({
       openRouterKey: "sealed:sk-or-fixture-only",
     });
+  });
+
+  it("preserves an explicitly saved Sonnet/xhigh preference when the application default changes", async () => {
+    const { store, settings } = fixture();
+    const previous = {
+      model: "anthropic/claude-sonnet-5.5",
+      reasoningEffort: "xhigh",
+      openRouterKey: "sealed:sk-or-existing-fixture",
+    };
+    await store.putRecord("settings", "owner", previous);
+    expect(await settings.getSelection()).toEqual({
+      model: previous.model,
+      reasoningEffort: previous.reasoningEffort,
+    });
+    expect(await settings.read()).toEqual({
+      model: previous.model,
+      reasoningEffort: previous.reasoningEffort,
+      openRouterConfigured: true,
+    });
+    expect(await store.getRecord("settings", "owner")).toEqual(previous);
   });
 
   it("preserves concurrent model and key patches under the database transaction", async () => {
@@ -106,7 +126,7 @@ describe("owner model preferences", () => {
     });
     const previous = await store.getRecord("settings", "owner");
     await expect(
-      settings.update({ reasoningEffort: "none", openRouterKey: "" }),
+      settings.update({ reasoningEffort: "minimal", openRouterKey: "" }),
     ).rejects.toMatchObject({ status: 422 });
     await expect(settings.update({ model: "missing" })).rejects.toMatchObject({
       status: 422,

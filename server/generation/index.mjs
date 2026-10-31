@@ -24,6 +24,11 @@ const inputSchema = z
     model: z.string().trim().min(1).optional(),
     reasoningEffort: z.string().trim().optional(),
     category: z.string().trim().optional(),
+    instructions: z
+      .string()
+      .trim()
+      .transform((value) => value || undefined)
+      .optional(),
     mutationId: z.string().uuid().optional(),
   })
   .strict();
@@ -92,6 +97,7 @@ export function createGenerationService({
             model: value.model,
             reasoningEffort: value.reasoningEffort,
             category: value.category,
+            instructions: value.instructions,
           }),
         )
         .digest("hex");

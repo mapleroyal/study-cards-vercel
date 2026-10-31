@@ -13,7 +13,7 @@ The library, favorites, study progress, source documents, and generation jobs pe
 
 PDF parsing explicitly uses OpenRouter's maintained `file-parser` plugin with the `cloudflare-ai` engine. There is no OCR fallback, home-server service, local AI model, or custom PDF cleanup system. Straightforward exclusions are part of the generation prompt: focus on instructional text and ignore visual material and document furniture. These instructions guide generation; they are not a custom layout-analysis engine.
 
-The default is **Claude Sonnet 5.5 with xhigh reasoning** (`anthropic/claude-sonnet-5.5`). First-time users can add their key directly after choosing Generate cards; Settings can replace or remove it. The searchable model picker is available in **Settings** and **Generate cards**. Model and reasoning choices are saved for the owner and reused for subsequent generations. Set your OpenRouter key in **Settings**, or configure a deployment key through an environment variable.
+The default is **Claude Haiku 5.5 with high reasoning** (`anthropic/claude-haiku-5.5`). First-time users can add their key directly after choosing Generate cards; Settings can replace or remove it. The searchable model picker is available in **Settings** and **Generate cards**. Model and reasoning choices are saved for the owner and reused for subsequent generations. Optional instructions apply only to the current generation, shaping style and question emphasis while preserving the complete supplied source, chosen card types and count. Set your OpenRouter key in **Settings**, or configure a deployment key through an environment variable.
 
 ## Study controls
 

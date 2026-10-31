@@ -916,3 +916,56 @@ test("drawer handle supports a downward dismissal gesture and restores its trigg
   await expect(drawer).toBeHidden();
   await expect(opener).toBeFocused();
 });
+
+test("passive tooltips stay out of pointer hit testing while explicit hoverable tooltips remain interactive", async ({
+  page,
+}, testInfo) => {
+  const passive = page.getByRole("button", {
+    name: "Passive tooltip",
+    exact: true,
+  });
+  await passive.scrollIntoViewIfNeeded();
+  await passive.hover();
+  const content = slot(page, "tooltip-content").filter({
+    hasText: "Plain tooltip content",
+  });
+  await expect(content).toBeVisible();
+  const positioner = content.locator("..");
+  expect(await css(positioner, "pointerEvents")).toBe("none");
+  for (const target of [
+    content,
+    content.locator('[data-slot="tooltip-arrow"]'),
+  ]) {
+    expect(
+      await target.evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return Boolean(
+          document
+            .elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)
+            ?.closest('[data-slot="tooltip-positioner"]'),
+        );
+      }),
+    ).toBe(false);
+  }
+  await attach(content, testInfo, "passive-tooltip");
+  await page.mouse.move(0, 0);
+  await expect(content).toBeHidden();
+  await passive.focus();
+  await expect(content).toBeVisible();
+  await page
+    .getByRole("button", { name: "Hoverable tooltip", exact: true })
+    .focus();
+  await expect(content).toBeHidden();
+
+  const interactive = page.getByRole("button", {
+    name: "Tooltip action",
+    exact: true,
+  });
+  await expect(interactive).toBeVisible();
+  await interactive.hover();
+  await expect(interactive).toBeVisible();
+  await interactive.click();
+  await expect(page.getByLabel("Tooltip actions", { exact: true })).toHaveText(
+    "1",
+  );
+});

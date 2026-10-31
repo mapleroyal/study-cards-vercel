@@ -94,7 +94,6 @@ Validation on the server:
 - A real Vercel generation with Sonnet 5.5/xhigh produced seven valid cards covering all seven types in one provider call. Reported cost: **$0.030006**. Its synthetic verification set and source were removed afterward.
 - The live history API passed Rename, Delete and Undo checks against that generated set. Both list and detail omit its result after deletion; the existing provider connection remained configured.
 
-
 The final deployed browser check also passed model/effort changes across Settings, reload and Generate; per-set/global shuffle with answer preservation; exact JSON downloads from both menus; and the deleted-generation URL. It wrote no key fields and made no inference calls. Only its own temporary study set was deleted afterward.
 
 ## Follow-up: generation limits and failure controls (2026-10-31)
@@ -119,3 +118,12 @@ Validation: lint passed; all 270 unit/integration tests across 38 files passed; 
 Validation: lint and production builds passed; all 292 unit/integration tests across 40 files passed; all 160 UI scenarios passed across light/dark desktop/narrow configurations. The new source-picker selectors were corrected and those four cases rerun successfully; no product changes were needed. Source tooltip and Generations screenshots were inspected in all four configurations.
 
 A separate test using the maintained Workflow Vitest integration compiled the actual orchestration and cancellation helper, redirecting only their runtime import to a fixture. Actual durable-hook replay and AbortSignal transport closed a local HTTP SSE connection, retained its provider ID, made exactly one provider request, and saved no set. This used the real generation service with PGlite and synthetic provider data, not a paid model call. No new paid inference was needed for this follow-up.
+
+## Follow-up: one-off instructions and tooltip polish (2026-10-31)
+
+- Fresh owners default to Haiku 5.5 with high reasoning; an existing saved model/effort remains unchanged. The current public OpenRouter catalog confirms that selection is supported.
+- Generate has an optional Instructions dialog beside its submit button. Guidance is kept separate from source contents, included in the generation snapshot and idempotency receipt, preserved during schema repair/retry, and cleared for a fresh generation. Blank guidance is omitted; there is no application-specific text-length cap.
+- Tooltip uses Pulse MD's Base UI behavior: the default non-hoverable popup and arrow are excluded from pointer hit testing. App consumers use the native render contract. Saved-source names remain searchable and readable in full on highlight.
+- Combobox items use symmetric 12 px horizontal padding until selected; selected items retain right-side checkmark clearance.
+
+Validation on the server: lint and production build passed; 296 unit/integration tests across 40 files passed; all 172 browser scenarios passed across light/dark desktop/narrow configurations. The first unrestricted unit run encountered concurrent PGlite startup timeouts; the complete rerun with two workers passed without changing product behavior or test timeouts. Instructions and source-picker screenshots were inspected in all four configurations. Changed-file credential scanning found no secrets. No paid inference call was made for this follow-up.

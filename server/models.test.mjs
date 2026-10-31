@@ -8,27 +8,31 @@ import {
 import { modelFixtures } from "./test-helpers/models.mjs";
 
 describe("OpenRouter model catalog", () => {
-  it("uses advertised reasoning efforts and retains the exact requested Sonnet xhigh default", () => {
-    const sonnet = summarizeModel(modelFixtures[0]);
-    expect(sonnet).toMatchObject({
+  it("uses advertised reasoning efforts and retains the exact requested Haiku high default", () => {
+    expect(DEFAULT_SELECTION).toEqual({
+      model: "anthropic/claude-haiku-5.5",
+      reasoningEffort: "high",
+    });
+    const haiku = summarizeModel(modelFixtures[0]);
+    expect(haiku).toMatchObject({
       id: DEFAULT_SELECTION.model,
-      variants: ["max", "xhigh", "high", "medium", "low"],
-      defaultVariant: "xhigh",
+      variants: ["max", "xhigh", "high", "medium", "low", "none"],
+      defaultVariant: "high",
       reasoning: true,
       contextLength: 1000000,
       maxCompletionTokens: 128000,
     });
-    expect(resolveModelSelection([sonnet], DEFAULT_SELECTION)).toMatchObject(
+    expect(resolveModelSelection([haiku], DEFAULT_SELECTION)).toMatchObject(
       DEFAULT_SELECTION,
     );
     expect(() =>
-      resolveModelSelection([sonnet], {
+      resolveModelSelection([haiku], {
         ...DEFAULT_SELECTION,
-        reasoningEffort: "none",
+        reasoningEffort: "minimal",
       }),
     ).toThrow(/reasoning effort/);
     expect(() =>
-      resolveModelSelection([sonnet], { model: "unavailable" }),
+      resolveModelSelection([haiku], { model: "unavailable" }),
     ).toThrow(/unavailable/);
   });
 
