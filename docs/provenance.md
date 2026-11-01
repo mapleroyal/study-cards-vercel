@@ -8,7 +8,7 @@ This repository is the portable Vercel adaptation of the current Lumina server e
 - Checkout baseline: `07c7f46cde9df8f000505d6162e0be7962ef00c0` (`Support native Vercel source builds without remote Git history`).
 - Original deployed source recorded by its release manifest: `a3f93c2cf27ad73e6644b64071c5bc9dd7e5aa4b`.
 - The two commits between that deployed source and the checkout baseline change build/deployment/version scaffolding. The inspected server application, source service, store, provider/agent modules, shared card validator, and generation skill matched the deployed payload byte for byte.
-- Template/design foundation: React template `b8f0d5d0da94699aef2b4f848510a7568d34cfc7`, recorded in [template-foundation.md](template-foundation.md).
+- Template/design foundation: React template `b8f0d5d0da94699aef2b4f848510a7568d34cfc7`, with a targeted October 31 tooltip/combobox follow-up recorded in [template-foundation.md](template-foundation.md).
 
 The adaptation began from those source files, not from an older browser-only generation implementation. It does not copy the original database, uploaded documents, credentials, logs, or machine-specific service configuration.
 

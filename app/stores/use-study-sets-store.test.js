@@ -65,6 +65,53 @@ describe("createStudySetsStore", () => {
     });
   });
 
+  it("keeps a concurrent cached load unavailable until a fresh library snapshot arrives", async () => {
+    const cached = {
+      id: "cached-set",
+      slug: "cached-set",
+      rawSet: createSet(),
+    };
+    const unavailable = new Error("Library unavailable");
+    let finishCachedLoad;
+    const storage = {
+      list: vi.fn(
+        ({ onCacheFallback }) =>
+          new Promise((resolve) => {
+            finishCachedLoad = () => {
+              onCacheFallback(unavailable);
+              resolve([cached]);
+            };
+          }),
+      ),
+    };
+    const store = createStudySetsStore({ storage });
+    const pending = store.getState().load();
+    // The reader's required-slug load failed while the chooser was loading.
+    store.getState().hydrate([], "Study set could not be loaded.");
+    finishCachedLoad();
+    await expect(pending).resolves.toEqual([cached]);
+    expect(store.getState()).toMatchObject({
+      records: [cached],
+      status: "error",
+      error: "Library unavailable",
+    });
+
+    // A successful background refresh can now prove the requested set absent.
+    store.getState().hydrate([]);
+    expect(store.getState()).toMatchObject({
+      records: [],
+      status: "ready",
+      error: null,
+    });
+    storage.list.mockResolvedValueOnce([]);
+    await expect(store.getState().load()).resolves.toEqual([]);
+    expect(store.getState()).toMatchObject({
+      records: [],
+      status: "ready",
+      error: null,
+    });
+  });
+
   it("imports and exposes local study sets", async () => {
     const interactions = createInteractionsStore();
     const store = createStudySetsStore({

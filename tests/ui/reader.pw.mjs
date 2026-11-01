@@ -458,3 +458,256 @@ test("long text answers remain complete after saving and reloading", async ({
   await page.reload();
   await expect(answer).toHaveValue(text);
 });
+
+function reviewRecord() {
+  return {
+    id: "reader-review-set",
+    slug: "ordering-practice",
+    revision: 1,
+    source: { type: "generated" },
+    importedAt: "2026-11-01T00:00:00Z",
+    updatedAt: "2026-11-01T00:00:00Z",
+    rawSet: {
+      title: "Ordering practice",
+      category: "Reader checks",
+      cards: [
+        {
+          id: 1,
+          type: "ordering",
+          question: "Order the stages.",
+          answer: ["First", "Second", "Third"],
+          unordered_items: ["Third", "First", "Second"],
+          explanation: "The stages proceed from first to third.",
+        },
+      ],
+    },
+  };
+}
+
+async function mockReviewLibrary(page, state) {
+  const patches = [];
+  await page.route("**/api/**", async (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    if (path === "/api/session") {
+      return route.continue();
+    }
+    if (path === "/api/library" && state.unavailable) {
+      return route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Library unavailable" }),
+      });
+    }
+    let result = {};
+    if (path === "/api/capabilities") {
+      result = { server: true, agent: false, authenticated: true };
+    }
+    if (path === "/api/library") {
+      result = {
+        records: state.records,
+        revision: state.records[0]?.revision || 0,
+      };
+    }
+    if (path === "/api/favorites") {
+      result = { favorites: [] };
+    }
+    if (path === "/api/progress") {
+      result = { interactionsBySet: {} };
+    }
+    if (path === "/api/actions") {
+      const body = request.postDataJSON();
+      if (body.action === "study_set.update") {
+        const record = state.records.find((item) => item.id === body.args.id);
+        expect(body.expectedRevision).toBe(record.revision);
+        patches.push(globalThis.structuredClone(body.args.patch));
+        for (const card of body.args.patch.upsertCards || []) {
+          record.rawSet.cards = record.rawSet.cards.map((item) =>
+            item.id === card.id ? card : item,
+          );
+        }
+        record.revision++;
+      }
+      result = {
+        mutationId: body.mutationId,
+        record: state.records[0],
+        revision: state.records[0]?.revision || 0,
+      };
+    }
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(result),
+    });
+  });
+  return patches;
+}
+
+test("ordering edits preserve the starting permutation across text, correct-order, add and remove changes", async ({
+  page,
+}) => {
+  const state = { records: [reviewRecord()], unavailable: false };
+  const patches = await mockReviewLibrary(page, state);
+  await page.goto("/sets/ordering-practice");
+  const dialog = page.getByRole("dialog", { name: "Edit card", exact: true });
+  const openEditor = () =>
+    page.getByRole("button", { name: "Edit card 1", exact: true }).click();
+  const save = async (count) => {
+    await dialog.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(dialog).toBeHidden();
+    expect(patches).toHaveLength(count);
+  };
+  await openEditor();
+  await dialog
+    .getByLabel("Correct order 1", { exact: true })
+    .fill("First corrected");
+  await save(1);
+  expect(patches[0].upsertCards[0].unordered_items).toEqual([
+    "Third",
+    "First corrected",
+    "Second",
+  ]);
+
+  await openEditor();
+  await dialog
+    .getByRole("button", { name: "Move item 1 down", exact: true })
+    .click();
+  await save(2);
+  expect(patches[1].upsertCards[0].answer).toEqual([
+    "Second",
+    "First corrected",
+    "Third",
+  ]);
+  expect(patches[1].upsertCards[0].unordered_items).toEqual([
+    "Third",
+    "First corrected",
+    "Second",
+  ]);
+
+  await openEditor();
+  await dialog
+    .getByRole("group", { name: "Correct order", exact: true })
+    .getByRole("button", { name: "Add", exact: true })
+    .click();
+  await dialog.getByLabel("Correct order 4", { exact: true }).fill("Fourth");
+  await save(3);
+  expect(patches[2].upsertCards[0].unordered_items).toEqual([
+    "Fourth",
+    "Third",
+    "First corrected",
+    "Second",
+  ]);
+
+  await openEditor();
+  await dialog
+    .getByRole("button", { name: "Remove correct order 1", exact: true })
+    .click();
+  await save(4);
+  expect(patches[3].upsertCards[0].answer).toEqual([
+    "First corrected",
+    "Third",
+    "Fourth",
+  ]);
+  expect(patches[3].upsertCards[0].unordered_items).toEqual([
+    "Fourth",
+    "Third",
+    "First corrected",
+  ]);
+  await page.reload();
+  await expect(
+    page.getByRole("article").getByRole("list").getByRole("button"),
+  ).toHaveText([/Fourth$/, /Third$/, /First corrected$/]);
+  await openEditor();
+  await expect(
+    dialog.getByLabel("Correct order 1", { exact: true }),
+  ).toHaveValue("First corrected");
+  await expect(
+    dialog.getByLabel("Correct order 2", { exact: true }),
+  ).toHaveValue("Third");
+  await expect(
+    dialog.getByLabel("Correct order 3", { exact: true }),
+  ).toHaveValue("Fourth");
+});
+
+test("unavailable readers retain the requested URL, retry, and use only a matching offline cache", async ({
+  page,
+}, testInfo) => {
+  const state = { records: [reviewRecord()], unavailable: true };
+  await mockReviewLibrary(page, state);
+  await page.goto("/sets/ordering-practice");
+  await expect(page.getByRole("alert")).toHaveText(
+    "Study set could not be loaded.",
+  );
+  await expect(page.getByRole("article")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/sets\/ordering-practice$/);
+  await capture(page, testInfo, "reader-load-error");
+
+  state.unavailable = false;
+  await page.getByRole("button", { name: "Retry", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Ordering practice", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(1);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/sets\/ordering-practice$/);
+
+  state.unavailable = true;
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Ordering practice", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(1);
+  await page.goto("/sets/uncached-study");
+  await expect(page.getByRole("alert")).toHaveText(
+    "Study set could not be loaded.",
+  );
+  await expect(page.getByRole("article")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/sets\/uncached-study$/);
+  state.unavailable = false;
+  await page.getByRole("button", { name: "Retry", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Study set not found", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/sets\/uncached-study$/);
+});
+
+test("unavailable readers recover from a refreshed library without replacing the requested set", async ({
+  page,
+}) => {
+  const state = { records: [reviewRecord()], unavailable: true };
+  await mockReviewLibrary(page, state);
+  await page.goto("/sets/ordering-practice");
+  await expect(page.getByRole("alert")).toHaveText(
+    "Study set could not be loaded.",
+  );
+  state.unavailable = false;
+  await page.evaluate(() =>
+    window.dispatchEvent(new globalThis.Event("online")),
+  );
+  await expect(
+    page.getByRole("heading", { name: "Ordering practice", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(1);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/sets\/ordering-practice$/);
+  state.unavailable = true;
+  await page.goto("/sets/does-not-exist");
+  await expect(page.getByRole("alert")).toHaveText(
+    "Study set could not be loaded.",
+  );
+  state.unavailable = false;
+  await page.evaluate(() =>
+    window.dispatchEvent(new globalThis.Event("online")),
+  );
+  await expect(
+    page.getByRole("heading", { name: "Study set not found", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(0);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/sets\/does-not-exist$/);
+  await page.goto("/sets/oops-something-went-wrong-example-study-set");
+  await expect(
+    page.getByRole("heading", { name: "Study set not found", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(0);
+});

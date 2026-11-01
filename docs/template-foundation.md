@@ -122,3 +122,5 @@ options still expose full filenames on pointer and keyboard highlight.
 Combobox text labels truncate visually with 12 px padding on both sides.
 Only selected items reserve 32 px on the right for the existing 16 px checkmark.
 Full values and search labels remain unchanged.
+
+The same targeted wrapper behavior was published to [React template `9698313ef118c688c312918a90ddc6ae1f96c2b9`](https://github.com/mapleroyal/react-template/commit/9698313ef118c688c312918a90ddc6ae1f96c2b9) and [Electron template `8ea9d3e8790af769a66689ca2f652060786868ea`](https://github.com/mapleroyal/electron-template/commit/8ea9d3e8790af769a66689ca2f652060786868ea) on October 31, 2026. This records the tooltip/combobox follow-up only; it does not replace the historical full-foundation baseline above or claim wholesale adoption of either template's current tree.

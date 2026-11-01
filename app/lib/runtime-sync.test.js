@@ -20,6 +20,7 @@ vi.mock("@/lib/runtime-client", () => ({
 vi.mock("@/lib/local-study-set-storage", () => ({
   localStudySetStorage: { list: listBrowserRecords },
   StudySetConflictError: class extends Error {},
+  closeLocalStudySetDatabase: async () => {},
 }));
 
 const rawSet = {
@@ -54,12 +55,15 @@ beforeEach(async () => {
   // Initialize the PostgreSQL fixture before installing browser globals.
   server = createTestStore();
   record = (await server.createStudySet(rawSet)).record;
-  let lock = Promise.resolve();
+  const locks = new Map();
   vi.stubGlobal("navigator", {
     locks: {
-      request: (_name, callback) => {
-        const result = lock.then(callback);
-        lock = result.catch(() => {});
+      request: (name, callback) => {
+        const result = (locks.get(name) || Promise.resolve()).then(callback);
+        locks.set(
+          name,
+          result.catch(() => {}),
+        );
         return result;
       },
     },
@@ -75,10 +79,14 @@ beforeEach(async () => {
       getItem: (key) => values.get(key) ?? null,
       setItem: (key, value) => values.set(key, value),
       removeItem: (key) => values.delete(key),
+      clear: () => values.clear(),
     },
     addEventListener() {},
     removeEventListener() {},
   });
+  vi.stubGlobal("localStorage", window.localStorage);
+  vi.stubGlobal("sessionStorage", { clear: vi.fn() });
+  vi.stubGlobal("location", { replace: vi.fn() });
   vi.stubGlobal("document", { visibilityState: "hidden" });
   handleProgressRead = null;
   loseImportResponse = false;
@@ -90,9 +98,19 @@ beforeEach(async () => {
     }
     if (path === "/api/progress") {
       if (options.method === "PATCH") {
-        const { slug, cardId, patch, mutationId, cardVersion } = options.body;
+        const { slug, setId, cardId, patch, mutationId, cardVersion } =
+          options.body;
+        if (typeof setId !== "string" || !setId) {
+          throw Object.assign(
+            new Error(
+              "A pending answer from an older app version needs review. Your draft remains saved on this device.",
+            ),
+            { status: 428 },
+          );
+        }
         return server.setInteraction(slug, cardId, patch, {
           mutationId,
+          setId,
           cardVersion,
           replace: true,
         });
@@ -116,6 +134,9 @@ beforeEach(async () => {
         throw new TypeError("Connection lost after the server committed");
       }
       return result;
+    }
+    if (path === "/api/session" && options.method === "DELETE") {
+      return { ok: true };
     }
     throw new Error(`Unexpected request: ${path}`);
   });
@@ -500,7 +521,7 @@ it("recovers a draft before IDB persistence without reviving it over another tab
         "Interrupted older answer",
       );
     expect(await storage.count("outbox")).toBe(0);
-    const pointerKey = `lumina:sync-draft:${JSON.stringify([record.slug, 1])}`;
+    const pointerKey = `lumina:sync-draft:${JSON.stringify([record.id, 1])}`;
     const olderId = window.localStorage.getItem(pointerKey);
     expect(
       JSON.parse(
@@ -629,4 +650,317 @@ it("does not revive a failed-storage draft after another tab acknowledges a newe
   } finally {
     release.resolve();
   }
+});
+
+it("does not attach a queued answer to an identical replacement set with the same slug", async () => {
+  stop = await sync.startRuntimeSync();
+  interactions
+    .getState()
+    .setTextResponse(record.slug, rawSet.cards[0], "Old set answer");
+  await server.deleteStudySet(record.id);
+  const replacement = (await server.createStudySet(rawSet)).record;
+  expect(replacement.slug).toBe(record.slug);
+  expect(replacement.id).not.toBe(record.id);
+  await sync.flushRuntimeSync();
+  expect(await server.getInteractions()).toEqual({});
+  expect(interactions.getState().interactionsBySet).toEqual({});
+  expect(sets.getState().records[0].id).toBe(replacement.id);
+  const body = apiRequest.mock.calls.find(
+    ([path, options]) =>
+      path === "/api/progress" && options?.method === "PATCH",
+  )[1].body;
+  expect(body.setId).toBe(record.id);
+  expect(toastInfo).toHaveBeenCalledOnce();
+});
+
+it("flushes a debounced answer before signing out and clearing private browser storage", async () => {
+  stop = await sync.startRuntimeSync();
+  interactions
+    .getState()
+    .setTextResponse(record.slug, rawSet.cards[0], "Answer before logout");
+  const { signOut } = await import("./sign-out");
+  await signOut();
+  expect((await server.getInteractions())[record.slug][1].response).toBe(
+    "Answer before logout",
+  );
+  const calls = apiRequest.mock.calls;
+  const writeIndex = calls.findIndex(
+    ([path, options]) =>
+      path === "/api/progress" && options?.method === "PATCH",
+  );
+  const logoutIndex = calls.findIndex(([path]) => path === "/api/session");
+  expect(writeIndex).toBeGreaterThanOrEqual(0);
+  expect(logoutIndex).toBeGreaterThan(writeIndex);
+  expect(globalThis.localStorage.length).toBe(0);
+  expect(globalThis.sessionStorage.clear).toHaveBeenCalledOnce();
+  expect(globalThis.location.replace).toHaveBeenCalledWith("/login");
+});
+
+it("keeps unsynced answers and the session when sign-out cannot drain the outbox", async () => {
+  stop = await sync.startRuntimeSync();
+  const request = apiRequest.getMockImplementation();
+  apiRequest.mockImplementation((path, options) =>
+    path === "/api/progress" && options?.method === "PATCH"
+      ? Promise.reject(Object.assign(new Error("Unavailable"), { status: 503 }))
+      : request(path, options),
+  );
+  interactions
+    .getState()
+    .setTextResponse(record.slug, rawSet.cards[0], "Still on this device");
+  const { signOut } = await import("./sign-out");
+  await expect(signOut()).rejects.toThrow(/Sign-out was stopped/);
+  expect(apiRequest.mock.calls.some(([path]) => path === "/api/session")).toBe(
+    false,
+  );
+  expect(globalThis.location.replace).not.toHaveBeenCalled();
+  expect(globalThis.sessionStorage.clear).not.toHaveBeenCalled();
+  const storage = await openDB("lumina-sync", 1);
+  expect((await storage.getAll("outbox"))[0].body.patch.response).toBe(
+    "Still on this device",
+  );
+  storage.close();
+  expect(
+    interactions.getState().interactionsBySet[record.slug][1].response,
+  ).toBe("Still on this device");
+  apiRequest.mockImplementation(request);
+  await signOut();
+  expect((await server.getInteractions())[record.slug][1].response).toBe(
+    "Still on this device",
+  );
+  expect(globalThis.location.replace).toHaveBeenCalledWith("/login");
+});
+
+it("waits for an in-flight answer and a newer draft before deleting the session", async () => {
+  stop = await sync.startRuntimeSync();
+  const request = apiRequest.getMockImplementation();
+  const entered = Promise.withResolvers();
+  const release = Promise.withResolvers();
+  let held = false;
+  apiRequest.mockImplementation(async (path, options) => {
+    if (path === "/api/progress" && options?.method === "PATCH" && !held) {
+      held = true;
+      entered.resolve();
+      await release.promise;
+    }
+    return request(path, options);
+  });
+  interactions
+    .getState()
+    .setTextResponse(record.slug, rawSet.cards[0], "First answer");
+  const flushing = sync.flushRuntimeSync();
+  await entered.promise;
+  interactions
+    .getState()
+    .setTextResponse(record.slug, rawSet.cards[0], "Newer answer");
+  const { signOut } = await import("./sign-out");
+  const signingOut = signOut();
+  expect(apiRequest.mock.calls.some(([path]) => path === "/api/session")).toBe(
+    false,
+  );
+  release.resolve();
+  await Promise.all([flushing, signingOut]);
+  expect((await server.getInteractions())[record.slug][1].response).toBe(
+    "Newer answer",
+  );
+  expect(globalThis.location.replace).toHaveBeenCalledWith("/login");
+});
+
+it("flushes another tab's shared draft before sign-out preparation completes", async () => {
+  stop = await sync.startRuntimeSync();
+  vi.resetModules();
+  const otherSync = await import("./runtime-sync");
+  const otherInteractions = (
+    await import("@/stores/use-study-interactions-store")
+  ).useStudyInteractionsStore;
+  (await import("@/stores/use-study-sets-store")).useStudySetsStore
+    .getState()
+    .hydrate([record]);
+  extraStops.push(await otherSync.startRuntimeSync());
+  otherInteractions
+    .getState()
+    .setTextResponse(record.slug, rawSet.cards[0], "Other tab answer");
+  await sync.flushRuntimeSyncForSignOut();
+  expect((await server.getInteractions())[record.slug][1].response).toBe(
+    "Other tab answer",
+  );
+  const storage = await openDB("lumina-sync", 1);
+  expect(await storage.count("outbox")).toBe(0);
+  storage.close();
+});
+
+it("preserves an older queued answer without identity rather than rebinding or silently dropping it", async () => {
+  stop = await sync.startRuntimeSync();
+  const storage = await openDB("lumina-sync", 1);
+  const mutationId = globalThis.crypto.randomUUID();
+  const legacy = {
+    path: "/api/progress",
+    method: "PATCH",
+    mutationId,
+    entityKey: JSON.stringify([record.slug, 1]),
+    sequence: 1,
+    body: {
+      slug: record.slug,
+      cardId: 1,
+      patch: { response: "Older offline answer" },
+      cardVersion: JSON.stringify(rawSet.cards[0]),
+      mutationId,
+    },
+  };
+  await storage.put("outbox", legacy);
+  await server.deleteStudySet(record.id);
+  const replacement = (await server.createStudySet(rawSet)).record;
+  expect(replacement.slug).toBe(record.slug);
+  await sync.flushRuntimeSync();
+  expect(await server.getInteractions()).toEqual({});
+  expect((await storage.getAll("outbox"))[0].body).toEqual(legacy.body);
+  expect(sync.getRuntimeSyncSnapshot()).toMatchObject({
+    pending: 1,
+    error: expect.stringMatching(/older app version needs review/),
+  });
+  expect(toastInfo).not.toHaveBeenCalled();
+  const { signOut } = await import("./sign-out");
+  await expect(signOut()).rejects.toThrow(/Sign-out was stopped/);
+  expect(apiRequest.mock.calls.some(([path]) => path === "/api/session")).toBe(
+    false,
+  );
+  storage.close();
+});
+
+it("exports an identity-bearing recovery copy without clearing or rebinding queued changes", async () => {
+  stop = await sync.startRuntimeSync();
+  const request = apiRequest.getMockImplementation();
+  apiRequest.mockImplementation((path, options) =>
+    path === "/api/progress" && options?.method === "PATCH"
+      ? Promise.reject(Object.assign(new Error("Unavailable"), { status: 503 }))
+      : request(path, options),
+  );
+  interactions
+    .getState()
+    .setTextResponse(record.slug, rawSet.cards[0], "Recover this answer");
+  await sync.flushRuntimeSync();
+  const storage = await openDB("lumina-sync", 1);
+  const before = await storage.getAll("outbox");
+  const recovery = await sync.readPendingRuntimeChanges();
+  expect(recovery).toMatchObject({
+    format: "lumina-unsynced-changes",
+    version: 1,
+    operations: [
+      {
+        path: "/api/progress",
+        method: "PATCH",
+        body: {
+          setId: record.id,
+          slug: record.slug,
+          cardId: 1,
+          cardVersion: JSON.stringify(record.rawSet.cards[0]),
+          patch: { response: "Recover this answer" },
+        },
+      },
+    ],
+    cachedSets: [
+      {
+        id: record.id,
+        slug: record.slug,
+        title: rawSet.title,
+        category: rawSet.category,
+      },
+    ],
+  });
+  expect(Object.keys(recovery).sort()).toEqual([
+    "cachedSets",
+    "description",
+    "exportedAt",
+    "format",
+    "operations",
+    "version",
+  ]);
+  expect(recovery.description).toMatch(/not a study-set import file/);
+  expect(await storage.getAll("outbox")).toEqual(before);
+  expect(await server.getInteractions()).toEqual({});
+  storage.close();
+});
+
+it("discards pending changes only through the explicit option and only after logout succeeds", async () => {
+  stop = await sync.startRuntimeSync();
+  const request = apiRequest.getMockImplementation();
+  let rejectLogout = true;
+  apiRequest.mockImplementation((path, options) => {
+    if (path === "/api/progress" && options?.method === "PATCH") {
+      throw Object.assign(new Error("Unavailable"), { status: 503 });
+    }
+    if (path === "/api/session" && rejectLogout) {
+      throw Object.assign(new Error("Logout unavailable"), { status: 503 });
+    }
+    return request(path, options);
+  });
+  interactions
+    .getState()
+    .setTextResponse(record.slug, rawSet.cards[0], "Pending discarded answer");
+  const { signOut } = await import("./sign-out");
+  await expect(signOut()).rejects.toMatchObject({ code: "UNSYNCED_CHANGES" });
+  await expect(signOut({ discardUnsynced: true })).rejects.toThrow(
+    "Logout unavailable",
+  );
+  expect(globalThis.location.replace).not.toHaveBeenCalled();
+  expect(globalThis.sessionStorage.clear).not.toHaveBeenCalled();
+  const storage = await openDB("lumina-sync", 1);
+  expect((await storage.getAll("outbox"))[0].body.patch.response).toBe(
+    "Pending discarded answer",
+  );
+  storage.close();
+  rejectLogout = false;
+  await signOut({ discardUnsynced: true });
+  expect(await server.getInteractions()).toEqual({});
+  expect(globalThis.localStorage.length).toBe(0);
+  expect(globalThis.sessionStorage.clear).toHaveBeenCalledOnce();
+  expect(globalThis.location.replace).toHaveBeenCalledWith("/login");
+});
+
+it("shares a pending sign-out operation so repeated clicks cannot delete the session twice", async () => {
+  stop = await sync.startRuntimeSync();
+  const request = apiRequest.getMockImplementation();
+  const entered = Promise.withResolvers();
+  const release = Promise.withResolvers();
+  apiRequest.mockImplementation(async (path, options) => {
+    if (path === "/api/session") {
+      entered.resolve();
+      await release.promise;
+    }
+    return request(path, options);
+  });
+  const { signOut } = await import("./sign-out");
+  const first = signOut();
+  await entered.promise;
+  const duplicate = signOut();
+  expect(duplicate).toBe(first);
+  release.resolve();
+  await Promise.all([first, duplicate]);
+  expect(
+    apiRequest.mock.calls.filter(([path]) => path === "/api/session"),
+  ).toHaveLength(1);
+});
+
+it("can sign out with no pending changes before the runtime subscription starts", async () => {
+  const { signOut } = await import("./sign-out");
+  await signOut();
+  expect(globalThis.location.replace).toHaveBeenCalledWith("/login");
+  expect(
+    apiRequest.mock.calls.filter(([path]) => path === "/api/session"),
+  ).toHaveLength(1);
+});
+
+it("preserves the session and recovery choice if browser storage cannot be inspected", async () => {
+  vi.spyOn(globalThis.indexedDB, "open").mockImplementation(() => {
+    throw new Error("Browser storage unavailable");
+  });
+  const { signOut } = await import("./sign-out");
+  await expect(signOut()).rejects.toMatchObject({
+    code: "UNSYNCED_CHANGES",
+    message: expect.stringMatching(/storage unavailable/),
+  });
+  expect(apiRequest.mock.calls.some(([path]) => path === "/api/session")).toBe(
+    false,
+  );
+  expect(globalThis.location.replace).not.toHaveBeenCalled();
+  expect(globalThis.sessionStorage.clear).not.toHaveBeenCalled();
 });

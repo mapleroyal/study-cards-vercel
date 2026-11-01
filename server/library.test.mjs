@@ -65,6 +65,7 @@ it("retains the browser library/progress/favorite mutation contract with persist
     "/progress",
     {
       slug: first.record.slug,
+      setId: first.record.id,
       cardId: 1,
       patch: { selectedAnswer: true },
       cardVersion: JSON.stringify(first.record.rawSet.cards[0]),
@@ -73,6 +74,35 @@ it("retains the browser library/progress/favorite mutation contract with persist
     "PATCH",
   );
   expect(progress.patch).toEqual({ selectedAnswer: true });
+  expect(
+    (
+      await request(
+        "/progress",
+        {
+          slug: first.record.slug,
+          cardId: 1,
+          patch: { selectedAnswer: false },
+          mutationId: "legacy-unidentified",
+        },
+        "PATCH",
+      )
+    ).status,
+  ).toBe(428);
+  expect(
+    (
+      await request(
+        "/progress",
+        {
+          slug: first.record.slug,
+          setId: "different-original-set",
+          cardId: 1,
+          patch: { selectedAnswer: false },
+          mutationId: "replacement-unidentified",
+        },
+        "PATCH",
+      )
+    ).status,
+  ).toBe(409);
   expect(
     (await request("/progress")).interactionsBySet[first.record.slug][1],
   ).toEqual({ selectedAnswer: true });
@@ -99,6 +129,12 @@ it("retains the browser library/progress/favorite mutation contract with persist
 it("returns HTTP errors for invalid, absent and stale library actions", async () => {
   const request = await app();
   expect((await request("/library/missing")).status).toBe(404);
+  expect((await request("/progress", undefined, "PATCH")).status).toBe(428);
+  expect((await request("/progress", [], "PATCH")).status).toBe(428);
+  expect((await request("/actions", undefined, "POST")).status).toBe(400);
+  expect(
+    (await request("/actions", { action: "progress.set", args: null })).status,
+  ).toBe(428);
   expect((await request("/actions", { action: "unknown" })).status).toBe(400);
   expect(
     (

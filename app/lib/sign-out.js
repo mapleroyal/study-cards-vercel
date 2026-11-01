@@ -1,10 +1,31 @@
 import { deleteDB } from "idb";
 import { apiRequest } from "@/lib/runtime-client";
-import { stopRuntimeSyncForSignOut } from "@/lib/runtime-sync";
+import {
+  flushRuntimeSyncForSignOut,
+  readPendingRuntimeChanges,
+  stopRuntimeSyncForSignOut,
+} from "@/lib/runtime-sync";
 import { closeStudySetCache } from "@/lib/runtime-study-set-storage";
 import { closeLocalStudySetDatabase } from "@/lib/local-study-set-storage";
 
-export async function signOut() {
+let signingOut;
+export function signOut({ discardUnsynced = false } = {}) {
+  if (!signingOut) {
+    const run = () => completeSignOut(discardUnsynced);
+    const locks = globalThis.navigator?.locks;
+    signingOut = (
+      locks ? locks.request("lumina-sign-out", run) : run()
+    ).finally(() => {
+      signingOut = undefined;
+    });
+  }
+  return signingOut;
+}
+
+async function completeSignOut(discardUnsynced) {
+  if (!discardUnsynced) {
+    await flushRuntimeSyncForSignOut();
+  }
   await apiRequest("/api/session", { method: "DELETE" });
   globalThis.localStorage.setItem("lumina:sign-out", String(Date.now()));
   await stopRuntimeSyncForSignOut();
@@ -34,4 +55,23 @@ export async function signOut() {
     );
   }
   globalThis.location.replace("/login");
+}
+
+export async function downloadUnsyncedChanges() {
+  const recovery = await readPendingRuntimeChanges();
+  const url = URL.createObjectURL(
+    new globalThis.Blob([`${JSON.stringify(recovery, null, 2)}\n`], {
+      type: "application/json;charset=utf-8",
+    }),
+  );
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "study-cards-unsynced-changes.json";
+  document.body.append(link);
+  try {
+    link.click();
+  } finally {
+    link.remove();
+    globalThis.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
 }

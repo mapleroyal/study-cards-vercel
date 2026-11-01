@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { Buffer } from "node:buffer";
 
 import { signInToPreview, resetOwnerSession } from "./owner-session.mjs";
 test.beforeEach(async ({ page }) => signInToPreview(page));
@@ -1425,4 +1426,550 @@ test("sign out clears private browser data and closes other signed-in tabs", asy
   ).toEqual([]);
   expect(await page.evaluate(async () => globalThis.caches.keys())).toEqual([]);
   resetOwnerSession();
+});
+
+test("job details never retain another job's actions during delayed or failed navigation", async ({
+  page,
+}) => {
+  const sources = [
+    { id: "scope-a", name: "Source A", status: "ready" },
+    { id: "scope-b", name: "Source B", status: "ready" },
+  ];
+  const jobs = sources.map((source, index) => ({
+    id: `scope-job-${index}`,
+    sourceId: source.id,
+    sourceName: source.name,
+    status: index === 0 ? "generating" : "failed",
+    questionCount: index === 0 ? 3 : 9,
+    cardTypes: ["short_answer"],
+  }));
+  const writes = [];
+  let release;
+  const delayed = new Promise((resolve) => {
+    release = resolve;
+  });
+  let delayNext = true;
+  await mockApp(page, ({ path, request }) => {
+    if (
+      request.method() === "POST" &&
+      path.startsWith("/api/generation/jobs")
+    ) {
+      writes.push(path);
+    }
+    if (path === "/api/sources") {
+      return { sources };
+    }
+    if (path === "/api/generation/jobs") {
+      return { jobs };
+    }
+    const job = jobs.find((item) => path === `/api/generation/jobs/${item.id}`);
+    if (job) {
+      return { job };
+    }
+  });
+  await page.route("**/api/generation/jobs/scope-job-1", async (route) => {
+    if (delayNext) {
+      delayNext = false;
+      await delayed;
+      await route.fulfill({
+        status: 503,
+        json: { error: "Details unavailable" },
+      });
+    } else {
+      await route.fulfill({ json: { job: jobs[1] } });
+    }
+  });
+  await page.goto("/generate?view=generations&job=scope-job-0");
+  const detail = page.locator('section[aria-live="polite"]');
+  await expect(
+    detail.getByRole("button", { name: "Cancel", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: "View details for Source B", exact: true })
+    .click();
+  await expect(page).toHaveURL(/job=scope-job-1$/);
+  await expect(detail.getByText("Loading…", { exact: true })).toBeVisible();
+  await expect(detail.getByRole("button")).toHaveCount(0);
+  release();
+  await expect(detail.getByRole("alert")).toHaveText("Details unavailable");
+  await expect(detail.getByRole("button")).toHaveCount(0);
+  expect(writes).toEqual([]);
+  await page
+    .getByRole("link", { name: "View details for Source A", exact: true })
+    .click();
+  await expect(
+    detail.getByRole("button", { name: "Cancel", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: "View details for Source B", exact: true })
+    .click();
+  await detail.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(page.getByLabel("Cards", { exact: true })).toHaveValue("9");
+  await expect(page.locator('span[title="Source B"]')).toBeVisible();
+  expect(writes).toEqual([]);
+});
+
+test("idle generation history discovers external jobs and pauses while hidden", async ({
+  page,
+}) => {
+  await page.clock.install();
+  const jobs = [];
+  let reads = 0;
+  await mockApp(page, ({ path }) => {
+    if (path === "/api/generation/jobs") {
+      reads++;
+      return { jobs };
+    }
+  });
+  await page.goto("/generate?view=generations");
+  await expect(
+    page.getByText("No generations yet", { exact: true }),
+  ).toBeVisible();
+  jobs.push({
+    id: "external-job",
+    sourceName: "Created elsewhere",
+    status: "queued",
+  });
+  await page.clock.runFor(10001);
+  const row = page
+    .getByText("Created elsewhere", { exact: true })
+    .locator("../..");
+  await expect(row.getByText("Queued", { exact: true })).toBeVisible();
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      value: "hidden",
+    });
+    document.dispatchEvent(new globalThis.Event("visibilitychange"));
+  });
+  const hiddenReads = reads;
+  jobs[0].status = "canceled";
+  await page.clock.runFor(30000);
+  expect(reads).toBe(hiddenReads);
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      value: "visible",
+    });
+    document.dispatchEvent(new globalThis.Event("visibilitychange"));
+  });
+  await expect(row.getByText("Canceled", { exact: true })).toBeVisible();
+  jobs.push({
+    id: "focus-job",
+    sourceName: "Created before refocus",
+    status: "failed",
+  });
+  await page.evaluate(() =>
+    globalThis.dispatchEvent(new globalThis.Event("focus")),
+  );
+  await expect(
+    page.getByText("Created before refocus", { exact: true }),
+  ).toBeVisible();
+});
+
+test("duplicate saved sources have distinguishing metadata and editable labels", async ({
+  page,
+}, testInfo) => {
+  const sources = [
+    "Chapter.pdf",
+    "Chapter.pdf",
+    "Pasted text",
+    "Pasted text",
+  ].map((name, index) => ({
+    id: `named-source-${index}`,
+    name,
+    status: "ready",
+    size: 1024 + index * 200,
+    createdAt: `2026-10-31T12:00:0${index}Z`,
+  }));
+  const updates = [];
+  await mockApp(page, ({ path, request }) => {
+    if (path === "/api/sources") {
+      return { sources };
+    }
+    if (request.method() === "PATCH" && path.startsWith("/api/sources/")) {
+      const source = sources.find((item) => path.endsWith(item.id));
+      updates.push({ id: source.id, ...request.postDataJSON() });
+      source.name = request.postDataJSON().name;
+      return { source };
+    }
+  });
+  await page.goto("/generate");
+  await page
+    .getByRole("combobox", { name: "Show options", exact: true })
+    .click();
+  const options = page.getByRole("option");
+  await expect(options).toHaveCount(4);
+  const names = await options.evaluateAll((elements) =>
+    elements.map((element) => element.getAttribute("aria-label")),
+  );
+  expect(new Set(names).size).toBe(4);
+  expect(
+    names.filter((name) => name.startsWith("Pasted text · ")),
+  ).toHaveLength(2);
+  const second = page.getByRole("option", { name: names[1], exact: true });
+  await second.hover();
+  await expect(page.locator('[data-slot="tooltip-content"]')).toContainText(
+    names[1].replace("Chapter.pdf · ", ""),
+  );
+  await capture(page, testInfo, "distinguishable-sources");
+  await second.click();
+  await page
+    .getByRole("button", { name: "Rename source", exact: true })
+    .click();
+  const nameInput = page.getByRole("textbox", {
+    name: "Source name",
+    exact: true,
+  });
+  await nameInput.fill(" ");
+  await expect(
+    page.getByRole("button", { name: "Save source name", exact: true }),
+  ).toBeDisabled();
+  await nameInput.fill("Cell division");
+  await capture(page, testInfo, "source-rename");
+  await nameInput.press("Enter");
+  await expect(page.locator('span[title="Cell division"]')).toBeVisible();
+  await capture(page, testInfo, "renamed-source");
+  expect(updates).toEqual([{ id: sources[1].id, name: "Cell division" }]);
+  await page.reload();
+  await page
+    .getByRole("combobox", { name: "Show options", exact: true })
+    .click();
+  await page
+    .getByLabel("Search sources", { exact: true })
+    .fill("Cell division");
+  await expect(page.getByRole("option")).toHaveCount(1);
+  await expect(page.getByRole("option")).toHaveAttribute(
+    "aria-label",
+    /^Cell division · /,
+  );
+});
+
+test("failed upload cleanup stays removable after reload and never becomes a saved source choice", async ({
+  page,
+}) => {
+  const source = {
+    id: "incomplete-upload",
+    name: "Chapter.pdf",
+    status: "uploading",
+    mime: "application/pdf",
+    pathname: "sources/incomplete-upload/original.pdf",
+    size: 12,
+    createdAt: "2026-10-31T12:00:00Z",
+  };
+  let present = false;
+  let deletes = 0;
+  let starts = 0;
+  await mockApp(page, ({ path, request }) => {
+    if (path === "/api/sources") {
+      return { sources: present ? [source] : [] };
+    }
+    if (path === "/api/sources/upload-intent") {
+      present = true;
+      return { source };
+    }
+    if (path === "/api/generation/jobs" && request.method() === "POST") {
+      starts++;
+    }
+  });
+  await page.route("**/api/sources/upload", (route) =>
+    route.fulfill({
+      status: 400,
+      json: { error: "Upload blocked by fixture" },
+    }),
+  );
+  await page.route("**/api/sources/incomplete-upload", async (route) => {
+    expect(route.request().method()).toBe("DELETE");
+    deletes++;
+    if (deletes === 1) {
+      source.status = "deleting";
+      source.deletionError = "Could not delete this document. Retry deletion.";
+      await route.fulfill({
+        status: 503,
+        json: { error: source.deletionError },
+      });
+    } else {
+      present = false;
+      await route.fulfill({ json: { deleted: true, id: source.id } });
+    }
+  });
+  await page.goto("/generate");
+  await page.getByLabel("Source file", { exact: true }).setInputFiles({
+    name: "Chapter.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from("%PDF-1.7\nTest"),
+  });
+  await page.getByRole("button", { name: "Generate", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText(
+    "incomplete upload could not be removed",
+  );
+  await expect(
+    page.getByText("Upload incomplete", { exact: true }),
+  ).toBeVisible();
+  expect(deletes).toBe(1);
+  expect(starts).toBe(0);
+  await page.reload();
+  await expect(page.getByText("Delete failed", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("combobox", { name: "Show options", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Generate", exact: true }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Retry delete", exact: true }).click();
+  await expect(page.getByText("Delete failed", { exact: true })).toHaveCount(0);
+  expect(deletes).toBe(2);
+  expect(starts).toBe(0);
+});
+
+test("sign out waits for another tab's pending answer before deleting the session", async ({
+  page,
+  context,
+}) => {
+  const entered = Promise.withResolvers();
+  const release = Promise.withResolvers();
+  const events = [];
+  let progress = {};
+  const extra = async ({ path, request }) => {
+    if (path === "/api/progress") {
+      if (request.method() === "PATCH") {
+        const body = request.postDataJSON();
+        expect(body.setId).toBe("set-1");
+        entered.resolve();
+        await release.promise;
+        progress = { [body.slug]: { [body.cardId]: body.patch } };
+        events.push("saved");
+      }
+      return { interactionsBySet: progress };
+    }
+  };
+  await mockApp(page, extra);
+  await page.goto("/settings");
+  const other = await context.newPage();
+  await mockApp(other, extra);
+  await other.goto("/sets/biology");
+  const response = other
+    .locator('[data-study-card-id="7"]')
+    .getByRole("textbox");
+  await response.fill("Unsynced answer from the other tab");
+  await entered.promise;
+  page.on("request", (request) => {
+    if (
+      new URL(request.url()).pathname === "/api/session" &&
+      request.method() === "DELETE"
+    ) {
+      events.push("logout");
+    }
+  });
+  try {
+    const signOut = page.getByRole("button", { name: "Sign out", exact: true });
+    await signOut.click();
+    await expect(signOut).toBeDisabled();
+    expect(events).toEqual([]);
+    await expect(page).toHaveURL(/\/settings$/);
+    release.resolve();
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(other).toHaveURL(/\/login$/);
+    expect(events).toEqual(["saved", "logout"]);
+    expect(progress.biology[7].response).toBe(
+      "Unsynced answer from the other tab",
+    );
+  } finally {
+    release.resolve();
+    resetOwnerSession();
+  }
+});
+
+test("failed answer sync blocks sign out and preserves drafts until a successful retry", async ({
+  page,
+  context,
+}, testInfo) => {
+  let unavailable = true;
+  let progress = {};
+  let logouts = 0;
+  const extra = async ({ path, request }) => {
+    if (path === "/api/progress") {
+      if (request.method() === "PATCH") {
+        const body = request.postDataJSON();
+        progress = { [body.slug]: { [body.cardId]: body.patch } };
+      }
+      return { interactionsBySet: progress };
+    }
+  };
+  const failWrites = async (tab) => {
+    await tab.route("**/api/progress", async (route) => {
+      if (unavailable && route.request().method() === "PATCH") {
+        await route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "Unavailable" }),
+        });
+      } else {
+        await route.fallback();
+      }
+    });
+  };
+  await mockApp(page, extra);
+  await failWrites(page);
+  await page.goto("/settings");
+  page.on("request", (request) => {
+    if (
+      new URL(request.url()).pathname === "/api/session" &&
+      request.method() === "DELETE"
+    ) {
+      logouts += 1;
+    }
+  });
+  const other = await context.newPage();
+  await mockApp(other, extra);
+  await failWrites(other);
+  await other.goto("/sets/biology");
+  const response = other
+    .locator('[data-study-card-id="7"]')
+    .getByRole("textbox");
+  await response.fill("Keep this unsynced answer");
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("Sign-out was stopped");
+  await expect(page).toHaveURL(/\/settings$/);
+  expect(logouts).toBe(0);
+  await expect(response).toHaveValue("Keep this unsynced answer");
+  expect(
+    await page.evaluate(() =>
+      Object.keys(globalThis.localStorage).some((key) =>
+        key.startsWith("lumina:sync-operation:"),
+      ),
+    ),
+  ).toBe(true);
+  await capture(page, testInfo, "unsynced-signout-controls");
+  const downloadEvent = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download unsynced changes", exact: true })
+    .click();
+  const download = await downloadEvent;
+  expect(download.suggestedFilename()).toBe(
+    "study-cards-unsynced-changes.json",
+  );
+  const chunks = [];
+  for await (const chunk of await download.createReadStream()) {
+    chunks.push(chunk);
+  }
+  const recovery = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  expect(recovery.format).toBe("lumina-unsynced-changes");
+  expect(
+    recovery.operations.some(
+      (operation) =>
+        operation.body.patch?.response === "Keep this unsynced answer",
+    ),
+  ).toBe(true);
+  await page
+    .getByRole("button", { name: "Discard changes and sign out", exact: true })
+    .click();
+  const discard = page.getByRole("alertdialog", {
+    name: "Discard unsynced changes?",
+  });
+  await expect(discard).toBeVisible();
+  await capture(page, testInfo, "discard-unsynced-confirmation");
+  await discard
+    .getByRole("button", { name: "Keep changes", exact: true })
+    .click();
+  await expect(discard).toBeHidden();
+  expect(logouts).toBe(0);
+  await expect(response).toHaveValue("Keep this unsynced answer");
+  unavailable = false;
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  expect(progress.biology[7].response).toBe("Keep this unsynced answer");
+  expect(logouts).toBe(1);
+  resetOwnerSession();
+});
+
+test("discarding unsynced changes requires confirmation and then clears them", async ({
+  page,
+}) => {
+  await mockApp(page);
+  await page.route("**/api/progress", async (route) => {
+    if (route.request().method() === "PATCH") {
+      await route.fulfill({ status: 503, json: { error: "Unavailable" } });
+    } else {
+      await route.fallback();
+    }
+  });
+  await page.goto("/sets/biology");
+  await page
+    .locator('[data-study-card-id="7"]')
+    .getByRole("textbox")
+    .fill("Explicitly discarded fixture answer");
+  await page.goto("/settings");
+  try {
+    await page.getByRole("button", { name: "Sign out", exact: true }).click();
+    await expect(page.getByRole("alert")).toContainText("Sign-out was stopped");
+    await page
+      .getByRole("button", {
+        name: "Discard changes and sign out",
+        exact: true,
+      })
+      .click();
+    const discard = page.getByRole("alertdialog", {
+      name: "Discard unsynced changes?",
+    });
+    await discard
+      .getByRole("button", { name: "Discard and sign out", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/login$/);
+    expect(
+      await page.evaluate(() => Object.keys(globalThis.localStorage)),
+    ).toEqual([]);
+  } finally {
+    resetOwnerSession();
+  }
+});
+
+test("completed generation only reports deletion after a successful library refresh", async ({
+  page,
+}) => {
+  const generated = {
+    ...fixture(),
+    id: "generated-set",
+    slug: "generated-chapter",
+  };
+  const job = {
+    id: "completed-unavailable",
+    status: "completed",
+    sourceName: "Generated chapter",
+    resultRecord: generated,
+  };
+  await mockApp(page, ({ path }) => {
+    if (path === "/api/generation/jobs") {
+      return { jobs: [job] };
+    }
+    if (path === "/api/generation/jobs/completed-unavailable") {
+      return { job };
+    }
+  });
+  await page.goto("/sets/biology");
+  await expect(page.locator('[data-study-card-id="7"]')).toBeVisible();
+  let unavailable = true;
+  let reads = 0;
+  await page.route("**/api/library", async (route) => {
+    reads++;
+    await route.fulfill(
+      unavailable
+        ? { status: 503, json: { error: "Library unavailable" } }
+        : { json: { records: [], revision: 2 } },
+    );
+  });
+  await page.goto("/generate?job=completed-unavailable");
+  const detail = page.locator('section[aria-live="polite"]');
+  await expect(detail.getByRole("alert")).toContainText("Library unavailable");
+  await expect(detail.getByText("Complete", { exact: true })).toBeVisible();
+  await expect(detail.getByText("Set deleted", { exact: true })).toHaveCount(0);
+  await expect(page).toHaveURL(/job=completed-unavailable$/);
+  const failedReads = reads;
+  unavailable = false;
+  await page.evaluate(() =>
+    globalThis.dispatchEvent(new globalThis.Event("focus")),
+  );
+  await expect(detail.getByText("Set deleted", { exact: true })).toBeVisible();
+  await expect(detail.getByRole("alert")).toHaveCount(0);
+  expect(reads).toBeGreaterThan(failedReads);
 });

@@ -1,5 +1,17 @@
 import { Router } from "express";
 
+function progressIdentity(body) {
+  if (typeof body?.setId !== "string" || !body.setId.trim()) {
+    throw Object.assign(
+      new Error(
+        "A pending answer from an older app version needs review. Your draft remains saved on this device.",
+      ),
+      { status: 428 },
+    );
+  }
+  return { setId: body.setId };
+}
+
 export function createLibraryRouter({ store }) {
   const router = Router();
   router.get("/library", async (_req, res) => {
@@ -18,10 +30,11 @@ export function createLibraryRouter({ store }) {
     res.json({ interactionsBySet, revision });
   });
   router.patch("/progress", async (req, res) => {
-    const { slug, cardId, patch, mutationId, cardVersion } = req.body;
+    const { slug, cardId, patch, mutationId, cardVersion } = req.body ?? {};
     res.json(
       await store.setInteraction(slug, cardId, patch, {
         mutationId,
+        ...progressIdentity(req.body),
         cardVersion,
         replace: true,
       }),
@@ -39,7 +52,13 @@ export function createLibraryRouter({ store }) {
     );
   });
   router.post("/actions", async (req, res) => {
-    const { action, args = {}, mutationId, expectedRevision } = req.body;
+    const {
+      action,
+      args: suppliedArgs,
+      mutationId,
+      expectedRevision,
+    } = req.body ?? {};
+    const args = suppliedArgs ?? {};
     const options = { mutationId, expectedRevision };
     let result;
     switch (action) {
@@ -68,7 +87,11 @@ export function createLibraryRouter({ store }) {
           args.slug,
           args.cardId,
           args.patch,
-          options,
+          {
+            ...options,
+            ...progressIdentity(args),
+            cardVersion: args.cardVersion,
+          },
         );
         break;
       case "progress.reset":

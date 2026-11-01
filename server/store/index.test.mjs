@@ -300,3 +300,81 @@ describe("Postgres study library", () => {
     expect(await store.getRecord("settings", "owner")).toBeNull();
   });
 });
+
+it("rejects categories that normalize to empty before any import or move is committed", async () => {
+  const store = open();
+  const original = (await store.createStudySet(sample())).record;
+  const revision = await store.getRevision();
+  await expect(
+    store.updateStudySet(original.id, { category: "/ /" }),
+  ).rejects.toMatchObject({ status: 400 });
+  expect(await store.getStudySet(original.id)).toEqual(original);
+  expect(await store.getRevision()).toBe(revision);
+  await expect(
+    store.createStudySet({ ...sample(), category: "/ /" }),
+  ).rejects.toMatchObject({ status: 400 });
+  await expect(
+    store.importBrowserData({
+      originId: "invalid-category",
+      records: [
+        { ...sample(), title: "Valid first" },
+        { ...sample(), category: "/ /" },
+      ],
+    }),
+  ).rejects.toMatchObject({ status: 400 });
+  expect(await store.listStudySets()).toEqual([original]);
+  expect(await store.getRevision()).toBe(revision);
+  const moved = (
+    await store.updateStudySet(original.id, {
+      category: " / Science / Biology // ",
+    })
+  ).record;
+  expect(moved.rawSet.category).toBe("Science/Biology");
+  expect(
+    (await store.updateStudySet(original.id, { title: "Still editable" }))
+      .record.rawSet.category,
+  ).toBe("Science/Biology");
+});
+
+it("fences progress by immutable set identity even when a replacement has identical cards and slug", async () => {
+  const store = open();
+  const original = (await store.createStudySet(sample())).record;
+  const cardVersion = JSON.stringify(original.rawSet.cards[0]);
+  const options = { setId: original.id, cardVersion, mutationId: "old-answer" };
+  const receipt = await store.setInteraction(
+    original.slug,
+    7,
+    { selectedOption: "B" },
+    options,
+  );
+  await store.deleteStudySet(original.id);
+  const replacement = (await store.createStudySet(sample())).record;
+  expect(replacement.slug).toBe(original.slug);
+  expect(
+    await store.setInteraction(
+      original.slug,
+      7,
+      { selectedOption: "B" },
+      options,
+    ),
+  ).toEqual(receipt);
+  expect(await store.getInteractions()).toEqual({});
+  await expect(
+    store.setInteraction(
+      original.slug,
+      7,
+      { selectedOption: "A" },
+      { ...options, mutationId: "offline-old-answer" },
+    ),
+  ).rejects.toMatchObject({ status: 409 });
+  expect(await store.getInteractions()).toEqual({});
+  await store.setInteraction(
+    replacement.slug,
+    7,
+    { selectedOption: "A" },
+    { setId: replacement.id, cardVersion },
+  );
+  expect(
+    (await store.getInteractions())[replacement.slug][7].selectedOption,
+  ).toBe("A");
+});

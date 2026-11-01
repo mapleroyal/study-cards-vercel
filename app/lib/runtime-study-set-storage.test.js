@@ -8,7 +8,11 @@ vi.mock("@/lib/runtime-client", () => ({
   getCapabilities: async () => ({ server: true }),
   newMutationId: () => globalThis.crypto.randomUUID(),
 }));
-import { runtimeStudySetStorage } from "./runtime-study-set-storage";
+import {
+  cacheStudySetRecords,
+  listStudySetRecords,
+  runtimeStudySetStorage,
+} from "./runtime-study-set-storage";
 
 let server;
 const rawSet = {
@@ -74,4 +78,31 @@ it("replaces the existing record only when explicitly requested", async () => {
   expect(record.id).toBe(original.id);
   expect((await server.getStudySet(original.id)).rawSet).toEqual(changedSet);
   expect(await server.listStudySets()).toHaveLength(1);
+});
+
+it("uses the requested set offline but rejects an unrelated or empty cache", async () => {
+  const cached = { id: "cached", slug: "cached-study", rawSet };
+  await cacheStudySetRecords([cached]);
+  const unavailable = new Error("Library unavailable");
+  apiRequest.mockRejectedValue(unavailable);
+  const onCacheFallback = vi.fn();
+  await expect(
+    listStudySetRecords({ requiredSlug: cached.slug, onCacheFallback }),
+  ).resolves.toEqual([cached]);
+  expect(onCacheFallback).toHaveBeenCalledExactlyOnceWith(unavailable);
+  await expect(
+    listStudySetRecords({ requiredSlug: "another-study", onCacheFallback }),
+  ).rejects.toBe(unavailable);
+  expect(onCacheFallback).toHaveBeenCalledTimes(1);
+  await cacheStudySetRecords([]);
+  await expect(listStudySetRecords({ requiredSlug: cached.slug })).rejects.toBe(
+    unavailable,
+  );
+  onCacheFallback.mockClear();
+  await expect(listStudySetRecords({ onCacheFallback })).resolves.toEqual([]);
+  expect(onCacheFallback).toHaveBeenCalledExactlyOnceWith(unavailable);
+  onCacheFallback.mockClear();
+  apiRequest.mockResolvedValueOnce({ records: [] });
+  await expect(listStudySetRecords({ onCacheFallback })).resolves.toEqual([]);
+  expect(onCacheFallback).not.toHaveBeenCalled();
 });

@@ -1,6 +1,8 @@
 import * as React from "react";
-import { Navigate, redirect, useLoaderData } from "react-router";
+import { Link, Navigate, useLoaderData, useRevalidator } from "react-router";
 
+import { StudyAppHeader } from "@/components/study/study-app-header";
+import { Button } from "@/components/ui/button";
 import { StudyShell } from "@/components/study/study-shell";
 import { StudyCard } from "@/components/study/study-card";
 import { StudySetEndCap } from "@/components/study/study-set-end-cap";
@@ -13,12 +15,7 @@ import {
 import { formatPageTitle } from "@/lib/app-config";
 import { listStudySetRecords } from "@/lib/runtime-study-set-storage";
 import { activateStudyPacksFromUrl } from "@/lib/study-pack-activation";
-import {
-  fallbackSetSlug,
-  getFallbackStudySet,
-  selectFirstLocalSet,
-  selectLocalSetBySlug,
-} from "@/lib/study-sets";
+import { selectFirstLocalSet, selectLocalSetBySlug } from "@/lib/study-sets";
 import {
   useHydrateStudySetsStore,
   useStudySetsStore,
@@ -34,62 +31,25 @@ export function meta({ data }) {
 
 export async function clientLoader({ params, request }) {
   let records;
-
+  let storageError = null;
   try {
     activateStudyPacksFromUrl(request.url);
-    records = await listStudySetRecords();
+    records = await listStudySetRecords({ requiredSlug: params.setSlug });
   } catch {
-    const fallbackSet = getFallbackStudySet();
-    useStudyReaderStore
-      .getState()
-      .ensureQuestionOrder(fallbackSet.slug, fallbackSet.cards);
-
-    return {
-      records: [],
-      setSlug: fallbackSet.slug,
-      setTitle: fallbackSet.title,
-      useFallback: true,
-      storageError: "Study sets could not be loaded.",
-    };
+    records = useStudySetsStore.getState().records;
+    storageError = "Study set could not be loaded.";
   }
-
   const localSet = selectLocalSetBySlug(records, params.setSlug);
-
-  if (localSet) {
-    useStudyReaderStore
-      .getState()
-      .ensureQuestionOrder(localSet.slug, localSet.cards);
-    return {
-      records,
-      setSlug: localSet.slug,
-      setTitle: localSet.title,
-      useFallback: false,
-      storageError: null,
-    };
+  const set = localSet;
+  if (set) {
+    useStudyReaderStore.getState().ensureQuestionOrder(set.slug, set.cards);
   }
-
-  if (params.setSlug === fallbackSetSlug) {
-    const fallbackSet = getFallbackStudySet();
-    useStudyReaderStore
-      .getState()
-      .ensureQuestionOrder(fallbackSet.slug, fallbackSet.cards);
-
-    return {
-      records,
-      setSlug: fallbackSet.slug,
-      setTitle: fallbackSet.title,
-      useFallback: true,
-      storageError: null,
-    };
-  }
-
-  const firstSet = selectFirstLocalSet(records);
-
-  if (firstSet) {
-    throw redirect(`/sets/${firstSet.slug}`);
-  }
-
-  throw redirect("/");
+  return {
+    records,
+    setSlug: params.setSlug,
+    setTitle: set?.title,
+    storageError,
+  };
 }
 
 // Cards keep their React keys and answer state. Preserve the visible card's
@@ -151,17 +111,81 @@ function usePreserveCardPosition(setSlug, cards) {
 
 export default function SetRoute() {
   const loaderData = useLoaderData();
+  const revalidator = useRevalidator();
   const hydratedLoader = React.useRef(null);
   const records = useStudySetsStore((state) => state.records);
   const status = useStudySetsStore((state) => state.status);
-  const localRecords = status === "ready" ? records : loaderData.records;
-  const loaderSet = loaderData.useFallback
-    ? getFallbackStudySet()
-    : selectLocalSetBySlug(loaderData.records, loaderData.setSlug);
-  const liveSet = loaderData.useFallback
-    ? getFallbackStudySet()
-    : selectLocalSetBySlug(localRecords, loaderData.setSlug);
-  const set = liveSet ?? loaderSet ?? getFallbackStudySet();
+  const storeError = useStudySetsStore((state) => state.error);
+  const localRecords =
+    hydratedLoader.current === loaderData ? records : loaderData.records;
+  const loaderSet = selectLocalSetBySlug(
+    loaderData.records,
+    loaderData.setSlug,
+  );
+  const liveSet = selectLocalSetBySlug(localRecords, loaderData.setSlug);
+  const set = liveSet || (status !== "ready" ? loaderSet : null);
+  const previouslyShown = React.useRef(null);
+
+  useHydrateStudySetsStore(loaderData.records, loaderData.storageError);
+  React.useEffect(() => {
+    hydratedLoader.current = loaderData;
+  }, [loaderData]);
+  React.useEffect(() => {
+    if (set) {
+      previouslyShown.current = loaderData.setSlug;
+    }
+  }, [set, loaderData.setSlug]);
+
+  if (
+    hydratedLoader.current === loaderData &&
+    status === "ready" &&
+    !set &&
+    previouslyShown.current === loaderData.setSlug
+  ) {
+    const nextSet = selectFirstLocalSet(localRecords);
+    return <Navigate to={nextSet ? `/sets/${nextSet.slug}` : "/"} replace />;
+  }
+  if (!set) {
+    const error =
+      hydratedLoader.current === loaderData && status === "ready"
+        ? storeError
+        : storeError || loaderData.storageError;
+    return (
+      <div
+        className="min-h-dvh bg-background"
+        style={{ "--study-app-header-height": "56px" }}
+      >
+        <StudyAppHeader activeSlug={loaderData.setSlug} />
+        <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-4 px-4 py-8 sm:px-6">
+          {error ? (
+            <>
+              <p role="alert" className="text-body-md text-muted-foreground">
+                Study set could not be loaded.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => revalidator.revalidate()}
+                disabled={revalidator.state !== "idle"}
+              >
+                {revalidator.state === "idle" ? "Retry" : "Retrying…"}
+              </Button>
+            </>
+          ) : (
+            <>
+              <h1 className="text-headline-md">Study set not found</h1>
+              <Button asChild variant="outline">
+                <Link to="/">Library</Link>
+              </Button>
+            </>
+          )}
+        </main>
+      </div>
+    );
+  }
+  return <LoadedSet set={set} />;
+}
+
+function LoadedSet({ set }) {
   const shuffleEnabled = useStudyReaderStore((state) =>
     isShuffleEnabled(state, set.slug),
   );
@@ -176,27 +200,10 @@ export default function SetRoute() {
       ),
     [set.cards, questionOrder, shuffleEnabled],
   );
-
   usePreserveCardPosition(set.slug, cards);
   React.useLayoutEffect(() => {
     useStudyReaderStore.getState().ensureQuestionOrder(set.slug, set.cards);
   }, [set.slug, set.cards, shuffleEnabled]);
-
-  useHydrateStudySetsStore(loaderData.records, loaderData.storageError);
-  React.useEffect(() => {
-    hydratedLoader.current = loaderData;
-  }, [loaderData]);
-
-  if (
-    hydratedLoader.current === loaderData &&
-    status === "ready" &&
-    !loaderData.useFallback &&
-    !liveSet
-  ) {
-    const nextSet = selectFirstLocalSet(localRecords);
-    return <Navigate to={nextSet ? `/sets/${nextSet.slug}` : "/"} replace />;
-  }
-
   return (
     <StudyShell set={set}>
       {cards.map((card, i) => (

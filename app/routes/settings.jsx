@@ -8,7 +8,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiRequest } from "@/lib/runtime-client";
-import { signOut } from "@/lib/sign-out";
+import { downloadUnsyncedChanges, signOut } from "@/lib/sign-out";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { formatPageTitle } from "@/lib/app-config";
 export function meta() {
   return [{ title: formatPageTitle("Settings") }];
@@ -20,6 +31,7 @@ export default function SettingsRoute() {
   const [busy, setBusy] = React.useState(false);
   const [modelBusy, setModelBusy] = React.useState(false);
   const [keyAction, setKeyAction] = React.useState(null);
+  const [unsyncedSignOut, setUnsyncedSignOut] = React.useState(false);
   React.useEffect(() => {
     let active = true;
     apiRequest("/api/settings")
@@ -91,13 +103,24 @@ export default function SettingsRoute() {
       setModelBusy(false);
     }
   }
-  async function handleSignOut() {
+  async function handleSignOut(discardUnsynced = false) {
     setBusy(true);
     setError(null);
     try {
-      await signOut();
+      await signOut({ discardUnsynced });
     } catch (cause) {
       setError(cause.message);
+      setUnsyncedSignOut(cause.code === "UNSYNCED_CHANGES");
+      setBusy(false);
+    }
+  }
+  async function downloadPending() {
+    setBusy(true);
+    try {
+      await downloadUnsyncedChanges();
+    } catch (cause) {
+      setError(cause.message);
+    } finally {
       setBusy(false);
     }
   }
@@ -168,11 +191,51 @@ export default function SettingsRoute() {
           <Button
             type="button"
             variant="outline"
-            onClick={handleSignOut}
+            onClick={() => handleSignOut()}
             disabled={busy || modelBusy}
           >
             Sign out
           </Button>
+          {unsyncedSignOut && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                disabled={busy}
+                onClick={downloadPending}
+              >
+                Download unsynced changes
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger
+                  render={<Button variant="ghost" disabled={busy} />}
+                >
+                  Discard changes and sign out
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Discard unsynced changes?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Unsynced answers and favorites on this device will be
+                      erased. Download a recovery copy first if you need to keep
+                      them. The recovery file is for reviewing changes, not
+                      importing a study set.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep changes</AlertDialogCancel>
+                    <AlertDialogAction
+                      variant="destructive"
+                      onClick={() => handleSignOut(true)}
+                    >
+                      Discard and sign out
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
         </div>
         {error && (
           <p role="alert" className="text-body-sm text-destructive">

@@ -127,3 +127,27 @@ A separate test using the maintained Workflow Vitest integration compiled the ac
 - Combobox items use symmetric 12 px horizontal padding until selected; selected items retain right-side checkmark clearance.
 
 Validation on the server: lint and production build passed; 296 unit/integration tests across 40 files passed; all 172 browser scenarios passed across light/dark desktop/narrow configurations. The first unrestricted unit run encountered concurrent PGlite startup timeouts; the complete rerun with two workers passed without changing product behavior or test timeouts. Instructions and source-picker screenshots were inspected in all four configurations. Changed-file credential scanning found no secrets. No paid inference call was made for this follow-up.
+
+Live verification on https://study-cards-vercel.vercel.app passed for source commit `4c3d6c9c67b250a4731c9b9ce683570014fd519d`: the catalog default is Haiku 5.5/high; Instructions opens, retains edits, clears, and resets for a new generation; saved-source padding and pointer-transparent tooltip hit testing pass; desktop/narrow layouts fit. Health returned 200 and unauthenticated library access returned 401. Owner settings were identical before and after. The initial live tooltip assertion used the old role selector; inspection confirmed Base UI's popup, correct visible behavior, and the option's complete accessible name. The corrected selector passed without a product change.
+
+Both template repositories published the same tooltip and combobox behavior. React passed 23 unit tests, Electron passed 30; each passed 128 Chromium cases, 45 standard WebKit cases, 20 focused WebKit behavior cases, and 8 theme cases. Lint and production builds passed, including unsigned Electron packaging on its declared Node 22 runtime. Keyboard tests now await actual option focus before navigation; the tooltip focus check accommodates macOS WebKit's native Tab-navigation setting. No dependencies or theme tokens changed.
+
+## Independent review follow-up (2026-10-31)
+
+A fresh Astra Ultra review examined only Study Cards at `4c3d6c9c67b250a4731c9b9ce683570014fd519d`, with a generic code/product-polish brief and no inherited conversation history. All nine findings were accepted:
+
+- Sign-out drains debounced, in-flight, and shared pending writes while still authenticated. A failed drain retains the session and local data, with a recovery download and separately confirmed discard action.
+- Progress captures and enforces immutable set identity, so a deleted set's queued answers cannot attach to an identical replacement with the same slug. Legacy unidentified writes receive 428 and stay available for recovery instead of being silently rebound or discarded.
+- Ordering edits preserve the presentation permutation independently from the correct answer.
+- Reader loading failures retain the requested slug, expose Retry, use only a matching cached set offline, and recover to the requested set or confirmed not-found. The obsolete bundled fallback exception is removed.
+- Generation detail actions require the loaded job to match the selected URL; delayed or failed navigation cannot leave controls targeting the previous job.
+- Category paths normalize before validation, with invalid imports/moves rejected without changing saved data.
+- Visible generation history refreshes even when initially idle and refreshes on focus/visibility changes. Polling pauses while hidden.
+- Saved sources show date/size details and support simple label changes; source content, Blob identity and PDF-parser filenames remain unchanged.
+- Failed uploads attempt cleanup. Incomplete records remain visible and removable if cleanup fails, including after reload.
+
+Recovery downloads identify themselves as unsynced-change records for manual review, not study-set import files. Sign-out serializes concurrent attempts and drains already-entered shared changes; it does not claim atomicity with a new edit entered by another tab after the final drain.
+
+The reviewer used isolated probes and read-only live checks. No paid inference was used for the review or its fixes.
+
+Final validation: lint, formatting and production build passed; all **321 unit/integration tests across 42 files** passed. The final rebuilt app passed **148 product browser scenarios** in one run across light/dark desktop/narrow configurations. All **68 unchanged shared-foundation scenarios** passed in the preceding full run. That run exposed the cached-library/error-state race above and an overbroad generation-test write counter; both were corrected before the final product run. Reader error states, source metadata/tooltips/rename controls, and unsynced-change recovery/confirmation were visually inspected in all four configurations. Credential scanning of the changed files found no secrets.

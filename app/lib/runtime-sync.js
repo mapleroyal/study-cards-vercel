@@ -244,9 +244,12 @@ export async function refreshRuntimeState() {
   setStatus({ offline: false, error: null });
   if (conflictNoticePending) {
     conflictNoticePending = false;
-    toast.info("A card changed. Its outdated answer was not saved.", {
-      id: "runtime-sync-conflict",
-    });
+    toast.info(
+      "A study set or card changed. Its outdated answer was not saved.",
+      {
+        id: "runtime-sync-conflict",
+      },
+    );
   }
   return true;
 }
@@ -351,7 +354,7 @@ function queue(path, method, body, { textEdit = false } = {}) {
   const mutationId = newMutationId();
   const entityKey =
     path === "/api/progress"
-      ? JSON.stringify([body.slug, body.cardId])
+      ? JSON.stringify([body.setId, body.cardId])
       : "favorites";
   const operation = {
     path,
@@ -423,6 +426,7 @@ function subscribeChanges() {
             "PATCH",
             {
               slug,
+              setId: record?.id,
               cardId: Number(cardId),
               patch,
               cardVersion: card ? JSON.stringify(card) : undefined,
@@ -501,6 +505,71 @@ export async function startRuntimeSync() {
       starting = null;
     }
   };
+}
+
+export async function flushRuntimeSyncForSignOut() {
+  try {
+    await starting;
+    // Force text drafts past the debounce and await any drain already in flight.
+    // Each drain stages the shared localStorage pointers, including other tabs.
+    while (true) {
+      await flushRuntimeSync();
+      while (flushing) {
+        await flushing;
+      }
+      const storage = await db();
+      const pending =
+        pendingMutations.size ||
+        (await storage.count("outbox")) ||
+        (await hasPendingDrafts(storage));
+      if (!pending) {
+        return;
+      }
+      if (snapshot.offline || snapshot.error) {
+        throw new Error(snapshot.error || "Reconnect and try again.");
+      }
+      // A draft may have arrived during the final read, or an earlier debounced
+      // drain may already have scheduled a timer. Force that work before logout.
+    }
+  } catch (cause) {
+    throw Object.assign(
+      new Error(
+        `Your changes could not be verified as synced. Sign-out was stopped to keep them on this device. ${cause.message}`,
+        { cause },
+      ),
+      { code: "UNSYNCED_CHANGES" },
+    );
+  }
+}
+
+export async function readPendingRuntimeChanges() {
+  const read = async () => {
+    const storage = await db();
+    await stageLatestDrafts(storage);
+    const operations = (await storage.getAll("outbox"))
+      .sort((a, b) => a.sequence - b.sequence)
+      .map(({ path, method, body }) => ({ path, method, body }));
+    const slugs = new Set(operations.map((operation) => operation.body.slug));
+    return {
+      format: "lumina-unsynced-changes",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      description:
+        "Recovery copy of unsynced changes, not a study-set import file.",
+      operations,
+      cachedSets: useStudySetsStore
+        .getState()
+        .records.filter((record) => slugs.has(record.slug))
+        .map((record) => ({
+          id: record.id,
+          slug: record.slug,
+          title: record.rawSet.title,
+          category: record.rawSet.category,
+        })),
+    };
+  };
+  const locks = globalThis.navigator?.locks;
+  return locks ? locks.request("lumina-runtime-sync", read) : read();
 }
 
 export async function stopRuntimeSyncForSignOut() {

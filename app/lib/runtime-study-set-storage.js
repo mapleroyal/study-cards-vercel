@@ -42,9 +42,14 @@ export async function listStudySetRecords(options) {
       throw error;
     }
     const saved = await (await cache()).get("snapshots", "library");
-    if (!saved) {
+    if (
+      !saved ||
+      (options?.requiredSlug &&
+        !saved.records.some((record) => record.slug === options.requiredSlug))
+    ) {
       throw error;
     }
+    options?.onCacheFallback?.(error);
     return saved.records;
   }
 }

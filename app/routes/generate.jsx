@@ -1,7 +1,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
-import { PlusIcon } from "@primer/octicons-react";
+import { CheckIcon, PencilIcon, PlusIcon, XIcon } from "@primer/octicons-react";
 import { GenerationInstructions } from "@/components/study/generation-instructions";
 import { GenerateCardsButton } from "@/components/study/generate-cards-button";
 import { OpenRouterKeyDialog } from "@/components/study/openrouter-key-dialog";
@@ -40,6 +40,28 @@ import { humanizeType } from "@/lib/study-sets";
 import { formatPageTitle } from "@/lib/app-config";
 import { useStudySetsStore } from "@/stores/use-study-sets-store";
 
+function sourceDetails(source) {
+  const parts = [];
+  const createdAt = new Date(source?.createdAt);
+  if (!Number.isNaN(createdAt.getTime())) {
+    parts.push(
+      new Intl.DateTimeFormat(undefined, {
+        dateStyle: "medium",
+        timeStyle: "medium",
+      }).format(createdAt),
+    );
+  }
+  if (Number.isFinite(source?.size)) {
+    const unit =
+      source.size >= 1024 * 1024 ? "MB" : source.size >= 1024 ? "KB" : "B";
+    const divisor = unit === "MB" ? 1024 * 1024 : unit === "KB" ? 1024 : 1;
+    parts.push(
+      `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 }).format(source.size / divisor)} ${unit}`,
+    );
+  }
+  return parts.join(" · ");
+}
+
 function isReusableSource(source) {
   return Boolean(source && !["uploading", "deleting"].includes(source.status));
 }
@@ -76,7 +98,12 @@ export default function GenerateRoute() {
   const [highlightedSourceId, setHighlightedSourceId] = React.useState(null);
   const [types, setTypes] = React.useState([...supportedCardTypes]);
   const [count, setCount] = React.useState("25");
-  const [job, setJob] = React.useState(null);
+  const [loadedJob, setJob] = React.useState(null);
+  const job = loadedJob?.id === jobId ? loadedJob : null;
+  const [jobError, setJobError] = React.useState(null);
+  const [historyError, setHistoryError] = React.useState(null);
+  const [editingSourceName, setEditingSourceName] = React.useState(false);
+  const [sourceName, setSourceName] = React.useState("");
   const [jobs, setJobs] = React.useState([]);
   const [jobsLoaded, setJobsLoaded] = React.useState(false);
   const [busy, setBusy] = React.useState(null);
@@ -95,9 +122,13 @@ export default function GenerateRoute() {
   const visibleJobs = jobs.filter(
     (item) => item.status !== "completed" || item.resultRecord?.slug,
   );
+  const historyVisible = historyView || visibleJobs.length > 0;
   const active = activeJobStatuses.has(job?.status);
-  const hasActiveJobs = jobs.some((item) => activeJobStatuses.has(item.status));
   const selectedSource = sources.find((source) => source.id === sourceId);
+
+  React.useEffect(() => {
+    setEditingSourceName(false);
+  }, [sourceId]);
 
   React.useEffect(() => {
     setInstructions(retryInstructionsRef.current);
@@ -140,34 +171,65 @@ export default function GenerateRoute() {
       return;
     }
     let stopped = false;
+    let inFlight = false;
     let timer;
+    const visible = () => document.visibilityState !== "hidden";
     async function refresh() {
+      clearTimeout(timer);
+      if (stopped || inFlight || !visible()) {
+        return;
+      }
+      inFlight = true;
+      let delay;
       try {
         const result = await apiRequest("/api/generation/jobs");
         if (!stopped) {
           setJobs(result.jobs);
           setJobsLoaded(true);
+          setHistoryError(null);
           if (result.jobs.some((item) => activeJobStatuses.has(item.status))) {
-            timer = setTimeout(refresh, 1500);
+            delay = 1500;
+          } else if (
+            historyVisible ||
+            result.jobs.some(
+              (item) => item.status !== "completed" || item.resultRecord?.slug,
+            )
+          ) {
+            delay = 10000;
           }
         }
       } catch (cause) {
         if (!stopped) {
-          setError(cause.message);
-          if (hasActiveJobs) {
-            timer = setTimeout(refresh, 5000);
-          }
+          setHistoryError(cause.message);
+          delay = 5000;
+        }
+      } finally {
+        inFlight = false;
+        if (!stopped && visible() && delay) {
+          timer = setTimeout(refresh, delay);
         }
       }
     }
+    function resume() {
+      clearTimeout(timer);
+      if (visible()) {
+        refresh();
+      }
+    }
     refresh();
+    document.addEventListener("visibilitychange", resume);
+    globalThis.addEventListener("focus", resume);
     return () => {
       stopped = true;
       clearTimeout(timer);
+      document.removeEventListener("visibilitychange", resume);
+      globalThis.removeEventListener("focus", resume);
     };
-  }, [librarySignature, hasActiveJobs, cancelingId]);
+  }, [librarySignature, historyVisible, cancelingId]);
 
   React.useEffect(() => {
+    setJobError(null);
+    setJob((current) => (current?.id === jobId ? current : null));
     if (!jobId) {
       setJob(null);
       return;
@@ -176,8 +238,16 @@ export default function GenerateRoute() {
       return;
     }
     let stopped = false;
+    let inFlight = false;
     let timer;
+    const visible = () => document.visibilityState !== "hidden";
     async function poll() {
+      clearTimeout(timer);
+      if (stopped || inFlight || !visible()) {
+        return;
+      }
+      inFlight = true;
+      let delay;
       try {
         const { job: next } = await apiRequest(
           `/api/generation/jobs/${encodeURIComponent(jobId)}`,
@@ -186,6 +256,7 @@ export default function GenerateRoute() {
           return;
         }
         setJob(next);
+        setJobError(null);
         setJobs((current) => [
           next,
           ...current.filter((item) => item.id !== next.id),
@@ -196,6 +267,10 @@ export default function GenerateRoute() {
             const currentRecord = records.find(
               (record) => record.id === next.resultRecord.id,
             );
+            const libraryError = useStudySetsStore.getState().error;
+            if (!currentRecord && libraryError) {
+              throw new Error(libraryError);
+            }
             if (currentRecord) {
               navigate(`/sets/${currentRecord.slug}`, { replace: true });
             } else {
@@ -210,19 +285,34 @@ export default function GenerateRoute() {
           return;
         }
         if (activeJobStatuses.has(next.status)) {
-          timer = setTimeout(poll, 1500);
+          delay = 1500;
         }
       } catch (cause) {
         if (!stopped) {
-          setError(cause.message);
-          timer = setTimeout(poll, 5000);
+          setJobError(cause.message);
+          delay = 5000;
+        }
+      } finally {
+        inFlight = false;
+        if (!stopped && visible() && delay) {
+          timer = setTimeout(poll, delay);
         }
       }
     }
+    function resume() {
+      clearTimeout(timer);
+      if (visible()) {
+        poll();
+      }
+    }
     poll();
+    document.addEventListener("visibilitychange", resume);
+    globalThis.addEventListener("focus", resume);
     return () => {
       stopped = true;
       clearTimeout(timer);
+      document.removeEventListener("visibilitychange", resume);
+      globalThis.removeEventListener("focus", resume);
     };
   }, [jobId, navigate, cancelingId]);
 
@@ -309,6 +399,12 @@ export default function GenerateRoute() {
       setJob(next);
       setParams({ job: next.id });
     } catch (cause) {
+      if (cause.pendingSource) {
+        setSources((current) => [
+          cause.pendingSource,
+          ...current.filter((item) => item.id !== cause.pendingSource.id),
+        ]);
+      }
       setError(cause.message);
     } finally {
       setBusy(null);
@@ -340,6 +436,27 @@ export default function GenerateRoute() {
       setCancelingId(null);
     }
   }
+  async function renameSource() {
+    if (!selectedSource || busy || !sourceName.trim()) {
+      return;
+    }
+    setBusy("Saving source…");
+    setError(null);
+    try {
+      const { source } = await apiRequest(
+        `/api/sources/${encodeURIComponent(selectedSource.id)}`,
+        { method: "PATCH", body: { name: sourceName.trim() } },
+      );
+      setSources((current) =>
+        current.map((item) => (item.id === source.id ? source : item)),
+      );
+      setEditingSourceName(false);
+    } catch (cause) {
+      setError(cause.message);
+    } finally {
+      setBusy(null);
+    }
+  }
   async function deleteSource(id) {
     if (!id || busy) {
       return;
@@ -349,9 +466,15 @@ export default function GenerateRoute() {
     setSourceId((current) => (current === id ? "" : current));
     preparedRef.current = null;
     try {
-      await apiRequest(`/api/sources/${encodeURIComponent(id)}`, {
-        method: "DELETE",
-      });
+      try {
+        await apiRequest(`/api/sources/${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        });
+      } catch (cause) {
+        if (cause.status !== 404) {
+          throw cause;
+        }
+      }
       setSources((current) => current.filter((source) => source.id !== id));
       toast.success("Source deleted");
     } catch (cause) {
@@ -367,6 +490,9 @@ export default function GenerateRoute() {
     }
   }
   function retry() {
+    if (!job) {
+      return;
+    }
     const source = sources.find((item) => item.id === job.sourceId);
     setSourceId(isReusableSource(source) ? source.id : "");
     setFile(null);
@@ -414,9 +540,16 @@ export default function GenerateRoute() {
                   ? "Set deleted"
                   : job
                     ? jobLabels[job.status] || job.status
-                    : "Loading…"}
+                    : jobError
+                      ? "Could not load generation"
+                      : "Loading…"}
               </p>
             </div>
+            {jobError && (
+              <p role="alert" className="text-body-sm text-destructive">
+                {jobError}
+              </p>
+            )}
             {job?.error && (
               <p role="alert" className="text-body-sm text-destructive">
                 {typeof job.error === "string" ? job.error : job.error.message}
@@ -488,19 +621,85 @@ export default function GenerateRoute() {
                 </ToggleGroup>
                 {sourceId ? (
                   <div className="flex items-center justify-between gap-3">
-                    <span
-                      className="truncate text-title-md"
-                      title={selectedSource?.name}
-                    >
-                      {selectedSource?.name || "Selected source"}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => setSourceId("")}
-                    >
-                      Remove
-                    </Button>
+                    <div className="min-w-0 flex-1">
+                      {editingSourceName ? (
+                        <Input
+                          aria-label="Source name"
+                          autoFocus
+                          value={sourceName}
+                          onChange={(event) =>
+                            setSourceName(event.target.value)
+                          }
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                              event.preventDefault();
+                              renameSource();
+                            } else if (event.key === "Escape") {
+                              event.preventDefault();
+                              setEditingSourceName(false);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <span
+                          className="block truncate text-title-md"
+                          title={selectedSource?.name}
+                        >
+                          {selectedSource?.name || "Selected source"}
+                        </span>
+                      )}
+                      <p
+                        className="truncate text-body-sm text-muted-foreground"
+                        title={sourceDetails(selectedSource)}
+                      >
+                        {sourceDetails(selectedSource)}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      {editingSourceName ? (
+                        <>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label="Save source name"
+                            onClick={renameSource}
+                            disabled={!sourceName.trim()}
+                          >
+                            <CheckIcon />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label="Cancel source rename"
+                            onClick={() => setEditingSourceName(false)}
+                          >
+                            <XIcon />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label="Rename source"
+                          onClick={() => {
+                            setSourceName(selectedSource?.name || "");
+                            setEditingSourceName(true);
+                          }}
+                        >
+                          <PencilIcon />
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setSourceId("")}
+                      >
+                        Remove
+                      </Button>
+                    </div>
                   </div>
                 ) : mode === "file" ? (
                   <div
@@ -549,7 +748,7 @@ export default function GenerateRoute() {
                     onChange={(event) => setText(event.target.value)}
                   />
                 )}
-                {sources.length > 0 && (
+                {sources.some(isReusableSource) && (
                   <TooltipProvider>
                     <Combobox
                       onOpenChange={(open) => {
@@ -599,23 +798,52 @@ export default function GenerateRoute() {
                         <ComboboxEmpty>No sources found</ComboboxEmpty>
                         <ComboboxList>
                           {(id) => {
-                            const name =
-                              sources.find((source) => source.id === id)
-                                ?.name || id;
+                            const source = sources.find(
+                              (item) => item.id === id,
+                            );
+                            const name = source?.name || id;
+                            const details = sourceDetails(source);
                             return (
                               <Tooltip
                                 key={id}
                                 open={highlightedSourceId === id}
                               >
                                 <TooltipTrigger
-                                  render={<ComboboxItem value={id} />}
+                                  render={
+                                    <ComboboxItem
+                                      value={id}
+                                      aria-label={
+                                        details ? `${name} · ${details}` : name
+                                      }
+                                    />
+                                  }
                                 >
-                                  {name}
+                                  <span className="flex min-w-0 flex-1 flex-col">
+                                    <span
+                                      data-slot="combobox-item-label"
+                                      className="min-w-0 truncate"
+                                    >
+                                      {name}
+                                    </span>
+                                    {details && (
+                                      <span className="truncate text-body-sm text-muted-foreground">
+                                        {details}
+                                      </span>
+                                    )}
+                                  </span>
                                 </TooltipTrigger>
-                                <TooltipContent side="top">
-                                  <span className="min-w-0 [overflow-wrap:anywhere]">
+                                <TooltipContent
+                                  side="top"
+                                  className="flex-col items-start gap-1"
+                                >
+                                  <span className="block min-w-0 [overflow-wrap:anywhere]">
                                     {name}
                                   </span>
+                                  {details && (
+                                    <span className="block text-body-sm">
+                                      {details}
+                                    </span>
+                                  )}
                                 </TooltipContent>
                               </Tooltip>
                             );
@@ -638,7 +866,9 @@ export default function GenerateRoute() {
                 )}
               </div>
               {sources
-                .filter((source) => source.status === "deleting")
+                .filter((source) =>
+                  ["uploading", "deleting"].includes(source.status),
+                )
                 .map((source) => (
                   <div
                     key={source.id}
@@ -650,9 +880,11 @@ export default function GenerateRoute() {
                         className="text-body-sm text-destructive"
                         title={source.deletionError || undefined}
                       >
-                        {source.deletionError
-                          ? "Delete failed"
-                          : "Deletion incomplete"}
+                        {source.status === "uploading"
+                          ? "Upload incomplete"
+                          : source.deletionError
+                            ? "Delete failed"
+                            : "Deletion incomplete"}
                       </p>
                     </div>
                     <Button
@@ -660,8 +892,15 @@ export default function GenerateRoute() {
                       variant="ghost"
                       size="sm"
                       onClick={() => deleteSource(source.id)}
+                      aria-label={
+                        source.status === "uploading"
+                          ? `Remove incomplete upload ${source.name}`
+                          : undefined
+                      }
                     >
-                      Retry delete
+                      {source.status === "uploading"
+                        ? "Remove"
+                        : "Retry delete"}
                     </Button>
                   </div>
                 ))}
@@ -746,6 +985,11 @@ export default function GenerateRoute() {
         {(visibleJobs.length > 0 || historyView) && (
           <section className="flex flex-col gap-2 border-t pt-5">
             <h2 className="text-title-md">Recent generations</h2>
+            {historyError && (
+              <p role="alert" className="text-body-sm text-destructive">
+                {historyError}
+              </p>
+            )}
             {visibleJobs.length === 0 && (
               <p className="text-body-sm text-muted-foreground">
                 {jobsLoaded ? "No generations yet" : "Loading…"}

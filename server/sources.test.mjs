@@ -74,6 +74,38 @@ describe("private source documents", () => {
     });
   });
 
+  it("renames a PDF label without changing Blob identity, source contents, or format", async () => {
+    const { sources, blob } = setup();
+    const { source, bytes } = await pdf(sources, blob);
+    const before = await sources.inspect(source.id);
+    const renamed = await sources.rename(source.id, {
+      name: "  Cell division  ",
+    });
+    expect(renamed.name).toBe("Cell division");
+    expect(renamed).toMatchObject({
+      id: source.id,
+      pathname: source.pathname,
+      mime: "application/pdf",
+      status: "uploaded",
+    });
+    const document = await sources.document(source.id);
+    expect(document.fileData).toBe(
+      `data:application/pdf;base64,${bytes.toString("base64")}`,
+    );
+    expect((await sources.inspect(source.id)).originalUrl).toBe(
+      before.originalUrl,
+    );
+    for (const name of ["  ", null, {}, 123]) {
+      await expect(sources.rename(source.id, { name })).rejects.toMatchObject({
+        status: 400,
+      });
+    }
+    await expect(sources.rename(source.id, null)).rejects.toMatchObject({
+      status: 400,
+    });
+    expect((await sources.inspect(source.id)).name).toBe("Cell division");
+  });
+
   it("verifies upload metadata against the server-owned pathname", async () => {
     const { sources, blob } = setup();
     const source = await sources.beginUpload({

@@ -44,20 +44,25 @@ const slugify = (value) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 function normalizeSet(input) {
-  let set;
+  const normalized =
+    typeof input?.category === "string"
+      ? {
+          ...input,
+          category: input.category
+            .split("/")
+            .map((part) => part.trim())
+            .filter(Boolean)
+            .join("/"),
+        }
+      : input;
   try {
-    set = validateStudySetImport(input);
+    return validateStudySetImport(normalized);
   } catch (error) {
     error.status = 400;
     throw error;
   }
-  set.category = set.category
-    .split("/")
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .join("/");
-  return set;
 }
+
 function normalizedFavorites(value) {
   const items = z
     .array(favoriteSchema)
@@ -787,12 +792,19 @@ export function createStudyStore({
           cardId,
           patch,
           replace: options.replace === true,
+          setId: options.setId,
           cardVersion: options.cardVersion,
           expectedCard: options.expectedCard,
         },
         options,
         async (tx) => {
           const record = await tx.requireSet(idOrSlug);
+          if (options.setId !== undefined && options.setId !== record.id) {
+            throw problem(
+              "This study set was replaced. Reload it before saving an answer.",
+              409,
+            );
+          }
           const currentCard = record.rawSet.cards.find(
             (card) => card.id === Number(cardId),
           );

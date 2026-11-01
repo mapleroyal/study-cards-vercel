@@ -26,11 +26,16 @@ export function createStudySetsStore({
 } = {}) {
   let pendingLoad = null;
 
-  function listRecords() {
-    return storage.list({
+  async function listRecords() {
+    let cacheError = null;
+    const records = await storage.list({
       onInteractionSetsReset: (setSlugs) =>
         studyInteractionsStore.getState().resetSets?.(setSlugs),
+      onCacheFallback: (error) => {
+        cacheError = getStoreErrorMessage(error);
+      },
     });
+    return { records, error: cacheError };
   }
 
   return create((set, get) => ({
@@ -51,11 +56,11 @@ export function createStudySetsStore({
       set({ status: "loading", error: null });
 
       pendingLoad = listRecords()
-        .then((records) => {
+        .then(({ records, error }) => {
           set({
             records,
-            status: "ready",
-            error: null,
+            status: error ? "error" : "ready",
+            error,
           });
 
           return records;
@@ -90,11 +95,11 @@ export function createStudySetsStore({
         studyInteractionsStore.getState().resetSet(record.slug);
       }
 
-      const records = await listRecords();
+      const { records, error } = await listRecords();
       set({
         records,
-        status: "ready",
-        error: null,
+        status: error ? "error" : "ready",
+        error,
       });
 
       return record;
@@ -109,11 +114,11 @@ export function createStudySetsStore({
         studyInteractionsStore.getState().resetSet(slug);
       }
 
-      const records = await listRecords();
+      const { records, error } = await listRecords();
       set({
         records,
-        status: "ready",
-        error: null,
+        status: error ? "error" : "ready",
+        error,
       });
 
       return records;

@@ -5,18 +5,37 @@ export async function uploadGenerationSource(file) {
     method: "POST",
     body: { name: file.name, size: file.size },
   });
-  const { upload } = await import("@vercel/blob/client");
-  await upload(source.pathname, file, {
-    access: "private",
-    handleUploadUrl: "/api/sources/upload",
-    clientPayload: JSON.stringify({ sourceId: source.id }),
-    contentType: source.mime,
-  });
-  const result = await apiRequest(
-    `/api/sources/${encodeURIComponent(source.id)}/complete`,
-    { method: "POST", body: {} },
-  );
-  return result.source;
+  try {
+    const { upload } = await import("@vercel/blob/client");
+    await upload(source.pathname, file, {
+      access: "private",
+      handleUploadUrl: "/api/sources/upload",
+      clientPayload: JSON.stringify({ sourceId: source.id }),
+      contentType: source.mime,
+    });
+    const result = await apiRequest(
+      `/api/sources/${encodeURIComponent(source.id)}/complete`,
+      { method: "POST", body: {} },
+    );
+    return result.source;
+  } catch (cause) {
+    try {
+      await apiRequest(`/api/sources/${encodeURIComponent(source.id)}`, {
+        method: "DELETE",
+      });
+    } catch (cleanupError) {
+      if (cleanupError.status !== 404) {
+        throw Object.assign(
+          new Error(
+            `${cause.message} The incomplete upload could not be removed.`,
+            { cause },
+          ),
+          { pendingSource: source },
+        );
+      }
+    }
+    throw cause;
+  }
 }
 export const activeJobStatuses = new Set([
   "queued",

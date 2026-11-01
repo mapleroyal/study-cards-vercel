@@ -65,6 +65,19 @@ export function createSourceService({
     await store.putRecord("sources", id, source);
     return publicSource(source);
   }
+  async function rename(id, input) {
+    const name = input?.name;
+    if (typeof name !== "string" || !name.trim()) {
+      throw problem("Enter a source name.");
+    }
+    const source = await store.updateRecord("sources", id, (current) => {
+      if (!current || current.status === "deleting") {
+        throw problem("Document not found.", 404);
+      }
+      return { ...current, name: name.trim(), updatedAt: now() };
+    });
+    return publicSource(source);
+  }
   async function complete(id) {
     const source = await inspect(id);
     if (source.status !== "uploading") {
@@ -346,6 +359,9 @@ export function createSourceService({
   router.get("/:id", async (req, res) =>
     res.json({ source: publicSource(await inspect(req.params.id)) }),
   );
+  router.patch("/:id", async (req, res) =>
+    res.json({ source: await rename(req.params.id, req.body) }),
+  );
   router.delete("/:id", async (req, res) =>
     res.json(await remove(req.params.id)),
   );
@@ -354,6 +370,7 @@ export function createSourceService({
     list,
     inspect,
     beginUpload,
+    rename,
     complete,
     addText,
     document,

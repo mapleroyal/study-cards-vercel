@@ -42,6 +42,7 @@ import {
   refreshRuntimeState,
   getRuntimeSyncSnapshot,
 } from "@/lib/runtime-sync";
+import { editOrderingCard } from "@/lib/study-card-editing";
 import { downloadStudySet } from "@/lib/study-set-export";
 import { validateStudySetImport } from "@/lib/study-set-validation";
 import { useStudySetsStore } from "@/stores/use-study-sets-store";
@@ -237,7 +238,7 @@ function StringRows({ label, values, onChange, reorder = false }) {
   function move(index, delta) {
     const next = [...values];
     [next[index], next[index + delta]] = [next[index + delta], next[index]];
-    onChange(next);
+    onChange(next, { kind: "move", from: index, to: index + delta });
   }
   return (
     <fieldset className="flex flex-col gap-2">
@@ -365,7 +366,9 @@ function CardAnswerFields({ draft, setDraft }) {
       <StringRows
         label="Correct order"
         values={draft.answer}
-        onChange={(answer) => update({ answer, unordered_items: [...answer] })}
+        onChange={(answer, change) =>
+          setDraft((current) => editOrderingCard(current, answer, change))
+        }
         reorder
       />
     );
