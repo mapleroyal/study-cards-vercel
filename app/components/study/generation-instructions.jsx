@@ -10,37 +10,54 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function GenerationInstructions({ value, onChange, disabled }) {
   const hasInstructions = Boolean(value.trim());
   return (
     <Dialog>
-      <DialogTrigger
-        render={
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={disabled}
-            className={hasInstructions ? undefined : "text-muted-foreground"}
-          />
-        }
-        aria-label={hasInstructions ? "Instructions added" : "Instructions"}
-      >
-        <QuestionIcon aria-hidden="true" />
-        Instructions
-        {hasInstructions && (
-          <span
-            aria-hidden="true"
-            className="size-1.5 rounded-full bg-current"
-          />
-        )}
-      </DialogTrigger>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <DialogTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={disabled}
+                    className={
+                      hasInstructions ? undefined : "text-muted-foreground"
+                    }
+                  />
+                }
+              />
+            }
+            aria-label={hasInstructions ? "Message added" : "Message"}
+          >
+            <QuestionIcon aria-hidden="true" />
+            Message
+            {hasInstructions && (
+              <span
+                aria-hidden="true"
+                className="size-1.5 rounded-full bg-current"
+              />
+            )}
+          </TooltipTrigger>
+          <TooltipContent>Include a message to the AI?</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Instructions</DialogTitle>
+          <DialogTitle>Message</DialogTitle>
         </DialogHeader>
         <Textarea
-          aria-label="Instructions"
+          aria-label="Message"
           placeholder="Add instructions for these cards…"
           rows={6}
           value={value}

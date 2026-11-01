@@ -1137,13 +1137,23 @@ test("one-off instructions persist in the dialog and retry, clear for a fresh se
     .getByLabel("Source text", { exact: true })
     .fill("The exact source section for these cards.");
   const instructions = "Focus on applications.\nUse concise wording.";
-  await page.getByRole("button", { name: "Instructions", exact: true }).click();
+  const messageButton = page.getByRole("button", {
+    name: "Message",
+    exact: true,
+  });
+  await messageButton.hover();
+  await expect(
+    page
+      .locator('[data-slot="tooltip-content"]')
+      .filter({ hasText: "Include a message to the AI?" }),
+  ).toBeVisible();
+  await messageButton.click();
   const dialog = page.getByRole("dialog", {
-    name: "Instructions",
+    name: "Message",
     exact: true,
   });
   const input = dialog.getByRole("textbox", {
-    name: "Instructions",
+    name: "Message",
     exact: true,
   });
   await expect(input).toHaveAttribute(
@@ -1155,7 +1165,7 @@ test("one-off instructions persist in the dialog and retry, clear for a fresh se
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await page
-    .getByRole("button", { name: "Instructions added", exact: true })
+    .getByRole("button", { name: "Message added", exact: true })
     .click();
   await expect(input).toHaveValue(`  ${instructions}\n  `);
   await dialog.getByRole("button", { name: "Done", exact: true }).click();
@@ -1164,7 +1174,7 @@ test("one-off instructions persist in the dialog and retry, clear for a fresh se
   expect(payloads[0].instructions).toBe(instructions);
   await page.reload();
   await page.getByRole("button", { name: "New set", exact: true }).click();
-  await page.getByRole("button", { name: "Instructions", exact: true }).click();
+  await page.getByRole("button", { name: "Message", exact: true }).click();
   await expect(input).toHaveValue("");
   await dialog.getByRole("button", { name: "Done", exact: true }).click();
   await page
@@ -1172,7 +1182,7 @@ test("one-off instructions persist in the dialog and retry, clear for a fresh se
     .click();
   await page.getByRole("button", { name: "Try again", exact: true }).click();
   await page
-    .getByRole("button", { name: "Instructions added", exact: true })
+    .getByRole("button", { name: "Message added", exact: true })
     .click();
   await expect(input).toHaveValue(instructions);
   await dialog.getByRole("button", { name: "Clear", exact: true }).click();
