@@ -318,6 +318,7 @@ export function SetChooser({ activeSlug, onOpenChange }) {
       open={open}
       onOpenChange={setPanelOpen}
       swipeDirection={isMobile ? "down" : "right"}
+      showSwipeHandle={isMobile}
     >
       <DrawerTrigger render={trigger} />
       <DrawerContent

@@ -942,6 +942,9 @@ test("chooser drawers restore nested editor focus and keep Settings reachable", 
     "data-swipe-direction",
     page.viewportSize().width < 768 ? "down" : "right",
   );
+  await expect(drawer.locator('[data-slot="drawer-swipe-handle"]')).toHaveCount(
+    page.viewportSize().width < 768 ? 1 : 0,
+  );
   await expect(
     drawer.getByRole("link", { name: "Settings", exact: true }),
   ).toBeInViewport();

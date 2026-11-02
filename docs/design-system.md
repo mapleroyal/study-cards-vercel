@@ -26,7 +26,7 @@ Defaults are implemented and tested here; this document only maps the code and t
 
 ## App integration and maintenance
 
-The current baseline is [React template e3b8d947c90ad50e886475592a008130dd7cebd8](https://github.com/mapleroyal/react-template/commit/e3b8d947c90ad50e886475592a008130dd7cebd8). See [the integration record](template-foundation.md) for source boundaries and qualification evidence.
+The current baseline is [React template 873ed3bd1ee2964ec1e1d51feafac67ac2ca2400](https://github.com/mapleroyal/react-template/commit/873ed3bd1ee2964ec1e1d51feafac67ac2ca2400). See [the integration record](template-foundation.md) for source boundaries and qualification evidence.
 
 The app preserves its Oooh Baby wordmark font, explicit HTML canvas background, the existing appearance storage key, pre-paint `public/theme-init.js`, service-worker/offline behavior, reader Markdown CSS, and hosted Node 24/Nitro/Workflow runtime. The controlled appearance switcher uses the app store through its existing adapter. AI presentation components do not replace the hosted generation and provider contracts.
 
@@ -36,6 +36,8 @@ Run `npm run lint`, `npm run test:run`, `npm run build:test`, `npm run test:ui`,
 
 Use `docs/learnings/typography-design-system.md` for reader-specific type decisions and [Typeset presets](typography-design-system.md) for rich document/AI compositions. Keep reusable behavior in wrappers, preserve the debugged corner implementation, and selectively review new registry source instead of regenerating tuned wrappers.
 
+Follow current stock shadcn/Base UI defaults except the explicitly retained foundations and demonstrated fixes: typography, the exact squircle implementation, the custom appearance switcher and first-paint behavior, tooltip and inset corrections, and the documented interaction/scrollbar fixes. Keep product-specific choices at product callsites through supported props; do not turn a product preference into a new template default. Verify upstream defaults before changing a shared wrapper.
+
 ## Interaction defaults
 
 Buttons and action/disclosure controls use the native default cursor; links use the pointer, text fields use the text cursor, and draggable handles retain their grab/resize cursors. This follows [shadcn's Tailwind v4 button default](https://ui.shadcn.com/docs/components/base/button#cursor). Do not add a pointer cursor to ordinary actions or suppress their hover feedback. Ghost icon and text buttons share a muted background hover; `aria-current="page"` gives a ghost navigation link its selected surface and stronger selected hover. Checked toggles and expanded ghost actions also retain visible hover feedback.
@@ -44,7 +46,7 @@ Product actions use the shared ghost variant: visible text or a meaningful icon 
 
 Text triggers own their label inset. Select and an uncomposed ComboboxTrigger share one filled field style, 12px horizontal padding, hover/open feedback, and default/small heights. Input, Textarea and InputGroup own the same field hover treatment. Bare Collapsible, DropdownMenu, Popover, Dialog, AlertDialog, Sheet and Drawer triggers (and bare dialog/sheet/drawer close actions) use padded ghost action defaults; an explicit `render` supplies the composed control's style instead. Use `render={<Button variant="ghost" size="icon" />}` for an icon action with its own fixed hit area. Do not remove horizontal padding from a text trigger to align it with nearby content. Accordion keeps its 16px inset; menu items and labels keep 12px inside the padded popup viewport. Trace disclosures keep auto-height text-action styling with a 12px label inset, rather than inheriting a fixed Button height.
 
-`className` still owns a popup's outer shell; `viewportClassName` owns content padding. Trigger insets and content insets solve separate boundaries and must not cancel each other. Drawer supports `swipeDirection="down" | "up" | "left" | "right"`; its inner viewport scrolls and defaults to 8px padding, with 16px Header/Footer padding. Top and bottom drawers show a swipe handle by default; left and right drawers omit it without reserving a side rail. Use the direction that suits the current layout; explicit render composition remains available for all triggers.
+`className` still owns a popup's outer shell; `viewportClassName` owns content padding. Trigger insets and content insets solve separate boundaries and must not cancel each other. Drawer supports `swipeDirection="down" | "up" | "left" | "right"`; its inner viewport scrolls and defaults to 8px padding, with 16px Header/Footer padding. Drawer follows the stock default: no swipe handle unless the caller passes `showSwipeHandle`. Explicit opt-in works in every direction; mobile product drawers may opt in while desktop side drawers keep the default. Use the direction that suits the current layout; explicit render composition remains available for all triggers.
 
 Native scrollbars and ScrollArea paint only the draggable thumb. Rails/corners stay transparent, scrollbar arrows are absent, and wheel, trackpad, thumb dragging and keyboard viewport scrolling remain available. Firefox uses its thin, transparent-rail native scrollbar. No custom direction buttons or reserved arrow space should be added.
 

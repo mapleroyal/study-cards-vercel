@@ -326,7 +326,7 @@ function MixedPanels() {
           </div>
         </SheetContent>
       </Sheet>
-      <Drawer>
+      <Drawer showSwipeHandle>
         <DrawerTrigger render={<Button variant="outline" />}>
           Open drawer
         </DrawerTrigger>
