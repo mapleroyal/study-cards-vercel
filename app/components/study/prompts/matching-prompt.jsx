@@ -432,11 +432,13 @@ export function MatchingPrompt({ card, interaction, questionId, setSlug }) {
   return (
     <CardContent className="flex flex-col gap-3 pb-4">
       <ToggleGroup
-        type="single"
         size="sm"
         aria-label="Matching input mode"
-        value={matchingMode}
-        onValueChange={(mode) => {
+        value={[matchingMode]}
+        onValueChange={([mode]) => {
+          if (!mode) {
+            return;
+          }
           setActiveChoice(null);
           setMatchingMode(mode);
         }}

@@ -52,14 +52,18 @@ export function GenerationInstructions({ value, onChange, disabled }) {
           <TooltipContent>Include a message to the AI?</TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <DialogContent>
+      <DialogContent
+        className="max-h-[calc(100dvh-2rem)]"
+        viewportClassName="flex min-h-0 flex-col gap-4"
+      >
         <DialogHeader>
           <DialogTitle>Message</DialogTitle>
         </DialogHeader>
         <Textarea
           aria-label="Message"
           placeholder="Add instructions for these cards…"
-          rows={6}
+          rows={8}
+          className="min-h-36 resize-none"
           value={value}
           onChange={(event) => onChange(event.target.value)}
         />
@@ -72,7 +76,9 @@ export function GenerationInstructions({ value, onChange, disabled }) {
           >
             Clear
           </Button>
-          <DialogClose render={<Button type="button" />}>Done</DialogClose>
+          <DialogClose render={<Button type="button" variant="ghost" />}>
+            Done
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

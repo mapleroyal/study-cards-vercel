@@ -2,7 +2,8 @@ import * as React from "react";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { SurfaceViewport } from "@/components/surface-viewport";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 
@@ -10,16 +11,30 @@ function Dialog({ ...props }) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
 
-function DialogTrigger({ ...props }) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
+function DialogTrigger({ className, render, ...props }) {
+  return (
+    <DialogPrimitive.Trigger
+      data-slot="dialog-trigger"
+      render={render}
+      className={cn(!render && buttonVariants({ variant: "ghost" }), className)}
+      {...props}
+    />
+  );
 }
 
 function DialogPortal({ ...props }) {
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
 }
 
-function DialogClose({ ...props }) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
+function DialogClose({ className, render, ...props }) {
+  return (
+    <DialogPrimitive.Close
+      data-slot="dialog-close"
+      render={render}
+      className={cn(!render && buttonVariants({ variant: "ghost" }), className)}
+      {...props}
+    />
+  );
 }
 
 function DialogOverlay({ className, ...props }) {
@@ -38,6 +53,7 @@ function DialogOverlay({ className, ...props }) {
 function DialogContent({
   className,
   children,
+  viewportClassName,
   closeButtonClassName,
   overlayClassName,
   showCloseButton = true,
@@ -49,13 +65,20 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "text-body-md fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-full overflow-y-auto max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-4xl bg-popover p-6 text-popover-foreground shadow-xl ring-1 ring-foreground/5 dark:ring-foreground/10 duration-100 outline-none sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          showCloseButton && "*:data-[slot=dialog-header]:pr-8",
+          "text-body-md fixed top-1/2 left-1/2 z-50 flex flex-col max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 [--surface-radius:--theme(--radius-4xl)] rounded-(--surface-radius) bg-popover text-popover-foreground shadow-xl ring-1 ring-foreground/5 dark:ring-foreground/10 duration-100 outline-none sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className,
         )}
         {...props}
       >
-        {children}
+        <SurfaceViewport
+          className={cn(
+            "grid gap-6 p-6",
+            showCloseButton && "*:data-[slot=dialog-header]:pr-8",
+            viewportClassName,
+          )}
+        >
+          {children}
+        </SurfaceViewport>
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"

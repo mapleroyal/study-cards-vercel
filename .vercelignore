@@ -10,3 +10,10 @@ build/
 test-results/
 playwright-report/
 coverage/
+.react-router/
+.shared-ui-build/
+.foundation-build/
+.ui-build/
+.vite/
+.vitest/
+.local/

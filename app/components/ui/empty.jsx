@@ -1,8 +1,7 @@
+import { mergeProps } from "@base-ui/react/merge-props";
+import { useRender } from "@base-ui/react/use-render";
 import { cva } from "class-variance-authority";
-import { Slot } from "radix-ui";
-
 import { cn } from "@/lib/utils";
-
 function Empty({ className, ...props }) {
   return (
     <div
@@ -15,7 +14,6 @@ function Empty({ className, ...props }) {
     />
   );
 }
-
 function EmptyHeader({ className, ...props }) {
   return (
     <div
@@ -25,7 +23,6 @@ function EmptyHeader({ className, ...props }) {
     />
   );
 }
-
 const emptyMediaVariants = cva(
   "flex shrink-0 items-center justify-center text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
@@ -41,30 +38,34 @@ const emptyMediaVariants = cva(
     },
   },
 );
-
 function EmptyMedia({ className, size = "default", ...props }) {
   return (
     <div
       data-slot="empty-icon"
       data-size={size}
-      className={cn(emptyMediaVariants({ size, className }))}
+      className={cn(
+        emptyMediaVariants({
+          size,
+          className,
+        }),
+      )}
       {...props}
     />
   );
 }
-
-function EmptyTitle({ className, asChild = false, ...props }) {
-  const Comp = asChild ? Slot.Root : "div";
-
-  return (
-    <Comp
-      data-slot="empty-title"
-      className={cn("text-headline-sm", className)}
-      {...props}
-    />
-  );
+function EmptyTitle({ className, render, ...props }) {
+  return useRender({
+    defaultTagName: "div",
+    render,
+    props: mergeProps(
+      {
+        "data-slot": "empty-title",
+        className: cn("text-headline-sm", className),
+      },
+      props,
+    ),
+  });
 }
-
 function EmptyDescription({ className, ...props }) {
   return (
     <div
@@ -77,7 +78,6 @@ function EmptyDescription({ className, ...props }) {
     />
   );
 }
-
 function EmptyContent({ className, ...props }) {
   return (
     <div
@@ -90,7 +90,6 @@ function EmptyContent({ className, ...props }) {
     />
   );
 }
-
 export {
   Empty,
   EmptyHeader,

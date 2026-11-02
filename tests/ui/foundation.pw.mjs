@@ -74,7 +74,7 @@ test("intentional circles stay round while app surfaces retain their corner trea
   );
 });
 
-test("native overflow has transparent rails with working arrows and a draggable thumb", async ({
+test("native overflow has unpainted rails, no arrows and a draggable thumb", async ({
   page,
 }, testInfo) => {
   const area = page.getByTestId("native-scroll");
@@ -102,14 +102,16 @@ test("native overflow has transparent rails with working arrows and a draggable 
   const y = box.y + box.height - 7;
   const top = () => area.evaluate((element) => element.scrollTop);
   const left = () => area.evaluate((element) => element.scrollLeft);
-  await page.mouse.click(x, box.y + box.height - 21);
-  await expect.poll(top).toBeGreaterThan(0);
-  await page.mouse.click(x, box.y + 7);
-  await expect.poll(top).toBe(0);
-  await page.mouse.click(box.x + box.width - 21, y);
-  await expect.poll(left).toBeGreaterThan(0);
-  await page.mouse.click(box.x + 7, y);
-  await expect.poll(left).toBe(0);
+  // Chromium exposes the scrollbar part, but not its directional pseudo-classes.
+  expect(await css(area, "display", "::-webkit-scrollbar-button")).toBe("none");
+  expect(await css(area, "backgroundImage", "::-webkit-scrollbar-button")).toBe(
+    "none",
+  );
+  await page.mouse.move(box.x + 24, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width - 24, y, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(left).toBeGreaterThan(100);
   // Drag the native thumb from the start to the end of its usable track.
   await page.mouse.move(x, box.y + 24);
   await page.mouse.down();
@@ -405,16 +407,15 @@ test("long select lists expose the shared transparent scrollbar and draggable th
   expect(metrics.scrollHeight).toBeGreaterThan(metrics.height);
   const before = await list.evaluate((element) => element.scrollTop);
   const box = await list.boundingBox();
-  const arrowSize = metrics.gutter;
-  const trackHeight = metrics.height - arrowSize * 2;
+  const trackHeight = metrics.height;
   const thumbHeight = Math.max(
     24,
     (trackHeight * metrics.height) / metrics.scrollHeight,
   );
   const x = box.x + box.width - metrics.gutter / 2;
-  await page.mouse.move(x, box.y + arrowSize + thumbHeight / 2);
+  await page.mouse.move(x, box.y + thumbHeight / 2);
   await page.mouse.down();
-  await page.mouse.move(x, box.y + box.height - arrowSize - thumbHeight / 2, {
+  await page.mouse.move(x, box.y + box.height - thumbHeight / 2, {
     steps: 8,
   });
   await page.mouse.up();
@@ -424,7 +425,7 @@ test("long select lists expose the shared transparent scrollbar and draggable th
 });
 
 for (const orientation of ["vertical", "horizontal"]) {
-  test(`${orientation} scrollbar keeps its rail invisible and supports arrows, thumb dragging and wheels`, async ({
+  test(`${orientation} scrollbar keeps its rail invisible and has no arrows and supports thumb dragging, keyboard and wheels`, async ({
     page,
   }, testInfo) => {
     const errors = [];
@@ -435,14 +436,6 @@ for (const orientation of ["vertical", "horizontal"]) {
     const bar = area.locator(
       `[data-slot="scroll-area-scrollbar"][data-orientation="${orientation}"]`,
     );
-    const backward = bar.getByRole("button", {
-      name: orientation === "vertical" ? "Scroll up" : "Scroll left",
-      exact: true,
-    });
-    const forward = bar.getByRole("button", {
-      name: orientation === "vertical" ? "Scroll down" : "Scroll right",
-      exact: true,
-    });
     const thumb = bar.locator('[data-slot="scroll-area-thumb"]');
     const position = () =>
       viewport.evaluate(
@@ -457,60 +450,43 @@ for (const orientation of ["vertical", "horizontal"]) {
 
     await area.scrollIntoViewIfNeeded();
     await expect(thumb).toBeVisible();
-    await expect(backward).toHaveAttribute(
-      "aria-controls",
-      await viewport.getAttribute("id"),
-    );
-    await expect(forward).toHaveAttribute(
-      "aria-controls",
-      await viewport.getAttribute("id"),
-    );
+    await expect(
+      bar.locator("button, [data-slot=scroll-area-arrow]"),
+    ).toHaveCount(0);
     await bar.hover();
-    for (const part of [bar, backward, forward]) {
-      expect(
-        await part.evaluate((element) => {
-          const style = globalThis.getComputedStyle(element);
-          return {
-            background: style.backgroundColor,
-            border: style.borderTopWidth,
-            shadow: style.boxShadow,
-          };
-        }),
-      ).toEqual({
-        background: "rgba(0, 0, 0, 0)",
-        border: "0px",
-        shadow: "none",
-      });
-    }
+    expect(
+      await bar.evaluate((element) => {
+        const style = globalThis.getComputedStyle(element);
+        return {
+          background: style.backgroundColor,
+          border: style.borderTopWidth,
+          shadow: style.boxShadow,
+        };
+      }),
+    ).toEqual({
+      background: "rgba(0, 0, 0, 0)",
+      border: "0px",
+      shadow: "none",
+    });
     expect(
       await thumb.evaluate(
         (element) => globalThis.getComputedStyle(element).backgroundColor,
       ),
     ).not.toBe("rgba(0, 0, 0, 0)");
 
-    // A short arrow press must scroll one step, not bubble into a track jump.
-    await forward.click();
-    await expect.poll(position).toBe(40);
-    await backward.click();
-    await expect.poll(position).toBe(0);
-    await forward.focus();
-    await forward.press("Enter");
-    await expect.poll(position).toBe(40);
-    await forward.press("Space");
-    await expect.poll(position).toBe(80);
-
-    await forward.hover();
-    await page.mouse.down();
-    await page.waitForTimeout(480);
-    await page.mouse.up();
-    const afterHold = await position();
-    expect(afterHold).toBeGreaterThan(120);
-    await page.waitForTimeout(120);
-    expect(await position()).toBe(afterHold);
-
+    // The focusable native viewport retains keyboard scrolling without extra controls.
+    await viewport.focus();
+    // Native WebKit scrolling starts between keydown and keyup; a zero-duration
+    // synthetic key press can finish before its first animation frame.
+    await viewport.press(
+      orientation === "vertical" ? "ArrowDown" : "ArrowRight",
+      { delay: 80 },
+    );
+    await expect.poll(position).toBeGreaterThan(0);
+    await page.waitForTimeout(150);
     await reset();
     const thumbBox = await thumb.boundingBox();
-    const forwardBox = await forward.boundingBox();
+    const trackBox = await bar.boundingBox();
     const start = {
       x: thumbBox.x + thumbBox.width / 2,
       y: thumbBox.y + thumbBox.height / 2,
@@ -519,12 +495,8 @@ for (const orientation of ["vertical", "horizontal"]) {
     await page.mouse.down();
     // Drag beyond the end of the thumb's travel to verify capture and clamping.
     await page.mouse.move(
-      orientation === "horizontal"
-        ? forwardBox.x + forwardBox.width / 2
-        : start.x,
-      orientation === "vertical"
-        ? forwardBox.y + forwardBox.height / 2
-        : start.y,
+      orientation === "horizontal" ? trackBox.x + trackBox.width : start.x,
+      orientation === "vertical" ? trackBox.y + trackBox.height : start.y,
       { steps: 8 },
     );
     await page.mouse.up();
@@ -881,7 +853,7 @@ test("drawer handle supports a downward dismissal gesture and restores its trigg
     exact: true,
   });
   await expectWithinViewport(drawer);
-  const handle = slot(page, "drawer-handle");
+  const handle = slot(page, "drawer-swipe-handle");
   // Raw pointer coordinates need the same settled actionability check as clicks.
   // Being within the viewport alone does not mean the entrance slide has ended.
   await handle.click({ trial: true });
@@ -934,7 +906,7 @@ test("passive tooltips stay out of pointer hit testing while explicit hoverable 
   expect(await css(positioner, "pointerEvents")).toBe("none");
   for (const target of [
     content,
-    content.locator('[data-slot="tooltip-arrow"]'),
+    positioner.locator('[data-slot="tooltip-arrow"]'),
   ]) {
     expect(
       await target.evaluate((element) => {

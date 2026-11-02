@@ -134,7 +134,7 @@ test("all seven prompt types preserve answers, keyboard order and menu matching"
   await expect(
     matching.getByRole("group", { name: "Unassigned choices bank" }),
   ).toBeVisible();
-  await matching.getByRole("radio", { name: "Match using menus" }).click();
+  await matching.getByRole("button", { name: "Match using menus" }).click();
   await expect(
     matching.getByRole("group", { name: "Unassigned choices bank" }),
   ).toHaveCount(0);
@@ -150,7 +150,7 @@ test("all seven prompt types preserve answers, keyboard order and menu matching"
   await expect(match).toHaveText("Modernism");
   await expect(match).toBeFocused();
   await capture(page, testInfo, "matching-mode-menus");
-  await matching.getByRole("radio", { name: "Match by dragging" }).click();
+  await matching.getByRole("button", { name: "Match by dragging" }).click();
   await expect(matching.getByRole("combobox")).toHaveCount(0);
   await expect(
     matching
@@ -158,7 +158,7 @@ test("all seven prompt types preserve answers, keyboard order and menu matching"
       .getByRole("button", { name: "Virginia Woolf" }),
   ).toBeVisible();
   await capture(page, testInfo, "matching-mode-drag");
-  await matching.getByRole("radio", { name: "Match using menus" }).click();
+  await matching.getByRole("button", { name: "Match using menus" }).click();
   await expect(match).toHaveText("Modernism");
 
   await page.reload();
@@ -180,8 +180,8 @@ test("all seven prompt types preserve answers, keyboard order and menu matching"
   );
   expect(await order.getByRole("button").allTextContents()).toEqual(after);
   await expect(
-    matching.getByRole("radio", { name: "Match using menus" }),
-  ).toBeChecked();
+    matching.getByRole("button", { name: "Match using menus" }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(
     matching.getByRole("group", { name: "Unassigned choices bank" }),
   ).toHaveCount(0);
@@ -201,11 +201,11 @@ test("question shuffle is on by default and toggles saved order without losing a
   const headings = cards.getByRole("heading", { level: 2 });
   const originalOrder = studySet.cards.map((card) => card.question);
   const shuffledOrder = await headings.allTextContents();
-  const shuffle = page.getByRole("button", {
+  const shuffle = page.getByRole("switch", {
     name: "Shuffle questions",
     exact: true,
   });
-  await expect(shuffle).toHaveAttribute("aria-pressed", "true");
+  await expect(shuffle).toBeChecked();
   expect([...shuffledOrder].sort()).toEqual([...originalOrder].sort());
   const answeredCard = page.getByRole("article", {
     name: source.cards[0].question,
@@ -219,10 +219,10 @@ test("question shuffle is on by default and toggles saved order without losing a
     answeredCard.getByRole("radio", { name: "True", exact: true }),
   ).toBeChecked();
   await shuffle.click();
-  await expect(shuffle).toHaveAttribute("aria-pressed", "false");
+  await expect(shuffle).not.toBeChecked();
   await expect(headings).toHaveText(originalOrder);
   await shuffle.click();
-  await expect(shuffle).toHaveAttribute("aria-pressed", "true");
+  await expect(shuffle).toBeChecked();
   await expect(headings).toHaveText(shuffledOrder);
   await expect(
     answeredCard.getByRole("button", { name: "Hide answer" }),
@@ -259,16 +259,30 @@ test("set browser, theme preference, reset and deletion remain usable", async ({
   await panel.getByRole("radio", { name: "Light", exact: true }).focus();
   await page.keyboard.press("Space");
   await expect(page.locator("html")).not.toHaveClass(/dark/);
-  await panel.getByRole("button", { name: "Reset study set progress" }).click();
+  await panel
+    .getByRole("button", { name: "Options for Study practice", exact: true })
+    .click();
+  await page
+    .getByRole("menuitem", { name: "Reset progress", exact: true })
+    .click();
   await expect(
     page.getByText("Reset this set?", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
-  await panel.getByRole("button", { name: "Reset study set progress" }).click();
+  await panel
+    .getByRole("button", { name: "Options for Study practice", exact: true })
+    .click();
+  await page
+    .getByRole("menuitem", { name: "Reset progress", exact: true })
+    .click();
   await page.getByRole("button", { name: "Reset", exact: true }).click();
+  await panel
+    .getByRole("button", { name: "Options for Study practice", exact: true })
+    .click();
   await expect(
-    panel.getByRole("button", { name: "Reset study set progress" }),
+    page.getByRole("menuitem", { name: "Reset progress", exact: true }),
   ).toHaveCount(0);
+  await page.keyboard.press("Escape");
   await page.keyboard.press("Escape");
   await expect(panel).not.toBeVisible();
   await expect(menuButton).toBeFocused();
@@ -282,8 +296,9 @@ test("set browser, theme preference, reset and deletion remain usable", async ({
   await expect(page.locator("html")).not.toHaveClass(/dark/);
   await menuButton.click();
   await panel
-    .getByRole("button", { name: "Delete Study practice", exact: true })
+    .getByRole("button", { name: "Options for Study practice", exact: true })
     .click();
+  await page.getByRole("menuitem", { name: "Delete set", exact: true }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(page.getByRole("article")).toHaveCount(0);
   await page.keyboard.press("Escape");
@@ -324,7 +339,7 @@ test("favorites and long study titles fit a constrained viewport", async ({
   await page.keyboard.press("Escape");
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: studySet.title, exact: true }),
+    page.getByRole("heading", { name: "Study sets", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Open study set menu" }).click();
   await panel
@@ -710,4 +725,309 @@ test("unavailable readers recover from a refreshed library without replacing the
     page.getByRole("heading", { name: "Study set not found", exact: true }),
   ).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(0);
+});
+
+test("library row padding and keyboard activation open sets while overflow actions stay separate", async ({
+  page,
+}, testInfo) => {
+  await importStudySet(page);
+  const libraryRow = () =>
+    page
+      .getByRole("region", { name: "Study library", exact: true })
+      .getByRole("button", {
+        name: "Study practice. Design review",
+        exact: true,
+      });
+  for (const edge of ["top", "bottom"]) {
+    await page.goto("/");
+    const row = libraryRow();
+    await expect(row).toBeVisible();
+    if (edge === "top") {
+      const importAction = page.getByRole("button", {
+        name: "Import set",
+        exact: true,
+      });
+      const generateAction = page.getByRole("link", {
+        name: "Generate cards",
+        exact: true,
+      });
+      await expect(generateAction.locator("svg.octicon-plus")).toHaveCount(1);
+      const metrics = async (control) =>
+        control.evaluate((element) => {
+          const walker = document.createTreeWalker(
+            element,
+            globalThis.NodeFilter.SHOW_TEXT,
+          );
+          let node;
+          while ((node = walker.nextNode())) {
+            if (node.textContent.trim()) {
+              const range = document.createRange();
+              range.selectNodeContents(node);
+              const text = range.getBoundingClientRect();
+              return {
+                height: element.getBoundingClientRect().height,
+                textBottom: text.bottom,
+              };
+            }
+          }
+          throw new Error("Action label missing");
+        });
+      const [importMetrics, generateMetrics] = await Promise.all([
+        metrics(importAction),
+        metrics(generateAction),
+      ]);
+      expect(importMetrics.height).toBe(32);
+      expect(generateMetrics.height).toBe(importMetrics.height);
+      expect(
+        Math.abs(generateMetrics.textBottom - importMetrics.textBottom),
+      ).toBeLessThanOrEqual(1);
+    }
+    const surface = await row.locator("..").boundingBox();
+    await page.mouse.click(
+      surface.x + surface.width / 2,
+      edge === "top" ? surface.y + 1 : surface.y + surface.height - 1,
+    );
+    await expect(
+      page.getByRole("heading", { name: studySet.title, exact: true }),
+    ).toBeVisible();
+  }
+  await page.goto("/");
+  await libraryRow().focus();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("heading", { name: studySet.title, exact: true }),
+  ).toBeVisible();
+  await page.goto("/");
+  await expect(
+    page
+      .getByRole("banner")
+      .getByRole("link", { name: "Settings", exact: true }),
+  ).toHaveCount(0);
+  const options = page.getByRole("button", {
+    name: "Options for Study practice",
+    exact: true,
+  });
+  await expect(options).toBeVisible();
+  const bounds = await options.boundingBox();
+  expect(bounds.width).toBeGreaterThanOrEqual(36);
+  expect(bounds.height).toBeGreaterThanOrEqual(36);
+  await options.click();
+  await expect(
+    page.getByRole("menuitem", { name: "Delete set", exact: true }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  await page.keyboard.press("Escape");
+  await expect(options).toBeFocused();
+  await capture(page, testInfo, "library-row-actions");
+});
+
+test("brand card layers remain opaque in the active appearance", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const icon = page
+    .getByRole("banner")
+    .getByRole("img", { name: "Lumina", exact: true });
+  await expect(icon).toBeVisible();
+  const layers = await icon.locator("rect").evaluateAll((elements) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 1;
+    const context = canvas.getContext("2d");
+    return elements.map((element) => {
+      const style = globalThis.getComputedStyle(element);
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = style.fill;
+      context.fillRect(0, 0, 1, 1);
+      return {
+        opacity: Number(style.opacity),
+        fillOpacity: Number(style.fillOpacity),
+        colorAlpha: context.getImageData(0, 0, 1, 1).data[3],
+      };
+    });
+  });
+  expect(layers).toEqual(
+    Array(3).fill({ opacity: 1, fillOpacity: 1, colorAlpha: 255 }),
+  );
+});
+
+test("library and chooser fuzzy search match titles and nested categories without changing the reader", async ({
+  page,
+}, testInfo) => {
+  const first = reviewRecord();
+  const second = {
+    ...reviewRecord(),
+    id: "reader-cell-set",
+    slug: "cell-biology",
+    rawSet: {
+      ...reviewRecord().rawSet,
+      title: "Cell biology",
+      category: "Science / Biology",
+    },
+  };
+  await mockReviewLibrary(page, {
+    records: [first, second],
+    unavailable: false,
+  });
+  await page.goto("/");
+  const library = page.getByRole("region", {
+    name: "Study library",
+    exact: true,
+  });
+  const search = page.getByRole("searchbox", {
+    name: "Search study sets",
+    exact: true,
+  });
+  await search.fill("biology scince");
+  await expect(
+    library.getByRole("button", {
+      name: "Cell biology. Science / Biology",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    library.getByRole("button", {
+      name: "Ordering practice. Reader checks",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await search.fill("biology ordering");
+  await expect(
+    page.getByText("No matching sets", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Clear search", exact: true }).click();
+  await capture(page, testInfo, "library-search");
+  await page
+    .getByRole("button", { name: "Open study set menu", exact: true })
+    .click();
+  const drawer = page.getByRole("dialog", { name: "Study sets", exact: true });
+  await drawer
+    .getByRole("searchbox", { name: "Search study sets", exact: true })
+    .fill("cheks ordering");
+  await expect(
+    drawer.getByRole("button", {
+      name: "Cell biology. Science / Biology",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await drawer
+    .getByRole("button", {
+      name: "Ordering practice. Reader checks",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Ordering practice", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "Main navigation" }),
+  ).toHaveCount(0);
+});
+
+test("chooser drawers restore nested editor focus and keep Settings reachable", async ({
+  page,
+}, testInfo) => {
+  await mockReviewLibrary(page, {
+    records: [reviewRecord()],
+    unavailable: false,
+  });
+  await page.goto("/sets/ordering-practice");
+  const trigger = page.getByRole("button", {
+    name: "Open study set menu",
+    exact: true,
+  });
+  await trigger.click();
+  const drawer = page.getByRole("dialog", { name: "Study sets", exact: true });
+  await expect(drawer).toHaveAttribute("data-slot", "drawer-content");
+  await expect(drawer).toHaveAttribute(
+    "data-swipe-direction",
+    page.viewportSize().width < 768 ? "down" : "right",
+  );
+  await expect(
+    drawer.getByRole("link", { name: "Settings", exact: true }),
+  ).toBeInViewport();
+  await expect(
+    page.getByRole("link", { name: "Chats", exact: true }),
+  ).toHaveCount(0);
+  const options = drawer.getByRole("button", {
+    name: "Options for Ordering practice",
+    exact: true,
+  });
+  await options.click();
+  await page.getByRole("menuitem", { name: "Move", exact: true }).click();
+  const editor = page.getByRole("dialog", { name: "Move set", exact: true });
+  const category = editor.getByRole("combobox", {
+    name: "Category",
+    exact: true,
+  });
+  await category.fill("cheks reader");
+  await expect(
+    page.getByRole("option", { name: "Reader checks", exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("listbox")).toBeHidden();
+  await expect(editor).toBeVisible();
+  await expect(category).toBeFocused();
+  // A closed Base Combobox consumes Escape to clear its selected value.
+  await editor.getByRole("button", { name: "Cancel", exact: true }).focus();
+  await page.keyboard.press("Escape");
+  await expect(editor).toBeHidden();
+  await expect(drawer).toBeVisible();
+  await expect(options).toBeFocused();
+  await capture(page, testInfo, "chooser-drawer-nested-focus");
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await expect(trigger).toBeFocused();
+});
+
+test("long card editing keeps Save visible while only the fields scroll", async ({
+  page,
+}, testInfo) => {
+  const record = reviewRecord();
+  record.rawSet.cards = [
+    {
+      id: 1,
+      type: "multiple_choice",
+      question: "Choose an answer",
+      options: Object.fromEntries(
+        Array.from({ length: 18 }, (_, index) => [
+          String.fromCharCode(97 + index),
+          `Answer ${index + 1}`,
+        ]),
+      ),
+      answer: "a",
+      explanation: "The first answer is correct.",
+    },
+  ];
+  const patches = await mockReviewLibrary(page, {
+    records: [record],
+    unavailable: false,
+  });
+  await page.goto("/sets/ordering-practice");
+  await page.getByRole("button", { name: "Edit card 1", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Edit card", exact: true });
+  const save = dialog.getByRole("button", { name: "Save", exact: true });
+  await dialog.evaluate(async (element) => {
+    await Promise.all(
+      element
+        .getAnimations({ subtree: true })
+        .filter(
+          (animation) => animation.effect.getTiming().iterations !== Infinity,
+        )
+        .map((animation) => animation.finished),
+    );
+  });
+  const before = await save.boundingBox();
+  expect(before.y + before.height).toBeLessThanOrEqual(
+    page.viewportSize().height,
+  );
+  await dialog
+    .getByRole("textbox", { name: "Explanation", exact: true })
+    .fill("Updated explanation.");
+  const after = await save.boundingBox();
+  expect(Math.abs(after.y - before.y)).toBeLessThan(2);
+  await capture(page, testInfo, "long-card-editor");
+  await save.click();
+  await expect(dialog).toBeHidden();
+  expect(patches[0].upsertCards[0].explanation).toBe("Updated explanation.");
+  expect(record.rawSet.cards[0].explanation).toBe("Updated explanation.");
 });

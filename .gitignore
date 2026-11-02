@@ -99,3 +99,6 @@ work/
 .swc/
 .nitro/
 .data/
+
+# Isolated shared-component fixture build
+.shared-ui-build/

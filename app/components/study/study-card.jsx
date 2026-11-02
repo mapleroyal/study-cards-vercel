@@ -122,7 +122,8 @@ export function StudyCard({ card, index, setSlug }) {
       data-study-card-id={card.id}
       aria-labelledby={questionId}
       size="sm"
-      className="gap-0 rounded-xl py-0 data-[size=sm]:gap-0 data-[size=sm]:py-0"
+      className="[--surface-radius:var(--radius-xl)]"
+      viewportClassName="gap-0 py-0 group-data-[size=sm]/card:gap-0 group-data-[size=sm]/card:py-0"
     >
       <CardHeader className="gap-3 pt-4 pb-4">
         <QuestionTypeLabel type={card.type} />
@@ -150,6 +151,7 @@ export function StudyCard({ card, index, setSlug }) {
         className="w-full"
       >
         <CollapsibleTrigger
+          render={<button type="button" />}
           className={cn(
             "flex min-h-11 w-full items-center justify-between gap-2 border-t px-4 py-2.5 text-left text-label-lg text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:ring-inset",
             interaction.answerOpen && "text-foreground",
@@ -166,7 +168,7 @@ export function StudyCard({ card, index, setSlug }) {
             )}
           />
         </CollapsibleTrigger>
-        <CollapsibleContent className="overflow-hidden [--radix-accordion-content-height:var(--radix-collapsible-content-height)] data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down motion-reduce:data-[state=closed]:animate-none motion-reduce:data-[state=open]:animate-none">
+        <CollapsibleContent className="h-(--collapsible-panel-height) overflow-hidden transition-[height] duration-200 data-ending-style:h-0 data-starting-style:h-0 motion-reduce:transition-none">
           <div className="flex flex-col gap-2 px-4 pb-4">
             <p className="text-body-md whitespace-pre-line">
               {formatAnswer(card)}

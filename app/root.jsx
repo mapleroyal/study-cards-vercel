@@ -11,7 +11,8 @@ import * as React from "react";
 
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { ThemeSync, THEME_COLORS } from "@/components/theme-sync";
-import { Toaster } from "@/components/ui/sonner";
+import { AppCorners } from "@/components/app-corners";
+import { UiProvider } from "@/components/ui-provider";
 import { RuntimeSync } from "@/components/runtime-sync";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -42,7 +43,7 @@ export function HydrateFallback() {
     <div className="mx-auto flex min-h-dvh w-full max-w-4xl items-center justify-center p-6">
       <div className="flex w-full max-w-40 flex-col items-center gap-6">
         <BrandLockup className="justify-center" />
-        <Progress indeterminate className="w-full" aria-label="Loading" />
+        <Progress value={null} className="w-full" aria-label="Loading" />
       </div>
     </div>
   );
@@ -75,7 +76,8 @@ export function Layout({ children }) {
       </head>
       <body className="min-h-dvh bg-background text-foreground antialiased">
         <ThemeSync />
-        {children}
+        <AppCorners />
+        <UiProvider>{children}</UiProvider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
@@ -105,7 +107,6 @@ export default function App() {
     <>
       {!isLogin && <RuntimeSync />}
       <Outlet />
-      <Toaster />
     </>
   );
 }

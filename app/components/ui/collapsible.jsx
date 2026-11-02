@@ -1,13 +1,18 @@
-import { Collapsible as CollapsiblePrimitive } from "radix-ui";
+import { Collapsible as CollapsiblePrimitive } from "@base-ui/react/collapsible";
+
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 function Collapsible({ ...props }) {
   return <CollapsiblePrimitive.Root data-slot="collapsible" {...props} />;
 }
 
-function CollapsibleTrigger({ ...props }) {
+function CollapsibleTrigger({ className, render, ...props }) {
   return (
-    <CollapsiblePrimitive.CollapsibleTrigger
+    <CollapsiblePrimitive.Trigger
       data-slot="collapsible-trigger"
+      render={render}
+      className={cn(!render && buttonVariants({ variant: "ghost" }), className)}
       {...props}
     />
   );
@@ -15,10 +20,7 @@ function CollapsibleTrigger({ ...props }) {
 
 function CollapsibleContent({ ...props }) {
   return (
-    <CollapsiblePrimitive.CollapsibleContent
-      data-slot="collapsible-content"
-      {...props}
-    />
+    <CollapsiblePrimitive.Panel data-slot="collapsible-content" {...props} />
   );
 }
 

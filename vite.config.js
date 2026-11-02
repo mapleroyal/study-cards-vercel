@@ -1,6 +1,7 @@
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
+import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import devtoolsJson from "vite-plugin-devtools-json";
@@ -34,6 +35,36 @@ function getBuildCommitId() {
   );
 }
 
+// React Router creates an internal Vite server and replaces server/cache options.
+// Reapply fixture paths in a plugin hook so that compiler is isolated as well.
+function fixtureIsolationPlugin() {
+  if (process.env.LUMINA_TEST_FIXTURES !== "1") {
+    return null;
+  }
+  return {
+    name: "lumina-fixture-isolation",
+    config(config) {
+      return {
+        cacheDir: path.join(
+          __dirname,
+          ".vite",
+          config.cacheDir?.includes("child-compiler")
+            ? "child-compiler"
+            : "main",
+        ),
+        server: {
+          fs: {
+            allow: [
+              __dirname,
+              realpathSync(path.join(__dirname, "node_modules")),
+            ],
+          },
+        },
+      };
+    },
+  };
+}
+
 function luminaBuildInfoPlugin() {
   const source = `${JSON.stringify(buildInfo, null, 2)}\n`;
 
@@ -57,19 +88,23 @@ function luminaBuildInfoPlugin() {
 }
 
 export default defineConfig({
-  test: {
-    exclude: ["**/node_modules/**", "**/.git/**", "tests/ui/**"],
-  },
+  // Fixture runs must never import hosted credentials from local dotenv files.
+  envDir: process.env.LUMINA_TEST_FIXTURES === "1" ? false : undefined,
   define: {
     "import.meta.env.VITE_LUMINA_APP_VERSION": JSON.stringify(appVersion),
     "import.meta.env.VITE_LUMINA_BUILD_ID": JSON.stringify(buildInfo.buildId),
   },
   plugins: [
+    fixtureIsolationPlugin(),
     luminaBuildInfoPlugin(),
     devtoolsJson(),
     reactRouter(),
     nitro({
       serverDir: "./server",
+      // Keep generated modules inside the isolated snapshot, outside its shared dependencies.
+      ...(process.env.LUMINA_TEST_FIXTURES === "1"
+        ? { buildDir: path.join(__dirname, ".nitro") }
+        : {}),
       vercel: { functions: { maxDuration: "max" } },
       ...(process.env.NITRO_PRESET === "vercel"
         ? { output: { publicDir: "build/client" } }

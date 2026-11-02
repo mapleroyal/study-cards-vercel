@@ -1,18 +1,34 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { SurfaceViewport } from "@/components/surface-viewport";
 
-function Card({ className, size = "default", ...props }) {
+function Card({
+  className,
+  viewportClassName,
+  children,
+  size = "default",
+  ...props
+}) {
   return (
     <div
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card text-body-md flex flex-col gap-6 overflow-hidden rounded-2xl bg-card py-6 text-card-foreground ring-1 ring-foreground/10 has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        "group/card text-body-md flex flex-col [--surface-radius:--theme(--radius-2xl)] rounded-(--surface-radius) bg-card text-card-foreground ring-1 ring-foreground/10",
         className,
       )}
       {...props}
-    />
+    >
+      <SurfaceViewport
+        className={cn(
+          "flex flex-col gap-6 overflow-hidden py-6 has-[>img:first-child]:pt-0 group-data-[size=sm]/card:gap-4 group-data-[size=sm]/card:py-4",
+          viewportClassName,
+        )}
+      >
+        {children}
+      </SurfaceViewport>
+    </div>
   );
 }
 

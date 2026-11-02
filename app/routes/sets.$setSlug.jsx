@@ -1,5 +1,6 @@
+import { ButtonLink } from "@/components/button-link";
 import * as React from "react";
-import { Link, Navigate, useLoaderData, useRevalidator } from "react-router";
+import { Navigate, useLoaderData, useRevalidator } from "react-router";
 
 import { StudyAppHeader } from "@/components/study/study-app-header";
 import { Button } from "@/components/ui/button";
@@ -163,7 +164,7 @@ export default function SetRoute() {
                 Study set could not be loaded.
               </p>
               <Button
-                variant="outline"
+                variant="ghost"
                 onClick={() => revalidator.revalidate()}
                 disabled={revalidator.state !== "idle"}
               >
@@ -173,9 +174,9 @@ export default function SetRoute() {
           ) : (
             <>
               <h1 className="text-headline-md">Study set not found</h1>
-              <Button asChild variant="outline">
-                <Link to="/">Library</Link>
-              </Button>
+              <ButtonLink to="/" variant="ghost">
+                Library
+              </ButtonLink>
             </>
           )}
         </main>

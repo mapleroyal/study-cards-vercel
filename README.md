@@ -48,12 +48,17 @@ Use Node.js 24 (the locked deployment target) and install the locked dependencie
 npm ci
 npm run lint
 npm run test:run
-npm run build
+npm run build:test
+npm run build:vercel:test
 npm run test:ui
+npm run test:foundation
+npm run test:pwa
 ```
 
 `npm run dev` starts Vite/Nitro for development. `npm start` runs a regular built Node server; `npm run build:vercel` emits Vercel output. Runtime credentials belong in the development environment, never in browser `VITE_` variables. See the deployment guide for the supported environment-loading commands.
 
-Unit/integration tests use deterministic provider fixtures and PGlite PostgreSQL. Browser checks cover the study interface and shared components. A real deployment/OpenRouter smoke test is a separate check and can incur provider charges. [Verification](docs/verification.md) distinguishes fixture checks from live results.
+Unit/integration tests use deterministic provider fixtures and PGlite PostgreSQL. Test and test-build scripts run from a source snapshot without local dotenv files or hosted credentials. Hosted browser/PWA checks start a disposable local PostgreSQL 18.6 Docker container and remove it on completion or interruption; Docker must be available with a local socket context. Logs, reports and build artifacts are saved under `work/modernization/<run>`.
+
+Browser checks cover the study interface and shared components; `test:foundation:webkit` provides a bounded cross-browser interaction/scrollbar check. The isolated galleries are excluded from production routes. A real deployment/OpenRouter smoke test is a separate check and can incur provider charges. [Verification](docs/verification.md) distinguishes fixture checks from live results.
 
 The visual conventions are documented in [the design guide](docs/design-system.md), [typography guide](docs/learnings/typography-design-system.md), and [template foundation record](docs/template-foundation.md).

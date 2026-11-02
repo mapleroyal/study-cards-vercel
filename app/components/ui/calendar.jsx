@@ -1,5 +1,9 @@
 import * as React from "react";
-import { DayPicker, getDefaultClassNames } from "react-day-picker";
+import {
+  DayPicker,
+  getDefaultClassNames,
+  useDayPicker,
+} from "@daypicker/react";
 
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -84,7 +88,7 @@ function Calendar({
             : "flex items-center gap-1 rounded-(--cell-radius) text-sm [&>svg]:size-3.5 [&>svg]:text-muted-foreground",
           defaultClassNames.caption_label,
         ),
-        table: "w-full border-collapse",
+        month_grid: cn("w-full border-collapse", defaultClassNames.month_grid),
         weekdays: cn("flex", defaultClassNames.weekdays),
         weekday: cn(
           "flex-1 rounded-(--cell-radius) text-[0.8rem] font-normal text-muted-foreground select-none",
@@ -201,14 +205,17 @@ function CalendarDropdown({
   onChange,
   disabled,
   className,
-  classNames,
-  components: _components,
   ...props
 }) {
+  const { classNames, styles } = useDayPicker();
   const selectedOption = options.find((option) => option.value === value);
 
   return (
-    <span className={classNames.dropdown_root} data-disabled={disabled}>
+    <span
+      className={classNames.dropdown_root}
+      style={styles?.dropdown_root}
+      data-disabled={disabled}
+    >
       <Select
         value={value?.toString()}
         disabled={disabled}
@@ -267,7 +274,7 @@ function CalendarDayButton({ className, day, modifiers, locale, ...props }) {
       data-range-middle={modifiers.range_middle}
       className={cn(
         "relative isolate z-10 flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 border-0 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-[3px] group-data-[focused=true]/day:ring-ring/30 data-[range-end=true]:rounded-(--cell-radius) data-[range-end=true]:rounded-r-(--cell-radius) data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-muted data-[range-middle=true]:text-foreground data-[range-start=true]:rounded-(--cell-radius) data-[range-start=true]:rounded-l-(--cell-radius) data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground data-[selected-single=true]:hover:bg-primary data-[selected-single=true]:hover:text-primary-foreground data-[range-start=true]:hover:bg-primary data-[range-start=true]:hover:text-primary-foreground data-[range-end=true]:hover:bg-primary data-[range-end=true]:hover:text-primary-foreground [&>span]:text-xs [&>span]:opacity-70",
-        defaultClassNames.day,
+        defaultClassNames.day_button,
         className,
       )}
       {...props}

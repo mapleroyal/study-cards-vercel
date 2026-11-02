@@ -104,8 +104,8 @@ export function createStudySetsStore({
 
       return record;
     },
-    deleteStudySet: async (slug) => {
-      await storage.delete(slug);
+    deleteStudySet: async (slug, { onDeleted } = {}) => {
+      const receipt = await storage.delete(slug);
       studyReaderStore.getState().resetQuestionOrder(slug);
       if (
         storage !== runtimeStudySetStorage ||
@@ -121,6 +121,9 @@ export function createStudySetsStore({
         error,
       });
 
+      if (receipt !== false) {
+        onDeleted?.(receipt);
+      }
       return records;
     },
     clearError: () => {

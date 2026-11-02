@@ -1,42 +1,77 @@
-import * as React from "react";
-import { Progress as ProgressPrimitive } from "radix-ui";
+"use client";
 
+import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
 import { cn } from "@/lib/utils";
 
-function Progress({
-  className,
-  value = 0,
-  max = 100,
-  indeterminate = false,
-  ...props
-}) {
-  const isIndeterminate = indeterminate || value === null;
-  const percentage = Math.min(100, Math.max(0, (value / max) * 100));
-
+function Progress({ className, children, value, ...props }) {
   return (
     <ProgressPrimitive.Root
+      value={value}
       data-slot="progress"
-      value={isIndeterminate ? null : value}
-      max={max}
-      className={cn(
-        "relative flex h-3 w-full items-center overflow-x-hidden rounded-4xl bg-muted",
-        className,
-      )}
+      className={cn("flex flex-wrap gap-3", className)}
       {...props}
     >
-      <ProgressPrimitive.Indicator
-        data-slot="progress-indicator"
-        className={cn(
-          "size-full flex-1 bg-primary transition-transform duration-300 data-[state=indeterminate]:w-1/2 data-[state=indeterminate]:flex-none data-[state=indeterminate]:animate-[progress-indeterminate_1.2s_ease-in-out_infinite]",
-        )}
-        style={
-          isIndeterminate
-            ? undefined
-            : { transform: `translateX(-${100 - percentage}%)` }
-        }
-      />
+      {children}
+      <ProgressTrack>
+        <ProgressIndicator />
+      </ProgressTrack>
     </ProgressPrimitive.Root>
   );
 }
 
-export { Progress };
+function ProgressTrack({ className, ...props }) {
+  return (
+    <ProgressPrimitive.Track
+      className={cn(
+        "relative flex h-3 w-full items-center overflow-x-hidden rounded-4xl bg-muted",
+        className,
+      )}
+      data-slot="progress-track"
+      {...props}
+    />
+  );
+}
+
+function ProgressIndicator({ className, ...props }) {
+  return (
+    <ProgressPrimitive.Indicator
+      data-slot="progress-indicator"
+      className={cn(
+        "h-full bg-primary transition-all data-indeterminate:w-1/2 data-indeterminate:animate-[progress-indeterminate_1.2s_ease-in-out_infinite]",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function ProgressLabel({ className, ...props }) {
+  return (
+    <ProgressPrimitive.Label
+      className={cn("text-label-lg", className)}
+      data-slot="progress-label"
+      {...props}
+    />
+  );
+}
+
+function ProgressValue({ className, ...props }) {
+  return (
+    <ProgressPrimitive.Value
+      className={cn(
+        "ml-auto text-body-md text-muted-foreground tabular-nums",
+        className,
+      )}
+      data-slot="progress-value"
+      {...props}
+    />
+  );
+}
+
+export {
+  Progress,
+  ProgressTrack,
+  ProgressIndicator,
+  ProgressLabel,
+  ProgressValue,
+};

@@ -1,5 +1,4 @@
-import { clsx } from "clsx";
-import { extendTailwindMerge } from "tailwind-merge";
+import { createCn } from "cn/config";
 
 const typeStyles = [
   "text-display-lg",
@@ -19,7 +18,7 @@ const typeStyles = [
   "text-label-sm",
 ];
 
-const mergeTailwindClasses = extendTailwindMerge({
+export const cn = createCn({
   extend: {
     classGroups: {
       "type-style": typeStyles,
@@ -30,7 +29,3 @@ const mergeTailwindClasses = extendTailwindMerge({
     },
   },
 });
-
-export function cn(...inputs) {
-  return mergeTailwindClasses(clsx(inputs));
-}

@@ -99,7 +99,11 @@ export function OpenRouterKeyDialog({ open, onOpenChange, onSaved }) {
             </p>
           )}
           <DialogFooter>
-            <Button disabled={busy || !key.trim()}>
+            <Button
+              type="submit"
+              variant="ghost"
+              disabled={busy || !key.trim()}
+            >
               {busy ? "Saving…" : "Continue"}
             </Button>
           </DialogFooter>

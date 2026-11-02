@@ -1,10 +1,9 @@
+import { mergeProps } from "@base-ui/react/merge-props";
+import { useRender } from "@base-ui/react/use-render";
 import * as React from "react";
 import { cva } from "class-variance-authority";
-import { Slot } from "radix-ui";
-
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-
 function ItemGroup({ className, ...props }) {
   return (
     <div
@@ -18,7 +17,6 @@ function ItemGroup({ className, ...props }) {
     />
   );
 }
-
 function ItemSeparator({ className, ...props }) {
   return (
     <Separator
@@ -29,7 +27,6 @@ function ItemSeparator({ className, ...props }) {
     />
   );
 }
-
 const itemVariants = cva(
   "group/item text-body-md flex w-full flex-wrap items-center rounded-2xl border transition-colors duration-100 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 [a]:transition-colors [a]:hover:bg-muted",
   {
@@ -51,26 +48,33 @@ const itemVariants = cva(
     },
   },
 );
-
 function Item({
   className,
   variant = "default",
   size = "default",
-  asChild = false,
+  render,
   ...props
 }) {
-  const Comp = asChild ? Slot.Root : "div";
-  return (
-    <Comp
-      data-slot="item"
-      data-variant={variant}
-      data-size={size}
-      className={cn(itemVariants({ variant, size, className }))}
-      {...props}
-    />
-  );
+  return useRender({
+    defaultTagName: "div",
+    render,
+    props: mergeProps(
+      {
+        "data-slot": "item",
+        "data-variant": variant,
+        "data-size": size,
+        className: cn(
+          itemVariants({
+            variant,
+            size,
+            className,
+          }),
+        ),
+      },
+      props,
+    ),
+  });
 }
-
 const itemMediaVariants = cva(
   "flex shrink-0 items-center justify-center gap-2 group-has-data-[slot=item-description]/item:translate-y-0.5 group-has-data-[slot=item-description]/item:self-start [&_svg]:pointer-events-none",
   {
@@ -87,18 +91,21 @@ const itemMediaVariants = cva(
     },
   },
 );
-
 function ItemMedia({ className, variant = "default", ...props }) {
   return (
     <div
       data-slot="item-media"
       data-variant={variant}
-      className={cn(itemMediaVariants({ variant, className }))}
+      className={cn(
+        itemMediaVariants({
+          variant,
+          className,
+        }),
+      )}
       {...props}
     />
   );
 }
-
 function ItemContent({ className, ...props }) {
   return (
     <div
@@ -111,7 +118,6 @@ function ItemContent({ className, ...props }) {
     />
   );
 }
-
 function ItemTitle({ className, ...props }) {
   return (
     <div
@@ -124,7 +130,6 @@ function ItemTitle({ className, ...props }) {
     />
   );
 }
-
 function ItemDescription({ className, ...props }) {
   return (
     <p
@@ -137,7 +142,6 @@ function ItemDescription({ className, ...props }) {
     />
   );
 }
-
 function ItemActions({ className, ...props }) {
   return (
     <div
@@ -147,7 +151,6 @@ function ItemActions({ className, ...props }) {
     />
   );
 }
-
 function ItemHeader({ className, ...props }) {
   return (
     <div
@@ -160,7 +163,6 @@ function ItemHeader({ className, ...props }) {
     />
   );
 }
-
 function ItemFooter({ className, ...props }) {
   return (
     <div
@@ -173,7 +175,6 @@ function ItemFooter({ className, ...props }) {
     />
   );
 }
-
 export {
   Item,
   ItemMedia,

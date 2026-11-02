@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cva } from "class-variance-authority";
-import { Slot } from "radix-ui";
+import { Button as ButtonPrimitive } from "@base-ui/react/button";
 
 import { cn } from "@/lib/utils";
 
@@ -15,7 +15,7 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 aria-pressed:bg-muted aria-pressed:hover:bg-active-hover aria-expanded:hover:bg-active-hover aria-[current=page]:bg-muted aria-[current=page]:text-foreground aria-[current=page]:hover:bg-active-hover",
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         "destructive-text":
@@ -38,14 +38,6 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-    compoundVariants: [
-      {
-        variant: "ghost",
-        size: ["icon", "icon-xs", "icon-sm", "icon-lg"],
-        className:
-          "transition-[color,opacity,transform] data-[icon-button=true]:not-disabled:not-aria-disabled:not-aria-pressed:not-aria-expanded:opacity-[0.68] data-[icon-button=true]:not-disabled:not-aria-disabled:not-aria-pressed:not-aria-expanded:hover:bg-transparent data-[icon-button=true]:not-disabled:not-aria-disabled:not-aria-pressed:not-aria-expanded:hover:opacity-100 aria-pressed:bg-muted aria-pressed:dark:bg-muted/50",
-      },
-    ],
   },
 );
 
@@ -53,13 +45,10 @@ function Button({
   className,
   variant = "default",
   size = "default",
-  asChild = false,
   ...props
 }) {
-  const Comp = asChild ? Slot.Root : "button";
-
   return (
-    <Comp
+    <ButtonPrimitive
       data-slot="button"
       data-icon-button={
         typeof size === "string" && size.startsWith("icon") ? true : undefined

@@ -116,10 +116,19 @@ test("cached server cards and queued answers survive an API outage and reload", 
   ).toBeChecked();
   await page.getByRole("button", { name: "Open study set menu" }).click();
   const panel = page.getByRole("dialog", { name: "Study sets", exact: true });
-  await panel.getByRole("button", { name: "Reset study set progress" }).click();
+  await panel
+    .getByRole("button", { name: "Options for Biology", exact: true })
+    .click();
+  await page
+    .getByRole("menuitem", { name: "Reset progress", exact: true })
+    .click();
+  await panel
+    .getByRole("button", { name: "Options for Biology", exact: true })
+    .click();
   await expect(
-    panel.getByRole("button", { name: "Reset study set progress" }),
+    page.getByRole("menuitem", { name: "Reset progress", exact: true }),
   ).toHaveCount(0);
+  await page.keyboard.press("Escape");
   await expect(page.getByText("Reset this set?", { exact: true })).toHaveCount(
     0,
   );

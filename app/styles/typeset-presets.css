@@ -1,0 +1,38 @@
+/* Product UI uses the semantic text-* roles in globals.css. Typeset owns
+   rendered content only, with the same local fonts and appearance tokens. */
+@layer components {
+  .typeset {
+    /* Let prose shrink inside flex/grid layouts so wide blocks scroll locally. */
+    min-width: 0;
+    --typeset-font-body: var(--font-sans);
+    --typeset-font-heading: var(--font-sans);
+    --typeset-font-mono: var(--font-mono);
+  }
+
+  .typeset-docs {
+    --typeset-size: var(--text-body-lg);
+    --typeset-leading: 1.75;
+    --typeset-flow: 1.25em;
+  }
+
+  .typeset-chat {
+    --typeset-size: var(--text-body-md);
+    --typeset-leading: 1.6;
+    --typeset-flow: 1em;
+  }
+
+  .typeset-reading {
+    --typeset-size: 1.125rem;
+    --typeset-leading: 1.85;
+    --typeset-flow: 1.5em;
+  }
+}
+
+/* Streamdown supplies space-y and first/last-child utility margins on its root.
+   Restore Typeset's components-layer flow for our renderer only, preserving
+   append stability and avoiding two competing paragraph spacing systems. */
+@layer utilities {
+  div.typeset[data-ai-response] > * {
+    margin-block: revert-layer;
+  }
+}

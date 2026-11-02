@@ -3,9 +3,13 @@ import {
   STUDY_APP_HEADER_HEIGHT,
   StudyAppHeader,
 } from "@/components/study/study-app-header";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ShuffleIcon } from "@hugeicons/core-free-icons";
-import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { useStudyLibraryActions } from "@/hooks/use-study-library-actions";
+import {
+  hasDirtyStudyInteractions,
+  useStudyInteractionsStore,
+} from "@/stores/use-study-interactions-store";
 import {
   isShuffleEnabled,
   useStudyReaderStore,
@@ -16,6 +20,12 @@ import * as React from "react";
 
 export function StudyShell({ set, children }) {
   const [menuPanelOpen, setMenuPanelOpen] = React.useState(false);
+  const shuffleId = React.useId();
+  const { resetSet, deleteSet } = useStudyLibraryActions(set.slug);
+  const interactions = useStudyInteractionsStore(
+    (state) => state.interactionsBySet[set.slug],
+  );
+  const canReset = hasDirtyStudyInteractions(set.cards, interactions);
   const shuffleEnabled = useStudyReaderStore((state) =>
     isShuffleEnabled(state, set.slug),
   );
@@ -64,26 +74,30 @@ export function StudyShell({ set, children }) {
               <h1 className="min-w-0 text-headline-md [overflow-wrap:anywhere]">
                 {set.title}
               </h1>
-              <SetEditMenu set={set} />
+              <SetEditMenu
+                set={set}
+                canReset={canReset}
+                onReset={() => resetSet(set.slug)}
+                canDelete={set.source?.type !== "bundled"}
+                onDelete={() => deleteSet(set.slug)}
+              />
             </div>
             <div className="flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1">
               <span className="shrink-0 text-body-sm text-muted-foreground type-numeric">
                 {set.cards.length} {set.cards.length === 1 ? "card" : "cards"}
               </span>
               {set.cards.length > 1 ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  aria-label="Shuffle questions"
-                  aria-pressed={shuffleEnabled}
-                  className="aria-pressed:bg-muted aria-pressed:text-foreground"
-                  onClick={() =>
-                    setShuffleEnabled(set.slug, !shuffleEnabled, set.cards)
-                  }
-                >
-                  <HugeiconsIcon icon={ShuffleIcon} aria-hidden="true" />
-                  Shuffle
-                </Button>
+                <div className="flex min-h-9 items-center gap-3">
+                  <Label htmlFor={shuffleId}>Shuffle</Label>
+                  <Switch
+                    id={shuffleId}
+                    aria-label="Shuffle questions"
+                    checked={shuffleEnabled}
+                    onCheckedChange={(enabled) =>
+                      setShuffleEnabled(set.slug, enabled, set.cards)
+                    }
+                  />
+                </div>
               ) : null}
             </div>
           </div>

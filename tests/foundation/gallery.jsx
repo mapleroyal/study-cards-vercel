@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AppCorners } from "@/components/app-corners";
 import { createRoot } from "react-dom/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -348,6 +349,7 @@ function Gallery() {
   const [date, setDate] = useState(new Date(2026, 8, 7));
   return (
     <main className="foundation-gallery">
+      <AppCorners />
       <h1>Shared foundation verification</h1>
       <Section title="Corner treatment">
         <div className="foundation-row" data-testid="shape-examples">

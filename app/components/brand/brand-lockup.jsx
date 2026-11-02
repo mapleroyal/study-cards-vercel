@@ -21,7 +21,7 @@ export function BrandIcon({ className, ...props }) {
           height="40"
           rx="8"
           transform="rotate(-13 0 10)"
-          className="fill-primary opacity-40 dark:opacity-55"
+          className="fill-[color-mix(in_srgb,var(--primary)_40%,var(--background))] dark:fill-[color-mix(in_srgb,var(--primary)_55%,var(--background))]"
         />
         <rect
           x="13"
@@ -30,8 +30,7 @@ export function BrandIcon({ className, ...props }) {
           height="40"
           rx="8"
           transform="rotate(9 13 8)"
-          className="fill-primary"
-          opacity="0.58"
+          className="fill-[color-mix(in_srgb,var(--primary)_58%,var(--background))]"
         />
         <rect
           x="7"

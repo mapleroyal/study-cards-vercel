@@ -7,7 +7,6 @@ import {
   newMutationId,
 } from "@/lib/runtime-client";
 
-let latestMutationId;
 let cachePromise;
 function cache() {
   if (!cachePromise) {
@@ -58,11 +57,7 @@ export async function performLibraryAction(action, args = {}, options = {}) {
     method: "POST",
     body: { action, args, mutationId: newMutationId(), ...options },
   });
-  latestMutationId = result.mutationId;
   return result;
-}
-export function getLatestMutationId() {
-  return latestMutationId;
 }
 export async function undoLibraryAction(mutationId, conversationId) {
   return performLibraryAction(

@@ -1,0 +1,132 @@
+@import "@/globals.css";
+@source ".";
+
+/* Only fixture layout. Component appearance comes from the actual app stylesheet. */
+.gallery {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px 20px 80px;
+}
+.gallery > h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+.gallery-section {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+.gallery-section > h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.gallery-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+.gallery-stack {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.gallery-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: 24px;
+}
+.gallery-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.gallery-field > [data-slot="select-trigger"],
+.gallery-field > [data-slot="native-select-wrapper"] {
+  width: 100%;
+}
+.gallery-controls {
+  max-width: 500px;
+}
+.gallery-sidebar {
+  height: 260px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.gallery-sidebar [data-slot="sidebar-wrapper"] {
+  min-height: 100%;
+}
+.gallery-sidebar [data-slot="sidebar"] {
+  min-height: 260px;
+}
+.gallery-chart {
+  width: 100%;
+  height: 200px;
+}
+.gallery-resizable {
+  height: 160px;
+}
+.gallery-resizable p {
+  padding: 16px;
+}
+.gallery-scroll {
+  min-width: 0;
+  height: 120px;
+  width: 100%;
+}
+.gallery-scroll p {
+  padding: 8px 16px;
+}
+.gallery-aspect {
+  width: 180px;
+  max-width: 100%;
+  background: var(--muted);
+}
+.gallery-context {
+  display: grid;
+  place-items: center;
+  min-height: 80px;
+  width: 100%;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+.gallery-carousel {
+  margin: 0 44px;
+  min-width: 0;
+}
+.gallery-carousel-slide {
+  display: grid;
+  height: 100px;
+  place-items: center;
+  background: var(--muted);
+  border-radius: var(--radius);
+}
+
+.gallery-edge-control {
+  position: absolute;
+  right: 0;
+  top: 20px;
+  width: 36px;
+}
+
+.gallery-corner-stage {
+  display: flex;
+  gap: 20px;
+  padding: 12px;
+  background: rgb(240, 242, 246);
+}
+.gallery-corner-stage > span {
+  display: block;
+  width: 96px;
+  height: 96px;
+  flex: none;
+  background: rgb(20, 28, 40);
+}
+.gallery-corner-controls {
+  display: grid;
+  gap: 16px;
+  max-width: 320px;
+}

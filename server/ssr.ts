@@ -10,10 +10,11 @@ const handler = createRequestHandler(
 export default {
   async fetch(request: Request) {
     const url = new URL(request.url);
-    // React Router data requests for the login page must also work signed out.
+    // Router 8 preserves trailing slashes with /_.data; only login data is public.
     if (
       url.pathname !== "/login" &&
       url.pathname !== "/login.data" &&
+      url.pathname !== "/login/_.data" &&
       !(await readSession(request.headers.get("cookie")))
     ) {
       return new Response(null, {

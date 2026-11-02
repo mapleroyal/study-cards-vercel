@@ -1,17 +1,9 @@
-import * as React from "react";
-import {
-  flushRuntimeSync,
-  refreshRuntimeState,
-  getRuntimeSyncSnapshot,
-} from "@/lib/runtime-sync";
-import { toast } from "sonner";
 import { useCapabilities } from "@/lib/runtime-client";
-import {
-  getLatestMutationId,
-  performLibraryAction,
-  undoLibraryAction,
-} from "@/lib/runtime-study-set-storage";
-import { Link, useNavigate } from "react-router";
+import { initializeStoredStudyFavorites } from "@/lib/study-favorites";
+import { createFuzzySearch } from "@/lib/fuzzy-search";
+import * as React from "react";
+import { useStudyLibraryActions } from "@/hooks/use-study-library-actions";
+import { useNavigate } from "react-router";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   SidebarBottomIcon,
@@ -24,6 +16,19 @@ import { StudySetImportDropzone } from "@/components/study/study-set-import-drop
 import { ThemeModeSwitcher } from "@/components/theme/theme-mode-switcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/button-link";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
+import { SearchIcon } from "@primer/octicons-react";
 import {
   Drawer,
   DrawerContent,
@@ -34,15 +39,6 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
   Popover,
   PopoverContent,
   PopoverHeader,
@@ -52,8 +48,7 @@ import {
 import { StudyFullscreenControl } from "@/components/study/study-fullscreen-control";
 import { useAppUpdate } from "@/lib/app-update";
 import { APP_VERSION } from "@/lib/app-config";
-import { initializeStoredStudyFavorites } from "@/lib/study-favorites";
-import { selectFirstLocalSet, selectLocalStudySets } from "@/lib/study-sets";
+import { getSetCategoryPath, selectLocalStudySets } from "@/lib/study-sets";
 import {
   hasDirtyStudyInteractions,
   useStudyInteractionsStore,
@@ -106,10 +101,12 @@ function AppUpdateNotice({ refreshSupported, onRefresh }) {
           </PopoverTitle>
         </PopoverHeader>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="ghost" onClick={() => setOpen(false)}>
             Not now
           </Button>
-          <Button onClick={handleRefresh}>Okay</Button>
+          <Button variant="ghost" onClick={handleRefresh}>
+            Okay
+          </Button>
         </div>
       </PopoverContent>
     </Popover>
@@ -119,30 +116,32 @@ function AppUpdateNotice({ refreshSupported, onRefresh }) {
 export function SetChooser({ activeSlug, onOpenChange }) {
   const capabilities = useCapabilities();
   const [open, setOpen] = React.useState(false);
+  const [query, setQuery] = React.useState("");
   const appUpdate = useAppUpdate();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const records = useStudySetsStore((state) => state.records);
   const storageStatus = useStudySetsStore((state) => state.status);
   const storageError = useStudySetsStore((state) => state.error);
-  const deleteStudySet = useStudySetsStore((state) => state.deleteStudySet);
+  const { deleteSet: handleDeleteSet, resetSet: handleResetSet } =
+    useStudyLibraryActions(activeSlug);
   const sets = React.useMemo(() => selectLocalStudySets(records), [records]);
   const favoriteItems = useStudyFavoritesStore((state) => state.favorites);
-  const setFavorites = useStudyFavoritesStore((state) => state.setFavorites);
   const addFavorite = useStudyFavoritesStore((state) => state.addFavorite);
   const removeFavorite = useStudyFavoritesStore(
     (state) => state.removeFavorite,
   );
-  const resetSet = useStudyInteractionsStore((state) => state.resetSet);
   const interactionsBySet = useStudyInteractionsStore(
     (state) => state.interactionsBySet,
   );
   useLoadStudySets();
   React.useEffect(() => {
     if (capabilities && !capabilities.server && storageStatus === "ready") {
-      setFavorites(initializeStoredStudyFavorites(sets));
+      useStudyFavoritesStore
+        .getState()
+        .setFavorites(initializeStoredStudyFavorites(sets));
     }
-  }, [capabilities, setFavorites, sets, storageStatus]);
+  }, [capabilities, sets, storageStatus]);
   const resettableSetSlugs = React.useMemo(
     () =>
       new Set(
@@ -168,6 +167,9 @@ export function SetChooser({ activeSlug, onOpenChange }) {
 
   function setPanelOpen(nextOpen) {
     setOpen(nextOpen);
+    if (!nextOpen) {
+      setQuery("");
+    }
     onOpenChange?.(nextOpen);
   }
 
@@ -183,72 +185,6 @@ export function SetChooser({ activeSlug, onOpenChange }) {
   function handleImported(record) {
     setPanelOpen(false);
     navigate(`/sets/${record.slug}`);
-  }
-
-  async function handleDeleteSet(slug) {
-    let nextRecords;
-    try {
-      nextRecords = await deleteStudySet(slug);
-    } catch (error) {
-      toast.error(error.message);
-      return;
-    }
-    if (capabilities?.server) {
-      const mutationId = getLatestMutationId();
-      toast.success("Set deleted", {
-        action: {
-          label: "Undo",
-          onClick: async () => {
-            try {
-              await undoLibraryAction(mutationId);
-              await useStudySetsStore.getState().load();
-            } catch (error) {
-              toast.error(error.message);
-            }
-          },
-        },
-      });
-    }
-
-    if (activeSlug === slug) {
-      const nextSet = selectFirstLocalSet(nextRecords);
-
-      navigate(nextSet ? `/sets/${nextSet.slug}` : "/");
-    }
-  }
-
-  async function handleResetSet(slug) {
-    if (!capabilities?.server) {
-      resetSet(slug);
-      return;
-    }
-    try {
-      await flushRuntimeSync();
-      if (getRuntimeSyncSnapshot().pending) {
-        throw new Error("Reconnect to reset progress.");
-      }
-      const result = await performLibraryAction("progress.reset", { slug });
-      await refreshRuntimeState();
-      toast.success("Progress reset", {
-        action: {
-          label: "Undo",
-          onClick: async () => {
-            try {
-              await flushRuntimeSync();
-              if (getRuntimeSyncSnapshot().pending) {
-                throw new Error("Reconnect to undo this change.");
-              }
-              await undoLibraryAction(result.mutationId);
-              await refreshRuntimeState();
-            } catch (error) {
-              toast.error(error.message);
-            }
-          },
-        },
-      });
-    } catch (error) {
-      toast.error(error.message);
-    }
   }
 
   const trigger = (
@@ -272,43 +208,95 @@ export function SetChooser({ activeSlug, onOpenChange }) {
     </Button>
   );
 
-  const list = (
-    <div className="flex min-h-full flex-col gap-5 px-4 pb-4 pt-1">
-      {updateAvailable ? (
-        <AppUpdateNotice
-          refreshSupported={appUpdate.refreshSupported}
-          onRefresh={appUpdate.refresh}
-        />
-      ) : null}
-      <div className="grid grid-cols-2 gap-2">
-        <StudySetImportDropzone variant="compact" onImported={handleImported} />
-        <GenerateCardsButton variant="outline" size="sm" onClick={closePanel} />
-      </div>
-      {storageError ? (
-        <p className="px-1 text-body-sm text-destructive">{storageError}</p>
-      ) : null}
-      {storageStatus === "loading" ? (
-        <p className="px-1 text-body-sm text-muted-foreground">
-          Loading sets...
-        </p>
-      ) : null}
-      <SetBrowserTree
-        sets={sets}
-        activeSlug={activeSlug}
-        onSelect={handleSelect}
-        resettableSetSlugs={resettableSetSlugs}
-        onResetSet={handleResetSet}
-        deletableSetSlugs={deletableSetSlugs}
-        onDeleteSet={handleDeleteSet}
-        favoriteItems={favoriteItems}
-        onFavoriteItem={addFavorite}
-        onUnfavoriteItem={removeFavorite}
-      />
-    </div>
+  const searchSets = React.useMemo(
+    () =>
+      createFuzzySearch(
+        sets,
+        (set) => `${set.title} ${getSetCategoryPath(set)}`,
+      ),
+    [sets],
   );
-
+  const visibleSets = searchSets(query);
+  const search = query.trim();
   const panelContent = (
-    <div className="min-h-0 flex-1 overflow-y-auto">{list}</div>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex shrink-0 flex-col gap-3 px-4 pb-4">
+        <nav
+          aria-label="Workspace"
+          className={`flex items-center gap-1 ${activeSlug ? "" : "md:hidden"}`}
+        >
+          <ButtonLink variant="ghost" size="sm" to="/" onClick={closePanel}>
+            Library
+          </ButtonLink>
+        </nav>
+        {updateAvailable && (
+          <AppUpdateNotice
+            refreshSupported={appUpdate.refreshSupported}
+            onRefresh={appUpdate.refresh}
+          />
+        )}
+        <div className="grid grid-cols-2 gap-2">
+          <StudySetImportDropzone
+            variant="compact"
+            onImported={handleImported}
+          />
+          <GenerateCardsButton size="sm" onClick={closePanel} />
+        </div>
+        <InputGroup>
+          <InputGroupAddon>
+            <SearchIcon aria-hidden="true" />
+          </InputGroupAddon>
+          <InputGroupInput
+            type="search"
+            aria-label="Search study sets"
+            placeholder="Search study sets…"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </InputGroup>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-5">
+        {storageError && (
+          <p role="alert" className="pb-3 text-body-sm text-destructive">
+            {storageError}
+          </p>
+        )}
+        {storageStatus === "loading" && (
+          <p role="status" className="py-3 text-body-sm text-muted-foreground">
+            Loading sets…
+          </p>
+        )}
+        {visibleSets.length ? (
+          <SetBrowserTree
+            sets={visibleSets}
+            activeSlug={activeSlug}
+            onSelect={handleSelect}
+            resettableSetSlugs={resettableSetSlugs}
+            onResetSet={handleResetSet}
+            deletableSetSlugs={deletableSetSlugs}
+            onDeleteSet={handleDeleteSet}
+            favoriteItems={favoriteItems}
+            onFavoriteItem={addFavorite}
+            onUnfavoriteItem={removeFavorite}
+          />
+        ) : (
+          storageStatus !== "loading" && (
+            <Empty className="min-h-40 px-2 py-8">
+              <EmptyHeader>
+                <EmptyTitle>
+                  {search ? "No matching sets" : "No study sets yet"}
+                </EmptyTitle>
+                <EmptyDescription>
+                  {search
+                    ? "Try a different title or category."
+                    : "Generate cards or import a set to begin."}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )
+        )}
+      </div>
+    </div>
   );
   const versionLabel = (
     <p className="text-center text-body-sm text-muted-foreground">
@@ -317,53 +305,37 @@ export function SetChooser({ activeSlug, onOpenChange }) {
   );
   const settingsControls = (
     <div className="flex w-full items-center justify-between gap-2">
-      <Button asChild variant="ghost" size="sm">
-        <Link to="/settings" onClick={closePanel}>
-          Settings
-        </Link>
-      </Button>
+      <ButtonLink variant="ghost" size="sm" to="/settings" onClick={closePanel}>
+        Settings
+      </ButtonLink>
       <StudyFullscreenControl onToggleComplete={closePanel} />
       <ThemeModeSwitcher />
     </div>
   );
 
-  if (isMobile) {
-    return (
-      <Drawer open={open} onOpenChange={setPanelOpen}>
-        <DrawerTrigger render={trigger} />
-        <DrawerContent className="max-h-[85dvh]">
-          <DrawerHeader className="text-left">
-            <DrawerTitle>Study sets</DrawerTitle>
-            <DrawerDescription className="sr-only">
-              {chooserDescription}
-            </DrawerDescription>
-          </DrawerHeader>
-          {panelContent}
-          <DrawerFooter className="gap-3 border-t px-4 py-4">
-            {settingsControls}
-            {versionLabel}
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-    );
-  }
-
   return (
-    <Sheet open={open} onOpenChange={setPanelOpen}>
-      <SheetTrigger render={trigger} />
-      <SheetContent className="overflow-hidden">
-        <SheetHeader>
-          <SheetTitle>Study sets</SheetTitle>
-          <SheetDescription className="sr-only">
+    <Drawer
+      open={open}
+      onOpenChange={setPanelOpen}
+      swipeDirection={isMobile ? "down" : "right"}
+    >
+      <DrawerTrigger render={trigger} />
+      <DrawerContent
+        className={isMobile ? "max-h-[85dvh]" : undefined}
+        viewportClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        <DrawerHeader className="text-left">
+          <DrawerTitle>Study sets</DrawerTitle>
+          <DrawerDescription className="sr-only">
             {chooserDescription}
-          </SheetDescription>
-        </SheetHeader>
+          </DrawerDescription>
+        </DrawerHeader>
         {panelContent}
-        <SheetFooter className="gap-3 border-t px-4 py-4">
+        <DrawerFooter className="gap-3 border-t">
           {settingsControls}
           {versionLabel}
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }
