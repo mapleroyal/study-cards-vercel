@@ -11,7 +11,7 @@ const { apiRequest, listBrowserRecords, getCapabilities, toastInfo } =
     apiRequest: vi.fn(),
     listBrowserRecords: vi.fn(),
   }));
-vi.mock("sonner", () => ({ toast: { info: toastInfo } }));
+vi.mock("@/components/ui/toast", () => ({ toast: { add: toastInfo } }));
 vi.mock("@/lib/runtime-client", () => ({
   apiRequest,
   getCapabilities,

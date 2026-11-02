@@ -1,14 +1,11 @@
-import { Link } from "react-router";
 import { PlusIcon } from "@primer/octicons-react";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/button-link";
 
 export function GenerateCardsButton({ onClick, ...props }) {
   return (
-    <Button asChild {...props}>
-      <Link to="/generate" onClick={onClick}>
-        <PlusIcon aria-hidden="true" />
-        Generate cards
-      </Link>
-    </Button>
+    <ButtonLink to="/generate" variant="ghost" onClick={onClick} {...props}>
+      <PlusIcon aria-hidden="true" />
+      Generate cards
+    </ButtonLink>
   );
 }

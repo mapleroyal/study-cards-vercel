@@ -1,13 +1,12 @@
+import { mergeProps } from "@base-ui/react/merge-props";
+import { useRender } from "@base-ui/react/use-render";
 import * as React from "react";
-import { Slot } from "radix-ui";
-
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowRight01Icon,
   MoreHorizontalCircle01Icon,
 } from "@hugeicons/core-free-icons";
-
 function Breadcrumb({ className, ...props }) {
   return (
     <nav
@@ -18,7 +17,6 @@ function Breadcrumb({ className, ...props }) {
     />
   );
 }
-
 function BreadcrumbList({ className, ...props }) {
   return (
     <ol
@@ -31,7 +29,6 @@ function BreadcrumbList({ className, ...props }) {
     />
   );
 }
-
 function BreadcrumbItem({ className, ...props }) {
   return (
     <li
@@ -41,19 +38,19 @@ function BreadcrumbItem({ className, ...props }) {
     />
   );
 }
-
-function BreadcrumbLink({ asChild, className, ...props }) {
-  const Comp = asChild ? Slot.Root : "a";
-
-  return (
-    <Comp
-      data-slot="breadcrumb-link"
-      className={cn("transition-colors hover:text-foreground", className)}
-      {...props}
-    />
-  );
+function BreadcrumbLink({ render, className, ...props }) {
+  return useRender({
+    defaultTagName: "a",
+    render,
+    props: mergeProps(
+      {
+        "data-slot": "breadcrumb-link",
+        className: cn("transition-colors hover:text-foreground", className),
+      },
+      props,
+    ),
+  });
 }
-
 function BreadcrumbPage({ className, ...props }) {
   return (
     <span
@@ -66,7 +63,6 @@ function BreadcrumbPage({ className, ...props }) {
     />
   );
 }
-
 function BreadcrumbSeparator({ children, className, ...props }) {
   return (
     <li
@@ -80,7 +76,6 @@ function BreadcrumbSeparator({ children, className, ...props }) {
     </li>
   );
 }
-
 function BreadcrumbEllipsis({ className, ...props }) {
   return (
     <span
@@ -98,7 +93,6 @@ function BreadcrumbEllipsis({ className, ...props }) {
     </span>
   );
 }
-
 export {
   Breadcrumb,
   BreadcrumbList,

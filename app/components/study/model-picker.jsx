@@ -16,33 +16,58 @@ import {
   ComboboxTrigger,
 } from "@/components/ui/combobox";
 import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { createFuzzyFilter } from "@/lib/fuzzy-search";
 import { useModelCatalog } from "@/hooks/use-model-catalog";
 
 // Preserve the server edition's searchable model + supported-effort controls.
 // The owner settings service is the canonical preference; never silently reset it.
-export function ModelPicker({ value, onChange, disabled = false }) {
+export function ModelPicker({
+  value,
+  onChange,
+  disabled = false,
+  compact = false,
+}) {
   const { models, loading, error, refresh } = useModelCatalog();
-  const selected = models.find((item) => item.id === value.model);
+  const modelsById = React.useMemo(
+    () => new Map(models.map((item) => [item.id, item])),
+    [models],
+  );
+  const selected = modelsById.get(value.model);
   const variants = selected?.variants || [];
   const showDefaultEffort = !selected?.defaultVariant || !value.reasoningEffort;
   const unavailableEffort =
     value.reasoningEffort &&
     selected &&
     !variants.includes(value.reasoningEffort);
-  return (
+  const ids = React.useMemo(() => models.map((item) => item.id), [models]);
+  const filter = React.useMemo(
+    () =>
+      createFuzzyFilter(ids, (id) => {
+        const model = modelsById.get(id);
+        return `${model?.name || ""} ${id}`;
+      }),
+    [ids, modelsById],
+  );
+  const controls = (
     <div className="flex min-w-0 flex-col gap-2">
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         <Combobox
-          items={models.map((item) => item.id)}
+          items={ids}
+          filter={filter}
           value={value.model}
-          itemToStringLabel={(id) =>
-            models.find((item) => item.id === id)?.name || id
-          }
+          itemToStringLabel={(id) => modelsById.get(id)?.name || id}
           onValueChange={(id) => {
             if (id === value.model) {
               return;
             }
-            const model = models.find((item) => item.id === id);
+            const model = modelsById.get(id);
             if (model) {
               onChange({
                 model: model.id,
@@ -54,16 +79,7 @@ export function ModelPicker({ value, onChange, disabled = false }) {
           }}
           disabled={disabled || loading || Boolean(error)}
         >
-          <ComboboxTrigger
-            aria-label="Model"
-            render={
-              <Button
-                type="button"
-                variant="secondary"
-                className="min-w-0 max-w-64 gap-3"
-              />
-            }
-          >
+          <ComboboxTrigger aria-label="Model" className="min-w-0 max-w-full">
             <span className="truncate">{selected?.name || value.model}</span>
           </ComboboxTrigger>
           <ComboboxContent className="min-w-[min(20rem,var(--available-width))]">
@@ -76,7 +92,7 @@ export function ModelPicker({ value, onChange, disabled = false }) {
             <ComboboxList>
               {(id) => (
                 <ComboboxItem key={id} value={id}>
-                  {models.find((item) => item.id === id)?.name || id}
+                  {modelsById.get(id)?.name || id}
                 </ComboboxItem>
               )}
             </ComboboxList>
@@ -143,5 +159,42 @@ export function ModelPicker({ value, onChange, disabled = false }) {
         </p>
       ) : null}
     </div>
+  );
+  if (!compact) {
+    return controls;
+  }
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={<Button variant="ghost" disabled={disabled} />}
+        aria-label="Change generation model"
+        className="h-auto min-h-9 max-w-full justify-start text-left"
+        title={`${selected?.name || value.model} · ${value.reasoningEffort || "Default effort"}`}
+      >
+        <span className="min-w-0">
+          <span className="block text-label-md text-muted-foreground">
+            Generation model
+          </span>
+          <span className="block truncate">
+            {selected?.name || value.model}
+          </span>
+          <span className="block text-body-sm text-muted-foreground">
+            {value.reasoningEffort || "Default effort"}
+          </span>
+        </span>
+        {error && (
+          <span
+            aria-label="Models unavailable"
+            className="size-1.5 shrink-0 rounded-full bg-destructive"
+          />
+        )}
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-96">
+        <PopoverHeader>
+          <PopoverTitle>Generation model</PopoverTitle>
+        </PopoverHeader>
+        {controls}
+      </PopoverContent>
+    </Popover>
   );
 }

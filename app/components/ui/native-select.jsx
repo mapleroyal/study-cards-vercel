@@ -8,16 +8,18 @@ function NativeSelect({ className, size = "default", ...props }) {
   return (
     <div
       className={cn(
-        "group/native-select relative w-fit has-[select:disabled]:opacity-50",
+        "group/native-select relative inline-flex w-fit items-center rounded-3xl border border-transparent bg-input/50 has-[>select:not(:disabled)]:hover:bg-input/70 transition-[color,box-shadow,background-color] has-[>select:focus-visible]:border-ring has-[>select:focus-visible]:ring-3 has-[>select:focus-visible]:ring-ring/30 has-[>select:disabled]:opacity-50 has-[>select[aria-invalid=true]]:border-destructive has-[>select[aria-invalid=true]]:ring-3 has-[>select[aria-invalid=true]]:ring-destructive/20 dark:has-[>select[aria-invalid=true]]:border-destructive/50 dark:has-[>select[aria-invalid=true]]:ring-destructive/40",
         className,
       )}
       data-slot="native-select-wrapper"
+      data-app-corner-focus-within=""
       data-size={size}
     >
       <select
         data-slot="native-select"
         data-size={size}
-        className="h-9 w-full min-w-0 appearance-none rounded-3xl border border-transparent bg-input/50 py-1 pr-8 pl-3 text-body-lg md:text-body-md transition-[color,box-shadow,background-color] outline-none select-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:cursor-not-allowed aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-[size=sm]:h-8 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+        data-corner-shape="round"
+        className="h-[calc(--spacing(9)-2px)] w-full min-w-0 appearance-none border-0 bg-transparent py-1 pr-8 pl-3 text-body-lg md:text-body-md outline-none select-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed data-[size=sm]:h-[calc(--spacing(8)-2px)]"
         {...props}
       />
       <HugeiconsIcon

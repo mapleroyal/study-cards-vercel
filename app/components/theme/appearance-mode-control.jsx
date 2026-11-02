@@ -149,11 +149,11 @@ function ExpandedAppearanceControl({ value, onValueChange }) {
                 role="radio"
                 tabIndex={value === option.value ? 0 : -1}
                 onClick={() => onValueChange(option.value)}
-              >
-                <AppearanceGlyph option={option} />
-              </button>
+              />
             }
-          />
+          >
+            <AppearanceGlyph option={option} />
+          </TooltipTrigger>
           <TooltipContent>{option.label}</TooltipContent>
         </Tooltip>
       ))}
@@ -169,22 +169,22 @@ function CompactAppearanceControl({ value, onValueChange }) {
   return (
     <DropdownMenu>
       <Tooltip>
-        <TooltipTrigger
+        <DropdownMenuTrigger
           render={
-            <DropdownMenuTrigger
+            <TooltipTrigger
               render={
                 <Button
                   type="button"
                   aria-label={`Appearance: ${selected.label}`}
                   size="icon-sm"
                   variant="ghost"
-                >
-                  <AppearanceGlyph option={selected} />
-                </Button>
+                />
               }
             />
           }
-        />
+        >
+          <AppearanceGlyph option={selected} />
+        </DropdownMenuTrigger>
         <TooltipContent side="bottom">Appearance</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="w-40">

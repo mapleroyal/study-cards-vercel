@@ -37,12 +37,14 @@ function InputOTPSlot({ index, className, ...props }) {
   const inputOTPContext = React.useContext(OTPInputContext);
   const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {};
 
+  // Solid overlapping borders keep every divider one pixel wide in both the
+  // native and SVG corner renderers; the extra width preserves the group size.
   return (
     <div
       data-slot="input-otp-slot"
       data-active={isActive}
       className={cn(
-        "text-body-lg relative flex size-9 items-center justify-center border-y border-r border-input bg-input/30 transition-all outline-none first:rounded-l-4xl first:border-l last:rounded-r-4xl aria-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-[3px] data-[active=true]:ring-ring/30 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 md:text-body-md dark:data-[active=true]:aria-invalid:ring-destructive/40",
+        "text-body-lg relative flex size-9 items-center justify-center border border-[color-mix(in_oklab,var(--foreground)_12%,var(--background))] not-first:-ml-px not-first:w-[calc(--spacing(9)+1px)] bg-input/30 transition-all outline-none first:rounded-l-4xl last:rounded-r-4xl aria-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-[3px] data-[active=true]:ring-ring/30 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 md:text-body-md dark:data-[active=true]:aria-invalid:ring-destructive/40",
         className,
       )}
       {...props}

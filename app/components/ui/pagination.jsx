@@ -1,14 +1,12 @@
 import * as React from "react";
-
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowLeft01Icon,
   ArrowRight01Icon,
   MoreHorizontalCircle01Icon,
 } from "@hugeicons/core-free-icons";
-
 function Pagination({ className, ...props }) {
   return (
     <nav
@@ -20,7 +18,6 @@ function Pagination({ className, ...props }) {
     />
   );
 }
-
 function PaginationContent({ className, ...props }) {
   return (
     <ul
@@ -30,30 +27,24 @@ function PaginationContent({ className, ...props }) {
     />
   );
 }
-
 function PaginationItem({ ...props }) {
   return <li data-slot="pagination-item" {...props} />;
 }
-
 function PaginationLink({ className, isActive, size = "icon", ...props }) {
   return (
-    <Button
-      asChild
+    <a
+      aria-current={isActive ? "page" : undefined}
+      data-slot="pagination-link"
+      data-active={isActive}
       data-icon-button={false}
-      variant={isActive ? "outline" : "ghost"}
-      size={size}
-      className={cn(className)}
-    >
-      <a
-        aria-current={isActive ? "page" : undefined}
-        data-slot="pagination-link"
-        data-active={isActive}
-        {...props}
-      />
-    </Button>
+      className={cn(
+        buttonVariants({ variant: isActive ? "outline" : "ghost", size }),
+        className,
+      )}
+      {...props}
+    />
   );
 }
-
 function PaginationPrevious({ className, text = "Previous", ...props }) {
   return (
     <PaginationLink
@@ -71,7 +62,6 @@ function PaginationPrevious({ className, text = "Previous", ...props }) {
     </PaginationLink>
   );
 }
-
 function PaginationNext({ className, text = "Next", ...props }) {
   return (
     <PaginationLink
@@ -89,7 +79,6 @@ function PaginationNext({ className, text = "Next", ...props }) {
     </PaginationLink>
   );
 }
-
 function PaginationEllipsis({ className, ...props }) {
   return (
     <span
@@ -106,7 +95,6 @@ function PaginationEllipsis({ className, ...props }) {
     </span>
   );
 }
-
 export {
   Pagination,
   PaginationContent,

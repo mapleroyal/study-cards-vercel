@@ -265,8 +265,9 @@ test("whole-source form survives reload of a generation job", async ({
   const csp = documentResponse.headers()["content-security-policy"];
   const nonce = csp?.match(/'nonce-([^']+)'/)?.[1];
   expect(nonce).toBeTruthy();
-  await page.getByRole("radio", { name: "Paste text", exact: true }).click();
+  await page.getByRole("button", { name: "Paste text", exact: true }).click();
   await page.getByRole("textbox", { name: "Source text" }).fill(sourceText);
+  await page.getByRole("button", { name: "Card types All card types" }).click();
   for (const checkbox of await page.getByRole("checkbox").all()) {
     await checkbox.uncheck();
   }
@@ -315,7 +316,9 @@ test("rename, move and all seven editors save and export portable JSON", async (
 }, testInfo) => {
   const app = await mockApp(page);
   await page.goto("/sets/biology");
-  await page.getByRole("button", { name: "Edit Biology", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Options for Biology", exact: true })
+    .click();
   await page.getByRole("menuitem", { name: "Rename", exact: true }).click();
   await page
     .getByRole("textbox", { name: "Title", exact: true })
@@ -328,7 +331,7 @@ test("rename, move and all seven editors save and export portable JSON", async (
     page.getByRole("heading", { name: "Cell study", exact: true }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Edit Cell study", exact: true })
+    .getByRole("button", { name: "Options for Cell study", exact: true })
     .click();
   await page.getByRole("menuitem", { name: "Move", exact: true }).click();
   await page
@@ -378,7 +381,7 @@ test("rename, move and all seven editors save and export portable JSON", async (
   const actionCount = app.actions.length;
   async function exportSavedSet() {
     await page
-      .getByRole("button", { name: "Edit Cell study", exact: true })
+      .getByRole("button", { name: "Options for Cell study", exact: true })
       .click();
     const downloading = page.waitForEvent("download");
     await page.getByRole("menuitem", { name: "Export", exact: true }).click();
@@ -397,7 +400,7 @@ test("rename, move and all seven editors save and export portable JSON", async (
   await exportSavedSet();
 });
 
-test("an empty library has two centered actions and generation asks quietly for a missing key", async ({
+test("an empty library keeps creation actions clear and generation asks quietly for a missing key", async ({
   page,
 }, testInfo) => {
   let generationStarts = 0;
@@ -434,20 +437,25 @@ test("an empty library has two centered actions and generation asks quietly for 
     main.getByRole("button", { name: "Import set", exact: true }),
   ).toBeVisible();
   await expect(main.locator("a, button")).toHaveCount(2);
-  await expect(main.getByRole("heading")).toHaveCount(0);
-  await expect(main.locator("p")).toHaveCount(0);
+  await expect(
+    main.getByRole("heading", { name: "Study sets", exact: true }),
+  ).toBeVisible();
+  await expect(
+    main.getByText("Your study library", { exact: true }),
+  ).toBeVisible();
   await expect(
     main
       .getByRole("link", { name: "Generate cards", exact: true })
       .locator("svg"),
   ).toHaveCount(1);
-  const mainBox = await main.boundingBox();
-  const actionsBox = await main.locator("div").first().boundingBox();
-  expect(
-    Math.abs(
-      actionsBox.y + actionsBox.height / 2 - (mainBox.y + mainBox.height / 2),
-    ),
-  ).toBeLessThan(3);
+  const actionBounds = await main.locator("a, button").evaluateAll((elements) =>
+    elements.map((element) => {
+      const rect = element.getBoundingClientRect();
+      return { height: rect.height, top: rect.top };
+    }),
+  );
+  expect(actionBounds[0].height).toBe(actionBounds[1].height);
+  expect(Math.abs(actionBounds[0].top - actionBounds[1].top)).toBeLessThan(1);
   await capture(page, testInfo, "empty-library");
   await main.getByRole("link", { name: "Generate cards", exact: true }).click();
   const dialog = page.getByRole("dialog", {
@@ -472,7 +480,7 @@ test("an empty library has two centered actions and generation asks quietly for 
     ...defaultSelection,
   });
   expect(app.settings()).not.toHaveProperty("openRouterKey");
-  await page.getByRole("radio", { name: "Paste text", exact: true }).click();
+  await page.getByRole("button", { name: "Paste text", exact: true }).click();
   await page
     .getByRole("textbox", { name: "Source text", exact: true })
     .fill("A short supplied section.");
@@ -481,7 +489,9 @@ test("an empty library has two centered actions and generation asks quietly for 
   ).toBeEnabled();
   expect(generationStarts).toBe(0);
   await page.reload();
-  await expect(page.getByLabel("Model", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Change generation model", exact: true }),
+  ).toBeVisible();
   await expect(dialog).toHaveCount(0);
   await page.goto("/settings");
   await page.getByRole("button", { name: "Remove key", exact: true }).click();
@@ -514,12 +524,21 @@ test("an empty library has two centered actions and generation asks quietly for 
   await expect(
     page.getByRole("button", { name: "Remove key", exact: true }),
   ).toHaveCount(0);
-  const headerGenerate = page.getByRole("link", {
-    name: "Generate cards",
-    exact: true,
-  });
-  await expect(headerGenerate.locator("svg")).toHaveCount(1);
-  await headerGenerate.click();
+  const headerGenerate = page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Generate", exact: true });
+  if (await headerGenerate.isVisible()) {
+    await headerGenerate.click();
+  } else {
+    await page
+      .getByRole("button", { name: "Open study set menu", exact: true })
+      .click();
+    const drawerGenerate = page
+      .getByRole("dialog", { name: "Study sets", exact: true })
+      .getByRole("link", { name: "Generate cards", exact: true });
+    await expect(drawerGenerate.locator("svg")).toHaveCount(1);
+    await drawerGenerate.click();
+  }
   await expect(dialog).toBeVisible();
   await expect(dialog.getByLabel("API key", { exact: true })).toHaveValue("");
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
@@ -548,7 +567,7 @@ test("model and reasoning preferences persist between Settings and Generate with
   await expect(model).toContainText("Claude Sonnet 5.5");
   await expect(effort).toHaveText("xhigh");
   await model.click();
-  await page.getByLabel("Search models", { exact: true }).fill("Haiku");
+  await page.getByLabel("Search models", { exact: true }).fill("claude haik");
   await page
     .getByRole("option", { name: "Anthropic: Claude Haiku 5.5", exact: true })
     .click();
@@ -564,6 +583,9 @@ test("model and reasoning preferences persist between Settings and Generate with
   });
   await expect(keyDialog).toBeVisible();
   await keyDialog.getByRole("button", { name: "Close", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Change generation model", exact: true })
+    .click();
   await expect(model).toContainText("Claude Haiku 5.5");
   await expect(effort).toHaveText("low");
   await model.click();
@@ -579,6 +601,9 @@ test("model and reasoning preferences persist between Settings and Generate with
   await page.reload();
   await expect(keyDialog).toBeVisible();
   await keyDialog.getByRole("button", { name: "Close", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Change generation model", exact: true })
+    .click();
   await expect(model).toContainText("Claude Sonnet 5.5");
   await expect(effort).toHaveText("xhigh");
   expect(app.settings()).toMatchObject({
@@ -604,11 +629,11 @@ test("global shuffle changes update another reader tab and clear per-set overrid
 }) => {
   await mockApp(page);
   await page.goto("/sets/biology");
-  const shuffle = page.getByRole("button", {
+  const shuffle = page.getByRole("switch", {
     name: "Shuffle questions",
     exact: true,
   });
-  await expect(shuffle).toHaveAttribute("aria-pressed", "true");
+  await expect(shuffle).toBeChecked();
   const order = () =>
     page
       .getByRole("article")
@@ -635,13 +660,13 @@ test("global shuffle changes update another reader tab and clear per-set overrid
   );
   const anchorTop = (await anchor.boundingBox()).y;
   await globalShuffle.uncheck();
-  await expect(shuffle).toHaveAttribute("aria-pressed", "false");
+  await expect(shuffle).not.toBeChecked();
   await expect.poll(order).toEqual(sourceOrder);
   await expect
     .poll(async () => Math.abs((await anchor.boundingBox()).y - anchorTop))
     .toBeLessThan(4);
   await shuffle.click();
-  await expect(shuffle).toHaveAttribute("aria-pressed", "true");
+  await expect(shuffle).toBeChecked();
   await expect.poll(order).toEqual(savedOrder);
   await expect(globalShuffle).not.toBeChecked();
   await globalShuffle.check();
@@ -657,7 +682,7 @@ test("global shuffle changes update another reader tab and clear per-set overrid
   await settingsPage.reload();
   await expect(globalShuffle).toBeChecked();
   await page.reload();
-  await expect(shuffle).toHaveAttribute("aria-pressed", "true");
+  await expect(shuffle).toBeChecked();
   await expect.poll(order).toEqual(savedOrder);
 });
 
@@ -675,11 +700,11 @@ test("enabling global shuffle creates the first saved order in an open reader", 
   });
   await mockApp(page);
   await page.goto("/sets/biology");
-  const shuffle = page.getByRole("button", {
+  const shuffle = page.getByRole("switch", {
     name: "Shuffle questions",
     exact: true,
   });
-  await expect(shuffle).toHaveAttribute("aria-pressed", "false");
+  await expect(shuffle).not.toBeChecked();
   expect(
     await page.evaluate(
       () =>
@@ -696,7 +721,7 @@ test("enabling global shuffle creates the first saved order in an open reader", 
   });
   await expect(globalShuffle).not.toBeChecked();
   await globalShuffle.check();
-  await expect(shuffle).toHaveAttribute("aria-pressed", "true");
+  await expect(shuffle).toBeChecked();
   await expect
     .poll(() =>
       page.evaluate(() =>
@@ -880,6 +905,7 @@ test("failed generation statuses are plain text and Details supports a complete 
     page.locator("form").getByText("Section 11", { exact: true }),
   ).toBeVisible();
   await expect(page.getByLabel("Cards", { exact: true })).toHaveValue("3");
+  await page.getByRole("button", { name: "Card types 1 selected" }).click();
   await expect(page.getByRole("checkbox", { checked: true })).toHaveCount(1);
   await expect(
     page.getByRole("checkbox", { name: "Short Answer", exact: true }),
@@ -937,7 +963,7 @@ test("retry asks for a deleted source again instead of submitting a stale source
   await expect(
     page.getByRole("button", { name: "Generate", exact: true }),
   ).toBeDisabled();
-  await page.getByRole("radio", { name: "Paste text", exact: true }).click();
+  await page.getByRole("button", { name: "Paste text", exact: true }).click();
   await page
     .getByRole("textbox", { name: "Source text", exact: true })
     .fill("The replacement source section.");
@@ -949,7 +975,34 @@ test("retry asks for a deleted source again instead of submitting a stale source
 
 test("saved source names stay within the picker and remain available by tooltip and search", async ({
   page,
+  browserName,
 }, testInfo) => {
+  if (browserName === "webkit") {
+    // Playwright WebKit emits zero movement deltas even when mouse.move changes
+    // client coordinates. Base UI correctly ignores stationary WebKit events
+    // (mui/base-ui#4002). Restore only missing deltas in this hover fixture;
+    // stationary events remain zero and the product guard stays unchanged.
+    await page.addInitScript(() => {
+      for (const type of ["mousemove", "pointermove"]) {
+        let previous = { x: 0, y: 0 };
+        document.addEventListener(
+          type,
+          (event) => {
+            const dx = event.clientX - previous.x;
+            const dy = event.clientY - previous.y;
+            previous = { x: event.clientX, y: event.clientY };
+            if (event.movementX === 0 && event.movementY === 0 && (dx || dy)) {
+              Object.defineProperties(event, {
+                movementX: { value: dx },
+                movementY: { value: dy },
+              });
+            }
+          },
+          true,
+        );
+      }
+    });
+  }
   const sources = [
     {
       id: "source-spaced",
@@ -1022,7 +1075,7 @@ test("saved source names stay within the picker and remain available by tooltip 
     .filter({ hasText: sources[1].name });
   for (const target of [
     secondTooltip,
-    secondTooltip.locator('[data-slot="tooltip-arrow"]'),
+    secondTooltip.locator("..").locator('[data-slot="tooltip-arrow"]'),
   ]) {
     expect(
       await target.evaluate((element) => {
@@ -1049,7 +1102,7 @@ test("saved source names stay within the picker and remain available by tooltip 
         .filter({ hasText: source.name }),
     ).toBeVisible();
   }
-  await page.getByLabel("Search sources", { exact: true }).fill("uniquetail");
+  await page.getByLabel("Search sources", { exact: true }).fill("uniquetil");
   await expect(page.getByRole("option")).toHaveCount(1);
   await page.mouse.move(0, 0);
   await page.getByLabel("Search sources", { exact: true }).press("ArrowDown");
@@ -1132,7 +1185,7 @@ test("one-off instructions persist in the dialog and retry, clear for a fresh se
     }
   });
   await page.goto("/generate");
-  await page.getByRole("radio", { name: "Paste text", exact: true }).click();
+  await page.getByRole("button", { name: "Paste text", exact: true }).click();
   await page
     .getByLabel("Source text", { exact: true })
     .fill("The exact source section for these cards.");
@@ -1210,6 +1263,11 @@ test("fresh Haiku high preferences supplied by the server appear in Generate and
   );
   for (const path of ["/generate", "/settings"]) {
     await page.goto(path);
+    if (path === "/generate") {
+      await page
+        .getByRole("button", { name: "Change generation model", exact: true })
+        .click();
+    }
     await expect(page.getByLabel("Model", { exact: true })).toContainText(
       "Claude Haiku 5.5",
     );
@@ -1327,16 +1385,18 @@ test("Settings opens live generations with row cancellation, retry and active de
   ).toBeVisible();
   await expect(
     page
-      .locator('section[aria-live="polite"]')
+      .getByRole("region", { name: "Generation details", exact: true })
       .getByText("Canceled", { exact: true }),
   ).toBeVisible();
   await expect(
-    page.locator('section[aria-live="polite"] [data-slot="spinner"]'),
+    page
+      .getByRole("region", { name: "Generation details", exact: true })
+      .locator('[data-slot="spinner"]'),
   ).toHaveCount(0);
   await page.reload();
   await expect(
     page
-      .locator('section[aria-live="polite"]')
+      .getByRole("region", { name: "Generation details", exact: true })
       .getByText("Canceled", { exact: true }),
   ).toBeVisible();
   expect(cancels).toEqual(["cancel-0", "cancel-0", "cancel-1"]);
@@ -1490,7 +1550,10 @@ test("job details never retain another job's actions during delayed or failed na
     }
   });
   await page.goto("/generate?view=generations&job=scope-job-0");
-  const detail = page.locator('section[aria-live="polite"]');
+  const detail = page.getByRole("region", {
+    name: "Generation details",
+    exact: true,
+  });
   await expect(
     detail.getByRole("button", { name: "Cancel", exact: true }),
   ).toBeVisible();
@@ -1969,7 +2032,10 @@ test("completed generation only reports deletion after a successful library refr
     );
   });
   await page.goto("/generate?job=completed-unavailable");
-  const detail = page.locator('section[aria-live="polite"]');
+  const detail = page.getByRole("region", {
+    name: "Generation details",
+    exact: true,
+  });
   await expect(detail.getByRole("alert")).toContainText("Library unavailable");
   await expect(detail.getByText("Complete", { exact: true })).toBeVisible();
   await expect(detail.getByText("Set deleted", { exact: true })).toHaveCount(0);
@@ -1982,4 +2048,119 @@ test("completed generation only reports deletion after a successful library refr
   await expect(detail.getByText("Set deleted", { exact: true })).toBeVisible();
   await expect(detail.getByRole("alert")).toHaveCount(0);
   expect(reads).toBeGreaterThan(failedReads);
+});
+
+test("durable generation stages shimmer only while running and respect reduced motion", async ({
+  page,
+}, testInfo) => {
+  const job = {
+    id: "stage-job",
+    sourceId: "source-1",
+    sourceName: "Biology notes",
+    status: "queued",
+    questionCount: 3,
+    cardTypes: ["short_answer"],
+  };
+  await mockApp(page, ({ path }) => {
+    if (path === "/api/generation/jobs") {
+      return { jobs: [job] };
+    }
+    if (path === "/api/generation/jobs/stage-job") {
+      return { job };
+    }
+  });
+  await page.goto("/generate?job=stage-job");
+  const status = page
+    .getByRole("region", { name: "Generation details" })
+    .getByRole("status");
+  const title = status.locator('[data-slot="trace-title"]');
+  await expect(status).toHaveAttribute("data-status", "pending");
+  await expect(title).toHaveText("Queued");
+  await expect(title).toHaveCSS("animation-name", "none");
+  for (const [stage, label] of [
+    ["preparing", "Preparing source"],
+    ["generating", "Generating cards"],
+    ["saving", "Saving set"],
+  ]) {
+    job.status = stage;
+    await page.evaluate(() =>
+      globalThis.dispatchEvent(new globalThis.Event("focus")),
+    );
+    await expect(title).toHaveText(label);
+    await expect(status).toHaveAttribute("data-status", "running");
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await expect(title).toHaveCSS("animation-name", "tw-shimmer");
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(title).toHaveCSS("animation-name", "none");
+    await expect(title).toHaveCSS("background-image", "none");
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+  }
+  await capture(page, testInfo, "generation-running");
+  job.status = "failed";
+  job.error = "The provider could not generate this set.";
+  await page.evaluate(() =>
+    globalThis.dispatchEvent(new globalThis.Event("focus")),
+  );
+  await expect(status).toHaveAttribute("data-status", "error");
+  await expect(title).toHaveCSS("animation-name", "none");
+  await expect(page.getByRole("alert")).toHaveText(job.error);
+  await expect(page.getByRole("alert")).toHaveAttribute("data-slot", "marker");
+  await expect(
+    page.getByRole("button", { name: "Try again", exact: true }),
+  ).toBeEnabled();
+});
+
+test("source actions keep attachment selection distinct from permanent deletion", async ({
+  page,
+}, testInfo) => {
+  const source = {
+    id: "source-actions",
+    name: "Biology notes.pdf",
+    status: "uploaded",
+    size: 2048,
+  };
+  let sources = [source];
+  const deletes = [];
+  await mockApp(page, ({ path, request }) => {
+    if (path === "/api/sources") {
+      return { sources };
+    }
+    if (
+      path === "/api/sources/source-actions" &&
+      request.method() === "DELETE"
+    ) {
+      deletes.push(path);
+      sources = [];
+      return { ok: true };
+    }
+  });
+  await page.goto("/generate");
+  const picker = page.getByRole("combobox", {
+    name: "Show options",
+    exact: true,
+  });
+  await picker.click();
+  await page.getByRole("option", { name: /Biology notes.pdf/ }).click();
+  const attachment = page.locator('[data-slot="attachment"]');
+  await expect(attachment).toContainText(source.name);
+  await capture(page, testInfo, "selected-source");
+  await page
+    .getByRole("button", { name: "Remove source", exact: true })
+    .click();
+  await expect(attachment).toHaveCount(0);
+  expect(deletes).toEqual([]);
+  await picker.click();
+  await page.getByRole("option", { name: /Biology notes.pdf/ }).click();
+  await page
+    .getByRole("button", { name: "Source options", exact: true })
+    .click();
+  await page
+    .getByRole("menuitem", { name: "Delete source", exact: true })
+    .click();
+  await expect(attachment).toHaveCount(0);
+  await expect.poll(() => deletes.length).toBe(1);
+  await expect(picker).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Generate", exact: true }),
+  ).toBeDisabled();
 });

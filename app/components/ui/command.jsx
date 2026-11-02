@@ -36,12 +36,14 @@ function CommandDialog({
   children,
   className,
   showCloseButton = false,
+  viewportClassName,
   ...props
 }) {
   return (
     <Dialog {...props}>
       <DialogContent
-        className={cn("overflow-hidden p-0", className)}
+        className={className}
+        viewportClassName={cn("overflow-hidden p-0", viewportClassName)}
         showCloseButton={showCloseButton}
       >
         <DialogHeader className="sr-only">

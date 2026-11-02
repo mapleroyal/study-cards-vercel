@@ -1,12 +1,12 @@
-import * as React from "react";
 import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu";
 
 import { cn } from "@/lib/utils";
+import { SurfaceViewport } from "@/components/surface-viewport";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 
 function ContextMenu({ ...props }) {
-  return <ContextMenuPrimitive.Root {...props} />;
+  return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />;
 }
 
 function ContextMenuTrigger({ className, ...props }) {
@@ -32,7 +32,9 @@ function ContextMenuPortal({ ...props }) {
 }
 
 function ContextMenuSub({ ...props }) {
-  return <ContextMenuPrimitive.SubmenuRoot {...props} />;
+  return (
+    <ContextMenuPrimitive.SubmenuRoot data-slot="context-menu-sub" {...props} />
+  );
 }
 
 function ContextMenuRadioGroup({ ...props }) {
@@ -46,30 +48,37 @@ function ContextMenuRadioGroup({ ...props }) {
 
 function ContextMenuContent({
   className,
+  viewportClassName,
+  children,
   align = "start",
-  side = "bottom",
-  sideOffset = 4,
-  alignOffset = 0,
+  alignOffset = 4,
+  side = "right",
+  sideOffset = 0,
+  collisionPadding = 8,
   ...props
 }) {
   return (
     <ContextMenuPrimitive.Portal>
       <ContextMenuPrimitive.Positioner
-        data-slot="context-menu-positioner"
-        side={side}
+        className="isolate z-50 outline-none"
         align={align}
-        sideOffset={sideOffset}
         alignOffset={alignOffset}
-        className="isolate z-50"
+        side={side}
+        sideOffset={sideOffset}
+        collisionPadding={collisionPadding}
       >
         <ContextMenuPrimitive.Popup
           data-slot="context-menu-content"
           className={cn(
-            "z-50 max-h-(--available-height) min-w-48 max-w-(--available-width) origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-3xl bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/5 dark:ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-closed:overflow-hidden data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            "z-50 flex flex-col max-h-(--available-height) min-w-48 max-w-[calc(100vw-1rem)] origin-(--transform-origin) [--surface-radius:--theme(--radius-3xl)] rounded-(--surface-radius) bg-popover text-popover-foreground shadow-lg ring-1 ring-foreground/5 dark:ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             className,
           )}
           {...props}
-        />
+        >
+          <SurfaceViewport className={cn("p-1.5", viewportClassName)}>
+            {children}
+          </SurfaceViewport>
+        </ContextMenuPrimitive.Popup>
       </ContextMenuPrimitive.Positioner>
     </ContextMenuPrimitive.Portal>
   );
@@ -116,8 +125,8 @@ function ContextMenuSubContent({ className, ...props }) {
     <ContextMenuContent
       data-slot="context-menu-sub-content"
       side="inline-end"
-      sideOffset={4}
       alignOffset={-4}
+      sideOffset={-4}
       className={cn("min-w-36", className)}
       {...props}
     />

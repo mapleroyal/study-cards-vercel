@@ -2,14 +2,21 @@ import { defineConfig } from "@playwright/test";
 
 const remoteBaseURL = process.env.PLAYWRIGHT_BASE_URL;
 
+if (!remoteBaseURL && process.env.LUMINA_TEST_FIXTURES !== "1") {
+  throw new Error(
+    "Use npm run test:ui so local hosted checks run in an isolated fixture snapshot.",
+  );
+}
+
 export default defineConfig({
+  outputDir: "./test-results/product",
   testDir: "./tests/ui",
   testMatch: "**/*.pw.mjs",
   testIgnore: remoteBaseURL ? ["**/foundation.pw.mjs"] : [],
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 2 : 4,
+  workers: 2,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: remoteBaseURL || "http://127.0.0.1:4180",
@@ -59,8 +66,7 @@ export default defineConfig({
     ? undefined
     : [
         {
-          command:
-            "npm run build && node --env-file-if-exists=.env.local build/server/index.mjs",
+          command: "npm run build && node build/server/index.mjs",
           env: {
             PORT: "4180",
             HOST: "127.0.0.1",

@@ -1,5 +1,5 @@
 import { openDB } from "idb";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import {
   apiRequest,
   getCapabilities,
@@ -244,12 +244,11 @@ export async function refreshRuntimeState() {
   setStatus({ offline: false, error: null });
   if (conflictNoticePending) {
     conflictNoticePending = false;
-    toast.info(
-      "A study set or card changed. Its outdated answer was not saved.",
-      {
-        id: "runtime-sync-conflict",
-      },
-    );
+    toast.add({
+      id: "runtime-sync-conflict",
+      type: "info",
+      title: "A study set or card changed. Its outdated answer was not saved.",
+    });
   }
   return true;
 }

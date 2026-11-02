@@ -16,7 +16,7 @@ export function ShuffleSettings() {
       <div className="flex flex-col gap-1">
         <Label htmlFor={id}>Shuffle cards</Label>
         <p className="text-body-sm text-muted-foreground">
-          Apply to all sets. Each set can be changed separately.
+          Sets can use their own order.
         </p>
       </div>
       <Switch

@@ -70,10 +70,10 @@ Use provider usage metadata as the spending authority; job cost summaries are us
 npm ci
 npm run lint
 npm run test:run
-npm run build:vercel
+npm run build:vercel:test
 ```
 
-Use the Playwright project's light/dark desktop/narrow configurations for the retained interface. `PLAYWRIGHT_BASE_URL` targets an already-running app and `PLAYWRIGHT_STORAGE_STATE` may point to an ignored authenticated session file. The ordinary browser fixtures mock generation endpoints. Record real-provider tests separately.
+Run browser checks through `npm run test:ui` or `npm run test:foundation`. The isolated runner creates a source snapshot and disposable loopback PostgreSQL instance, excludes hosted credentials, and rejects remote test origins. The ordinary browser fixtures mock generation endpoints. Record read-only deployed checks and real-provider tests separately.
 
 For disposable live checks, use the supplied synthetic source, create identifiable temporary sets, record results and cost, then delete test sets/sources through the application. Keep private uploads private and revoke the experimental provider key when qualification is finished.
 
@@ -151,3 +151,22 @@ Recovery downloads identify themselves as unsynced-change records for manual rev
 The reviewer used isolated probes and read-only live checks. No paid inference was used for the review or its fixes.
 
 Final validation: lint, formatting and production build passed; all **321 unit/integration tests across 42 files** passed. The final rebuilt app passed **148 product browser scenarios** in one run across light/dark desktop/narrow configurations. All **68 unchanged shared-foundation scenarios** passed in the preceding full run. That run exposed the cached-library/error-state race above and an overbroad generation-test write counter; both were corrected before the final product run. Reader error states, source metadata/tooltips/rename controls, and unsynced-change recovery/confirmation were visually inspected in all four configurations. Credential scanning of the changed files found no secrets.
+
+## Shared baseline and hosted layout modernization — 2026-11-01
+
+The hosted app adopts the modern template’s Base UI wrappers, Typeset, AI presentation, exact Hyperellipse/native corner engine and appearance controls. Library, Generate, generation history/detail, Settings and editors share quiet actions, padded text triggers, responsive drawers and instant fuzzy search. Generate cards navigation retains its plus icon; the Generate submit action omits it. Library actions have matching height and text alignment. The hosted generation/Blob/Workflow architecture is retained; no native agent or Chats backend is added.
+
+A confirmed Linux Chrome scrollbar conflict is corrected in both apps and templates: standard thin/color utilities in MessageScroller and CodeBlock bypassed the global pseudo-element rules. Those viewports now inherit thumb-only styling, and a source guard prevents the conflicting classes from returning. A separate overlapping-delete test exposed an inherited Undo receipt race. Each delete now retains its own receipt, and stale-row no-ops offer no Undo.
+
+Local qualification ran exclusively over SSH on home-server, with hosted secrets excluded from fixture source snapshots and environments. Checks requiring a database used disposable loopback PostgreSQL; fixtures used synthetic source data and made no paid inference calls.
+
+- Full unit/integration run: **345 tests across 46 files**; lint and isolated Node SSR/Vercel production builds pass. Clean `npm ci` reproduction leaves the lockfile unchanged.
+- Product Chromium: all **244 existing scenarios qualified** (232 in the broad run, then the 12 cases with corrected navigation/tooltip/status selectors passed separately). Four additional auth/appearance checks pass. The only related layout adjustment was narrow empty-state padding; the main library alignment is measured against real text bounds.
+- Shared Chromium gallery: **240 distinct cases qualified** (the full 224-case baseline and 16 new actual-native/message/code scrollbar cases). The final 24-case native/custom scrollbar run passes all themes and widths. Linux Chromium also passes all 16 new actual-wrapper cases, including keyboard, wheel, thumb dragging and autoscroll thumb hiding.
+- WebKit: **32 shared foundation cases** and **20 bounded hosted cases** qualified. Hosted tests retain the real signed session while relaxing Secure only for isolated HTTP loopback. The saved-source hover case repairs Playwright’s confirmed missing mouse deltas from actual consecutive pointer coordinates; Chromium verifies the unmodified hover behavior. Production components/authentication are unchanged by these test adapters.
+- PWA: actual authenticated first-visit offline reload, durable queued answer, reload/reconnect and API/login-cache exclusion pass against disposable PostgreSQL, with no external browser origin or provider/Blob/OIDC credential present.
+- Router 8’s `/login/_.data` request initially redirected incorrectly. The exact login-only path is now allowed; protected documents/data and owner APIs remain denied anonymously. Held application modules verify an opaque dark canvas before hydration, matching CSP nonces, and persisted Light/Dark/System through the custom switcher.
+
+The Vercel artifact retains Build Output API v3, Node 24, all four application/API/Workflow handlers, the generated queue trigger and `maxDuration: max`. Runtime/schema/provider services and complete-source generation contracts are unchanged apart from the precise SSR login-data allowlist adjustment. Runtime audit has no high/critical findings; 23 moderate entries propagate from the single upstream minimatch advisory [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249) through Workflow. The incompatible suggested Workflow downgrade is not applied.
+
+Private deployment preparation includes a validated PostgreSQL custom dump, transactional table fingerprints, API snapshots, Blob metadata, provider-state and prior deployment identity. Repeated predeploy snapshots match. Deployed read-only evidence and the exact release identity are recorded separately after the staged build is verified and promoted. These checks do not claim new paid-provider quality acceptance.

@@ -29,11 +29,12 @@ const generatedUiFiles = [
 export default [
   {
     ignores: [
-      "work/",
+      "work/**",
       ".react-router/",
-      ".local/",
-      ".foundation-build/",
       ".ui-build/",
+      ".shared-ui-build/",
+      ".foundation-build/",
+      ".local/",
       ".vercel/",
       "playwright-report/",
       "test-results/",
@@ -103,6 +104,12 @@ export default [
       "no-restricted-syntax": [
         "error",
         {
+          selector:
+            "Literal[value=/(^|[ \\t\\r\\n:])scrollbar-(thin|auto|thumb-|track-)/], TemplateElement[value.raw=/(^|[ \\t\\r\\n:])scrollbar-(thin|auto|thumb-|track-)/]",
+          message:
+            "Use the shared thumb-only scrollbar policy. Standard scrollbar width/color utilities bypass Chromium's custom parts and restore platform tracks/buttons. Use --scrollbar-thumb-color for visibility; scrollbar-none is allowed for intentional hiding.",
+        },
+        {
           selector: "JSXOpeningElement[name.name='select']",
           message:
             "Use the tuned Select or Combobox from @/components/ui. Native select is reserved for the explicit test gallery fixture.",
@@ -122,11 +129,63 @@ export default [
       "no-restricted-imports": [
         "error",
         {
+          paths: [
+            {
+              name: "cn",
+              message:
+                "Import cn from @/lib/utils to preserve semantic typography merging.",
+            },
+          ],
           patterns: [
+            {
+              group: ["clsx", "tailwind-merge"],
+              message:
+                "Import cn from @/lib/utils so semantic typography overrides merge as complete styles.",
+            },
             {
               group: ["**/ui/native-select", "**/ui/native-select.*"],
               message:
                 "Product screens must use the shared Select or Combobox.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["app/**/*.{js,jsx,mjs,cjs}"],
+    ignores: ["app/components/ui/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "cn",
+              message:
+                "Import cn from @/lib/utils to preserve semantic typography merging.",
+            },
+          ],
+          patterns: [
+            {
+              group: ["clsx", "tailwind-merge"],
+              message:
+                "Import cn from @/lib/utils so semantic typography overrides merge as complete styles.",
+            },
+            {
+              group: ["**/ui/native-select", "**/ui/native-select.*"],
+              message:
+                "Product screens must use the shared Select or Combobox.",
+            },
+            {
+              group: [
+                "@base-ui/react",
+                "@base-ui/react/**",
+                "radix-ui",
+                "@radix-ui/react-*",
+              ],
+              message:
+                "Compose from @/components/ui wrappers; primitive packages belong inside those wrappers so shared behavior and styling are retained.",
             },
           ],
         },

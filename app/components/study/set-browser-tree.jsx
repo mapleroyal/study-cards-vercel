@@ -2,8 +2,6 @@ import { SetEditMenu } from "@/components/study/study-edit-controls";
 import * as React from "react";
 import { StarFillIcon } from "@primer/octicons-react";
 
-import { StudyResetControl } from "@/components/study/study-reset-control";
-import { StudySetDeleteControl } from "@/components/study/study-set-delete-control";
 import { Button } from "@/components/ui/button";
 import {
   ContextMenu,
@@ -135,10 +133,12 @@ function FavoriteMarker({
           </PopoverDescription>
         </PopoverHeader>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onConfirmOpenChange(false)}>
+          <Button variant="ghost" onClick={() => onConfirmOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleUnfavorite}>Unfavorite</Button>
+          <Button variant="ghost" onClick={handleUnfavorite}>
+            Unfavorite
+          </Button>
         </div>
       </PopoverContent>
     </Popover>
@@ -244,6 +244,7 @@ function SetLeafNode({
       onFavorite={onFavoriteItem ? handleFavorite : undefined}
       onUnfavorite={onUnfavoriteItem ? handleUnfavorite : undefined}
       showDefaultMarker={!isNestedLeaf}
+      className="relative z-10"
     />
   );
 
@@ -259,11 +260,13 @@ function SetLeafNode({
       {!isNestedLeaf ? favoriteMarker : null}
       <div
         className={cn(
-          "flex min-h-9 min-w-0 flex-1 items-center gap-1.5 rounded-xl py-1 pr-2 transition-colors",
+          "relative flex min-h-11 min-w-0 flex-1 items-center gap-1.5 rounded-xl py-1 pr-2 transition-colors",
           isNestedLeaf
             ? cn("ml-1.5", isFavorited ? "pl-1.5" : "pl-3")
             : "pl-3.5",
-          isActive ? "bg-accent" : "group-hover/set-row:bg-muted",
+          isActive
+            ? "bg-muted group-hover/set-row:bg-active-hover"
+            : "group-hover/set-row:bg-muted",
         )}
       >
         {isNestedLeaf ? favoriteMarker : null}
@@ -272,8 +275,9 @@ function SetLeafNode({
           onClick={() => onSelect(node.set.slug)}
           aria-current={isActive ? "page" : undefined}
           aria-label={getSetAriaLabel(node.set)}
-          className="flex min-w-0 flex-1 flex-col items-start rounded-lg py-0.5 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
-        >
+          className="absolute inset-0 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+        />
+        <div className="pointer-events-none flex min-w-0 flex-1 flex-col items-start py-0.5 text-left">
           {node.categoryPathLabel ? (
             <span className="block max-w-full truncate text-body-sm text-muted-foreground">
               {node.categoryPathLabel}
@@ -287,18 +291,20 @@ function SetLeafNode({
           >
             {node.set.title}
           </span>
-        </button>
-        <div className="flex shrink-0 items-center gap-0.5 self-center">
-          <SetEditMenu set={node.set} />
-          {canDelete ? (
-            <StudySetDeleteControl
-              set={node.set}
-              onDelete={() => onDeleteSet(node.set.slug)}
-            />
-          ) : null}
-          <StudyResetControl
-            visible={canReset}
+        </div>
+        <div className="pointer-events-none relative flex shrink-0 items-center gap-0.5 self-center">
+          <span
+            className="mr-1 text-body-sm text-muted-foreground type-numeric"
+            aria-label={`${node.set.cards.length} cards`}
+          >
+            {node.set.cards.length}
+          </span>
+          <SetEditMenu
+            set={node.set}
+            canReset={canReset}
             onReset={() => onResetSet(node.set.slug)}
+            canDelete={canDelete}
+            onDelete={() => onDeleteSet(node.set.slug)}
           />
         </div>
       </div>

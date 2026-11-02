@@ -25,23 +25,26 @@
 
 # UI components
 
-- Use the tuned `@/components/ui/*` wrappers. Prefer Base UI where equivalent primitives exist; retain Radix only where an intentional wrapper requires it.
+- Use the tuned `@/components/ui/*` wrappers. Base UI primitives belong inside these wrappers; do not bypass their typography, surfaces, focus or interaction defaults.
 - Do not regenerate tuned wrappers with a different Shadcn style. Compose existing components before introducing new ones.
 - Product dropdowns use the tuned Select or Combobox, never raw `select` elements or NativeSelect. The native wrapper exists only for its test-gallery fixture.
-- Select, Dialog, Popover, Combobox, Tooltip, Sheet, Drawer, AlertDialog, DropdownMenu, and ContextMenu use Base UI `render`. Retained Radix wrappers use `asChild`.
+- Compose interactive wrappers with Base UI `render`. Navigation uses native anchors or Router links styled with `buttonVariants` (or the app ButtonLink), never Base Button rendered as a link. ToggleGroup values are arrays; indeterminate Progress uses `value={null}`; notifications use `toast.add` from the shared Toast wrapper.
+- Surface `className` controls outer placement/size/paint; `viewportClassName` controls inner layout/padding. Explicit trigger `render` supplies the control's own dimensions and styling.
 
 # Styling
 
 - Use Tailwind v4 and the shared theme.
 - Keep intentional circles and pills `rounded-full`; do not apply the app superellipse to them.
-- Scrollbars paint direction triangles and the thumb with transparent rails in both themes.
+- Preserve the exact debugged squircle engine and its pinned Hyperellipse version. Custom painted surfaces reserve their before/after pseudo-elements; shared wrappers already own their geometry.
+- Scrollbars paint only the thumb, with transparent rails and no arrows in both themes.
+- Ordinary product actions use ghost buttons and native default cursors; navigation links retain native link behavior. Keep visible hover/focus states and shared text-trigger insets.
 - Put reusable control defaults in shared wrappers/theme, not screen-specific overrides.
 - Before template maintenance, read `docs/template-foundation.md`; record the actual template commit and verify CSS, wrappers, lint, and browser behavior together.
 
 # Validation
 
 - Add tests for meaningful behavior and failure boundaries, not tests that merely mirror the implementation.
-- Run `npm run lint`, `npm run test:run`, and `npm run build` for implementation changes.
-- After shared UI changes, also run `npm run test:ui` and inspect light/dark screenshots at desktop and narrow widths.
+- Run `npm run lint`, `npm run test:run`, and `npm run build:test` for implementation changes. Fixture checks must run through the isolated test environment; never load the real local dotenv files. Nitro loads dotenv independently of Vite, so a sanitized environment alone is insufficient.
+- After shared UI changes, also run `npm run test:foundation` and `npm run test:ui`, and inspect light/dark screenshots at desktop and narrow widths. Shared fixtures live outside product routes.
 - Use deterministic provider fixtures for ordinary checks. A live OpenRouter test needs an authorized budget and a disposable key; revoke it after the test and remove any configured copy.
 - Distinguish local checks, deployed verification, and paid model-quality evidence in reports. Never present fixture-only results as live-provider acceptance.

@@ -2,15 +2,21 @@ import * as React from "react";
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
 
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { SurfaceViewport } from "@/components/surface-viewport";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 function AlertDialog({ ...props }) {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
 }
 
-function AlertDialogTrigger({ ...props }) {
+function AlertDialogTrigger({ className, render, ...props }) {
   return (
-    <AlertDialogPrimitive.Trigger data-slot="alert-dialog-trigger" {...props} />
+    <AlertDialogPrimitive.Trigger
+      data-slot="alert-dialog-trigger"
+      render={render}
+      className={cn(!render && buttonVariants({ variant: "ghost" }), className)}
+      {...props}
+    />
   );
 }
 
@@ -33,7 +39,13 @@ function AlertDialogOverlay({ className, ...props }) {
   );
 }
 
-function AlertDialogContent({ className, size = "default", ...props }) {
+function AlertDialogContent({
+  className,
+  viewportClassName,
+  children,
+  size = "default",
+  ...props
+}) {
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
@@ -41,11 +53,15 @@ function AlertDialogContent({ className, size = "default", ...props }) {
         data-slot="alert-dialog-content"
         data-size={size}
         className={cn(
-          "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto -translate-x-1/2 -translate-y-1/2 gap-6 rounded-4xl bg-popover p-6 text-popover-foreground shadow-xl ring-1 ring-foreground/5 dark:ring-foreground/10 duration-100 outline-none data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 flex flex-col max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 [--surface-radius:--theme(--radius-4xl)] rounded-(--surface-radius) bg-popover text-popover-foreground shadow-xl ring-1 ring-foreground/5 dark:ring-foreground/10 duration-100 outline-none data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className,
         )}
         {...props}
-      />
+      >
+        <SurfaceViewport className={cn("grid gap-6 p-6", viewportClassName)}>
+          {children}
+        </SurfaceViewport>
+      </AlertDialogPrimitive.Popup>
     </AlertDialogPortal>
   );
 }
@@ -123,9 +139,9 @@ function AlertDialogAction({
 }) {
   return (
     <AlertDialogPrimitive.Close
-      data-slot="alert-dialog-action"
       render={<Button variant={variant} size={size} />}
-      className={className}
+      data-slot="alert-dialog-action"
+      className={cn(className)}
       {...props}
     />
   );
@@ -139,9 +155,9 @@ function AlertDialogCancel({
 }) {
   return (
     <AlertDialogPrimitive.Close
-      data-slot="alert-dialog-cancel"
       render={<Button variant={variant} size={size} />}
-      className={className}
+      data-slot="alert-dialog-cancel"
+      className={cn(className)}
       {...props}
     />
   );

@@ -148,7 +148,7 @@ export function StudySetImportDropzone({
         {input}
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="sm"
           disabled={importing}
           onClick={() => inputRef.current?.click()}
@@ -207,7 +207,7 @@ export function StudySetImportDropzone({
           </EmptyMedia>
           <Button
             type="button"
-            variant="default"
+            variant="ghost"
             disabled={importing}
             onClick={() => inputRef.current?.click()}
           >

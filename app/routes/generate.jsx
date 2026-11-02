@@ -1,7 +1,38 @@
 import * as React from "react";
-import { toast } from "sonner";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
-import { CheckIcon, PencilIcon, PlusIcon, XIcon } from "@primer/octicons-react";
+import { toast } from "@/components/ui/toast";
+import { useLocation, useNavigate, useSearchParams } from "react-router";
+import {
+  CheckIcon,
+  PencilIcon,
+  FileIcon,
+  KebabHorizontalIcon,
+  XIcon,
+} from "@primer/octicons-react";
+import { ButtonLink } from "@/components/button-link";
+import {
+  GenerationNotice,
+  GenerationStatus,
+} from "@/components/study/generation-status";
+import {
+  Attachment,
+  AttachmentMedia,
+  AttachmentContent,
+  AttachmentTitle,
+  AttachmentDescription,
+  AttachmentActions,
+} from "@/components/ui/attachment";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { createFuzzyFilter } from "@/lib/fuzzy-search";
 import { GenerationInstructions } from "@/components/study/generation-instructions";
 import { GenerateCardsButton } from "@/components/study/generate-cards-button";
 import { OpenRouterKeyDialog } from "@/components/study/openrouter-key-dialog";
@@ -95,6 +126,7 @@ export default function GenerateRoute() {
   const retryInstructionsRef = React.useRef("");
   const [sourceId, setSourceId] = React.useState("");
   const [sources, setSources] = React.useState([]);
+  const [typesOpen, setTypesOpen] = React.useState(false);
   const [highlightedSourceId, setHighlightedSourceId] = React.useState(null);
   const [types, setTypes] = React.useState([...supportedCardTypes]);
   const [count, setCount] = React.useState("25");
@@ -123,8 +155,23 @@ export default function GenerateRoute() {
     (item) => item.status !== "completed" || item.resultRecord?.slug,
   );
   const historyVisible = historyView || visibleJobs.length > 0;
-  const active = activeJobStatuses.has(job?.status);
-  const selectedSource = sources.find((source) => source.id === sourceId);
+  const sourcesById = React.useMemo(
+    () => new Map(sources.map((source) => [source.id, source])),
+    [sources],
+  );
+  const selectedSource = sourcesById.get(sourceId);
+  const reusableSourceIds = React.useMemo(
+    () => sources.filter(isReusableSource).map((source) => source.id),
+    [sources],
+  );
+  const sourceFilter = React.useMemo(
+    () =>
+      createFuzzyFilter(
+        reusableSourceIds,
+        (id) => sourcesById.get(id)?.name || id,
+      ),
+    [sourcesById, reusableSourceIds],
+  );
 
   React.useEffect(() => {
     setEditingSourceName(false);
@@ -476,7 +523,7 @@ export default function GenerateRoute() {
         }
       }
       setSources((current) => current.filter((source) => source.id !== id));
-      toast.success("Source deleted");
+      toast.add({ title: "Source deleted", type: "success" });
     } catch (cause) {
       setError(cause.message);
       try {
@@ -493,7 +540,7 @@ export default function GenerateRoute() {
     if (!job) {
       return;
     }
-    const source = sources.find((item) => item.id === job.sourceId);
+    const source = sourcesById.get(job.sourceId);
     setSourceId(isReusableSource(source) ? source.id : "");
     setFile(null);
     setText("");
@@ -524,46 +571,31 @@ export default function GenerateRoute() {
       style={{ "--study-app-header-height": "56px" }}
     >
       <StudyAppHeader />
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-7 px-4 py-8 sm:px-6">
+      <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8 sm:px-6">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-headline-lg">
             {historyView ? "Generations" : "Generate cards"}
           </h1>
-          {historyView && <GenerateCardsButton variant="outline" />}
+          <div className="flex shrink-0 gap-1">
+            {historyView || jobId ? (
+              <GenerateCardsButton />
+            ) : (
+              <ButtonLink variant="ghost" to="/generate?view=generations">
+                Generations
+              </ButtonLink>
+            )}
+          </div>
         </div>
         {jobId ? (
-          <section className="flex flex-col gap-4" aria-live="polite">
-            <div className="flex items-center gap-3">
-              {active && <Spinner />}
-              <p className="text-title-lg">
-                {job?.status === "completed" && !job.resultRecord
-                  ? "Set deleted"
-                  : job
-                    ? jobLabels[job.status] || job.status
-                    : jobError
-                      ? "Could not load generation"
-                      : "Loading…"}
-              </p>
-            </div>
-            {jobError && (
-              <p role="alert" className="text-body-sm text-destructive">
-                {jobError}
-              </p>
-            )}
-            {job?.error && (
-              <p role="alert" className="text-body-sm text-destructive">
-                {typeof job.error === "string" ? job.error : job.error.message}
-              </p>
-            )}
-            {job?.cancellationError && (
-              <p role="alert" className="text-body-sm text-destructive">
-                {job.cancellationError}
-              </p>
-            )}
+          <section
+            aria-label="Generation details"
+            className="flex max-w-2xl flex-col gap-5"
+          >
+            <GenerationStatus job={job} error={jobError} />
             <div className="flex gap-2">
               {canCancelJob(job) ? (
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => cancel(job.id)}
                   disabled={Boolean(busy) || Boolean(cancelingId)}
                 >
@@ -578,6 +610,7 @@ export default function GenerateRoute() {
                   <>
                     {job.status !== "completed" && (
                       <Button
+                        variant="ghost"
                         onClick={retry}
                         disabled={!ready || Boolean(busy)}
                       >
@@ -599,16 +632,22 @@ export default function GenerateRoute() {
             </div>
           </section>
         ) : !historyView ? (
-          <form onSubmit={submit} className="flex flex-col gap-6">
+          <form onSubmit={submit} className="min-w-0">
             <fieldset
               disabled={Boolean(busy) || modelBusy || !ready}
-              className="contents"
+              className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-12"
             >
-              <div className="flex flex-col gap-3">
+              <section
+                aria-labelledby="source-heading"
+                className="flex min-w-0 flex-col gap-4"
+              >
+                <h2 id="source-heading" className="text-title-lg">
+                  Source
+                </h2>
                 <ToggleGroup
-                  type="single"
-                  value={mode}
-                  onValueChange={(value) => {
+                  value={[mode]}
+                  onValueChange={(values) => {
+                    const value = values[0];
                     if (value) {
                       setMode(value);
                       setSourceId("");
@@ -620,8 +659,11 @@ export default function GenerateRoute() {
                   <ToggleGroupItem value="text">Paste text</ToggleGroupItem>
                 </ToggleGroup>
                 {sourceId ? (
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
+                  <Attachment className="w-full flex-nowrap">
+                    <AttachmentMedia>
+                      <FileIcon />
+                    </AttachmentMedia>
+                    <AttachmentContent>
                       {editingSourceName ? (
                         <Input
                           aria-label="Source name"
@@ -641,27 +683,23 @@ export default function GenerateRoute() {
                           }}
                         />
                       ) : (
-                        <span
-                          className="block truncate text-title-md"
-                          title={selectedSource?.name}
-                        >
+                        <AttachmentTitle title={selectedSource?.name}>
                           {selectedSource?.name || "Selected source"}
-                        </span>
+                        </AttachmentTitle>
                       )}
-                      <p
-                        className="truncate text-body-sm text-muted-foreground"
+                      <AttachmentDescription
                         title={sourceDetails(selectedSource)}
                       >
                         {sourceDetails(selectedSource)}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-1">
+                      </AttachmentDescription>
+                    </AttachmentContent>
+                    <AttachmentActions>
                       {editingSourceName ? (
                         <>
                           <Button
                             type="button"
                             variant="ghost"
-                            size="icon-sm"
+                            size="icon"
                             aria-label="Save source name"
                             onClick={renameSource}
                             disabled={!sourceName.trim()}
@@ -671,7 +709,7 @@ export default function GenerateRoute() {
                           <Button
                             type="button"
                             variant="ghost"
-                            size="icon-sm"
+                            size="icon"
                             aria-label="Cancel source rename"
                             onClick={() => setEditingSourceName(false)}
                           >
@@ -682,7 +720,7 @@ export default function GenerateRoute() {
                         <Button
                           type="button"
                           variant="ghost"
-                          size="icon-sm"
+                          size="icon"
                           aria-label="Rename source"
                           onClick={() => {
                             setSourceName(selectedSource?.name || "");
@@ -692,22 +730,65 @@ export default function GenerateRoute() {
                           <PencilIcon />
                         </Button>
                       )}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => setSourceId("")}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  </div>
+                      {!editingSourceName && (
+                        <>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              render={
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label="Source options"
+                                />
+                              }
+                            >
+                              <KebabHorizontalIcon />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => deleteSource(sourceId)}
+                              >
+                                Delete source
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Remove source"
+                            onClick={() => setSourceId("")}
+                          >
+                            <XIcon />
+                          </Button>
+                        </>
+                      )}
+                    </AttachmentActions>
+                  </Attachment>
                 ) : mode === "file" ? (
                   <div
                     className="flex items-center justify-between gap-3 rounded-xl border border-dashed p-5"
-                    onDragOver={(event) => event.preventDefault()}
+                    onDragOver={(event) => {
+                      if (
+                        Array.from(event.dataTransfer.types).includes("Files")
+                      ) {
+                        event.preventDefault();
+                      }
+                    }}
                     onDrop={(event) => {
+                      if (
+                        !Array.from(event.dataTransfer.types).includes("Files")
+                      ) {
+                        return;
+                      }
                       event.preventDefault();
-                      if (!busy) {
+                      if (
+                        !busy &&
+                        !modelBusy &&
+                        ready &&
+                        event.dataTransfer.files[0]
+                      ) {
                         chooseFile(event.dataTransfer.files[0]);
                       }
                     }}
@@ -733,7 +814,7 @@ export default function GenerateRoute() {
                     />
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => fileInput.current?.click()}
                     >
                       {file ? "Replace" : "Browse"}
@@ -743,7 +824,8 @@ export default function GenerateRoute() {
                   <Textarea
                     aria-label="Source text"
                     placeholder="Paste your source text"
-                    rows={10}
+                    rows={12}
+                    className="min-h-64"
                     value={text}
                     onChange={(event) => setText(event.target.value)}
                   />
@@ -761,15 +843,11 @@ export default function GenerateRoute() {
                           details.reason === "none" ? null : id,
                         )
                       }
-                      items={sources
-                        .filter(
-                          (source) =>
-                            !["uploading", "deleting"].includes(source.status),
-                        )
-                        .map((source) => source.id)}
+                      items={reusableSourceIds}
+                      filter={sourceFilter}
                       value={sourceId || null}
                       itemToStringLabel={(id) =>
-                        sources.find((source) => source.id === id)?.name || id
+                        sourcesById.get(id)?.name || id
                       }
                       onValueChange={(value) => {
                         if (value) {
@@ -798,9 +876,7 @@ export default function GenerateRoute() {
                         <ComboboxEmpty>No sources found</ComboboxEmpty>
                         <ComboboxList>
                           {(id) => {
-                            const source = sources.find(
-                              (item) => item.id === id,
-                            );
+                            const source = sourcesById.get(id);
                             const name = source?.name || id;
                             const details = sourceDetails(source);
                             return (
@@ -853,143 +929,146 @@ export default function GenerateRoute() {
                     </Combobox>
                   </TooltipProvider>
                 )}
-                {sourceId && (
+                {sources
+                  .filter((source) =>
+                    ["uploading", "deleting"].includes(source.status),
+                  )
+                  .map((source) => (
+                    <div
+                      key={source.id}
+                      className="flex items-center justify-between gap-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-body-sm">{source.name}</p>
+                        <p
+                          className="text-body-sm text-destructive"
+                          title={source.deletionError || undefined}
+                        >
+                          {source.status === "uploading"
+                            ? "Upload incomplete"
+                            : source.deletionError
+                              ? "Delete failed"
+                              : "Deletion incomplete"}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteSource(source.id)}
+                        aria-label={
+                          source.status === "uploading"
+                            ? `Remove incomplete upload ${source.name}`
+                            : undefined
+                        }
+                      >
+                        {source.status === "uploading"
+                          ? "Remove"
+                          : "Retry delete"}
+                      </Button>
+                    </div>
+                  ))}
+              </section>
+              <section
+                aria-label="Generation options"
+                className="flex min-w-0 flex-col gap-6 lg:border-l lg:pl-8"
+              >
+                <h2 className="text-title-lg">Cards</h2>
+                <Collapsible open={typesOpen} onOpenChange={setTypesOpen}>
+                  <CollapsibleTrigger className="w-full justify-between">
+                    <span>Card types</span>
+                    <span className="text-body-sm text-muted-foreground">
+                      {types.length === supportedCardTypes.length
+                        ? "All card types"
+                        : `${types.length} selected`}
+                    </span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <fieldset className="flex flex-col gap-3 p-3">
+                      <legend className="sr-only">Card types</legend>
+                      <div className="grid gap-3">
+                        {supportedCardTypes.map((type) => (
+                          <Label key={type} className="flex items-center gap-3">
+                            <Checkbox
+                              checked={types.includes(type)}
+                              onCheckedChange={(checked) =>
+                                setTypes((current) =>
+                                  checked
+                                    ? [...current, type]
+                                    : current.filter((item) => item !== type),
+                                )
+                              }
+                            />
+                            {humanizeType(type)}
+                          </Label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  </CollapsibleContent>
+                </Collapsible>
+                <div className="flex items-center justify-between gap-4">
+                  <Label htmlFor="card-count">Cards</Label>
+                  <Input
+                    id="card-count"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={count}
+                    onChange={(event) => setCount(event.target.value)}
+                    className="w-24"
+                    required
+                  />
+                </div>
+                {settings && (
+                  <section
+                    aria-label="Generation model"
+                    className="flex flex-col gap-3"
+                  >
+                    <ModelPicker
+                      compact
+                      value={{
+                        model: settings.model,
+                        reasoningEffort: settings.reasoningEffort,
+                      }}
+                      onChange={saveModel}
+                      disabled={Boolean(busy) || modelBusy}
+                    />
+                  </section>
+                )}
+                {settings && !settings.openRouterConfigured && (
                   <Button
                     type="button"
                     variant="ghost"
-                    size="sm"
-                    className="self-start text-destructive"
-                    onClick={() => deleteSource(sourceId)}
+                    className="self-start"
+                    onClick={() => setKeyDialogOpen(true)}
                   >
-                    Delete source
+                    Add API key
                   </Button>
                 )}
-              </div>
-              {sources
-                .filter((source) =>
-                  ["uploading", "deleting"].includes(source.status),
-                )
-                .map((source) => (
-                  <div
-                    key={source.id}
-                    className="flex items-center justify-between gap-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-body-sm">{source.name}</p>
-                      <p
-                        className="text-body-sm text-destructive"
-                        title={source.deletionError || undefined}
-                      >
-                        {source.status === "uploading"
-                          ? "Upload incomplete"
-                          : source.deletionError
-                            ? "Delete failed"
-                            : "Deletion incomplete"}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteSource(source.id)}
-                      aria-label={
-                        source.status === "uploading"
-                          ? `Remove incomplete upload ${source.name}`
-                          : undefined
-                      }
-                    >
-                      {source.status === "uploading"
-                        ? "Remove"
-                        : "Retry delete"}
-                    </Button>
-                  </div>
-                ))}
-              <fieldset className="flex flex-col gap-3">
-                <legend className="mb-3 text-label-lg">Card types</legend>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {supportedCardTypes.map((type) => (
-                    <Label key={type} className="flex items-center gap-3">
-                      <Checkbox
-                        checked={types.includes(type)}
-                        onCheckedChange={(checked) =>
-                          setTypes((current) =>
-                            checked
-                              ? [...current, type]
-                              : current.filter((item) => item !== type),
-                          )
-                        }
-                      />
-                      {humanizeType(type)}
-                    </Label>
-                  ))}
-                </div>
-              </fieldset>
-              <div className="flex items-center gap-4">
-                <Label htmlFor="card-count">Cards</Label>
-                <Input
-                  id="card-count"
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={count}
-                  onChange={(event) => setCount(event.target.value)}
-                  className="w-24"
-                  required
-                />
-              </div>
-              {settings && (
-                <section
-                  aria-label="Generation model"
-                  className="flex flex-col gap-3"
-                >
-                  <h2 className="text-title-md">Model</h2>
-                  <ModelPicker
-                    value={{
-                      model: settings.model,
-                      reasoningEffort: settings.reasoningEffort,
-                    }}
-                    onChange={saveModel}
+                <div className="flex items-center justify-end gap-2">
+                  <GenerationInstructions
+                    value={instructions}
+                    onChange={setInstructions}
                     disabled={Boolean(busy) || modelBusy}
                   />
-                </section>
-              )}
-              {settings && !settings.openRouterConfigured && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="self-start"
-                  onClick={() => setKeyDialogOpen(true)}
-                >
-                  Add API key
-                </Button>
-              )}
-              <div className="flex items-center justify-end gap-2">
-                <GenerationInstructions
-                  value={instructions}
-                  onChange={setInstructions}
-                  disabled={Boolean(busy) || modelBusy}
-                />
-                <Button disabled={!canSubmit || Boolean(busy) || modelBusy}>
-                  {busy ? <Spinner /> : <PlusIcon aria-hidden="true" />}
-                  {busy || "Generate"}
-                </Button>
-              </div>
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    disabled={!canSubmit || Boolean(busy) || modelBusy}
+                  >
+                    {busy && <Spinner />}
+                    {busy || "Generate"}
+                  </Button>
+                </div>
+              </section>
             </fieldset>
           </form>
         ) : null}
-        {error && (
-          <p role="alert" className="text-body-sm text-destructive">
-            {error}
-          </p>
-        )}
+        <GenerationNotice>{error}</GenerationNotice>
         {(visibleJobs.length > 0 || historyView) && (
           <section className="flex flex-col gap-2 border-t pt-5">
             <h2 className="text-title-md">Recent generations</h2>
-            {historyError && (
-              <p role="alert" className="text-body-sm text-destructive">
-                {historyError}
-              </p>
-            )}
+            <GenerationNotice>{historyError}</GenerationNotice>
             {visibleJobs.length === 0 && (
               <p className="text-body-sm text-muted-foreground">
                 {jobsLoaded ? "No generations yet" : "Loading…"}
@@ -998,7 +1077,7 @@ export default function GenerateRoute() {
             {visibleJobs.map((item) => {
               const title =
                 item.resultRecord?.rawSet?.title ||
-                sources.find((source) => source.id === item.sourceId)?.name ||
+                sourcesById.get(item.sourceId)?.name ||
                 item.sourceName ||
                 "Study set";
               return (
@@ -1037,22 +1116,24 @@ export default function GenerateRoute() {
                       </Button>
                     )}
                     {item.status === "completed" && item.resultRecord?.slug ? (
-                      <Button asChild variant="ghost" size="sm">
-                        <Link to={`/sets/${item.resultRecord.slug}`}>
-                          Open set
-                        </Link>
-                      </Button>
+                      <ButtonLink
+                        variant="ghost"
+                        size="sm"
+                        to={`/sets/${item.resultRecord.slug}`}
+                      >
+                        Open set
+                      </ButtonLink>
                     ) : item.id !== jobId ? (
-                      <Button asChild variant="ghost" size="sm">
-                        <Link
-                          to={`?${
-                            historyView ? "view=generations&" : ""
-                          }job=${encodeURIComponent(item.id)}`}
-                          aria-label={`View details for ${title}`}
-                        >
-                          Details
-                        </Link>
-                      </Button>
+                      <ButtonLink
+                        variant="ghost"
+                        size="sm"
+                        to={`?${
+                          historyView ? "view=generations&" : ""
+                        }job=${encodeURIComponent(item.id)}`}
+                        aria-label={`View details for ${title}`}
+                      >
+                        Details
+                      </ButtonLink>
                     ) : null}
                   </div>
                 </div>

@@ -1,32 +1,63 @@
-# Shared UI baseline
+# Shared UI
 
-The reader follows the Pulse MD design language shared by the React and Electron templates. Its current foundation is [React template b8f0d5d](https://github.com/mapleroyal/react-template/commit/b8f0d5d0da94699aef2b4f848510a7568d34cfc7), published October 4, 2026 at 14:00 CDT and checked against upstream main on that date. The older `3fb2c76bb3f89334d3f4802e0799784df5a17bcb` identifier is the audited **Pulse MD reference**, not a React-template source revision. Unused registry scaffolding alone does not establish a product convention. The [foundation record](template-foundation.md) records the source lineage, adopted changes, app-specific differences, and validation.
+The visual reference is [Pulse MD](https://github.com/mapleroyal/pulse-md/tree/3fb2c76bb3f89334d3f4802e0799784df5a17bcb): quiet neutral surfaces, Inter UI text, Cascadia Code for code, and restrained rounded controls. Use ChatGPT as the reference for cases Pulse does not cover.
 
-## Theme and typography
+Defaults are implemented and tested here; this document only maps the code and the composition API.
 
-- Inter is the UI font; Cascadia Code is the monospace font. Typography roles are defined in `app/globals.css` and documented in `docs/learnings/typography-design-system.md`.
-- The application default is `text-body-md` (14/20). Shared primitives provide role-specific defaults; screens use semantic utilities for deliberate exceptions.
-- Foreground and background generate the neutral surface palette. Primary actions contrast foreground and background; focus and destructive colors remain distinct.
-- Native controls inherit the document color scheme. Browser-owned option menus retain native colors and behavior.
+| Contract                                                                  | Implementation                                                  | Verification                                                                    |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Palette, type scale, radii, circles, transparent scrollbars               | `app/globals.css`                                               | `tests/shared-ui/global-style.pw.mjs`, `tests/shared-ui/corners.pw.mjs`         |
+| Popup padding, bounds, truncation, focus, disabled/selected states        | `app/components/ui/`                                            | `tests/shared-ui/components.pw.mjs`, `tests/shared-ui/calendar-dropdown.pw.mjs` |
+| Native and fallback superellipses, clipped content, visible shadows/rings | `app/lib/app-corners.js`, `app/components/surface-viewport.jsx` | `tests/shared-ui/corners.pw.mjs`, `tests/shared-ui/control-corners.pw.mjs`      |
+| Reduced motion                                                            | `app/globals.css`                                               | `tests/shared-ui/components.pw.mjs`                                             |
+| Semantic typography merging                                               | `app/lib/utils.js`                                              | `app/lib/utils.test.js`                                                         |
+| Shared primitive imports and product dropdowns                            | `eslint.config.mjs`                                             | `tests/design-contract.test.mjs`                                                |
 
-## Controls and surfaces
+## Composition API
 
-- Default controls are 36 px high with 12 px horizontal insets. Icon buttons use the shared `Button` sizes; unpressed ghost icon buttons emphasize their icon on hover. Controls which represent selected state expose it through their primitive or `aria-pressed`.
-- Inputs and selects use a muted fill with no persistent outline. Focus uses the shared ring, and disabled/invalid states remain owned by the primitive.
-- Popup lists own their 6 px outer padding. Optional grouping must not be necessary for a correctly inset select or menu. Selects grow to fit their options, remain at least trigger-width, and stay inside the viewport; selected labels shrink with ellipsis. Menus and dialogs use a subtle edge and shadow; overlays use black at 30% without blur.
-- The radius ladder starts at 6/8/10/14 px for `rounded-sm` through `rounded-xl`, with 18/22/26 px for larger surfaces. Supported browsers scale the ladder by 1.25 and use `superellipse(1.5)`; other browsers retain ordinary rounded corners. Radios, avatars, sliders, switches, and spinners stay round.
-- Intentional circles and pills use `rounded-full` and never receive the superellipse treatment. Scrollbar rails, corners, and arrow backgrounds stay transparent in both themes; only direction triangles and the thumb are painted. ScrollArea retains Radix thumb/scrolling mechanics and adds direction buttons. Firefox uses its browser-owned arrows and a transparent track.
-- Product dropdowns, including Calendar month/year navigation, use the shared Select or Combobox. NativeSelect is restricted to the test gallery.
-- Cards frame individual study questions. Ordinary page sections, metadata, progress, and actions do not each need another panel or outline.
+- Navigation uses real anchors or router links styled with `buttonVariants`; Base UI Button is for actions, including when `nativeButton={false}`.
+- Import controls from `@/components/ui/*`. All primitive wrappers compose with Base UI `render`. See [the foundation and migration guide](ui-foundation.md) for current APIs and AI composition layers.
+- Card, Dialog, AlertDialog, Popover, HoverCard and menu surfaces use `className` for shell placement, size and paint, and `viewportClassName` for inner layout and padding. For a custom surface radius, set `[--surface-radius:40px]` once on the shell; its viewport follows automatically.
+- Input, Textarea and Checkbox keep refs, events and form attributes on the native control; their `className`/`style` customize the paint surface. InputGroup owns its surface.
+- Use `rounded-full` for round geometry. `data-app-corner` opts a custom painted surface into the app shape; `data-corner-shape="round"` opts it out. Custom corner surfaces reserve `::before` and `::after` for fallback paint; add `data-app-corner-focus-within` when focus lives on a descendant. Shared wrappers already handle their own shape.
+- Tooltips follow Pulse MD: the popup and arrow ignore pointer input by default and close when the pointer leaves the trigger. Use `disableHoverablePopup={false}` only when hoverable tooltip content is intentional. Keyboard focus and Escape remain supported.
+- Combobox items use equal horizontal padding until selected, when the trailing indicator reserves space. Plain labels truncate inside the item; custom child layouts keep control of their own content.
+- [Typography roles](typography-design-system.md) describe when to choose a semantic text utility.
 
-## Component contracts
+## App integration and maintenance
 
-Import primitives from `@/components/ui/*`. Reusable defaults belong in these wrappers and the shared theme, not repeated screen overrides. `cn()` merges each semantic typography utility as a complete style.
+The current baseline is [React template 1f79c91132e3e696278cb910d96733138739af2a](https://github.com/mapleroyal/react-template/commit/1f79c91132e3e696278cb910d96733138739af2a). See [the integration record](template-foundation.md) for source boundaries and qualification evidence.
 
-Select, Dialog, Popover, Combobox, Tooltip, Sheet, Drawer, AlertDialog, DropdownMenu, and ContextMenu use Base UI so nested dropdowns share focus and dismissal management. Compose Base UI triggers and closes with `render`. Select roots with closed, preselected human-readable labels receive `items`; selection callbacks handle nullable values. Select lists use the native shared scrollbar, without automatically registering the optional arrow overlays that hide its draggable thumb.
+The app preserves its Oooh Baby wordmark font, explicit HTML canvas background, the existing appearance storage key, pre-paint `public/theme-init.js`, service-worker/offline behavior, reader Markdown CSS, and hosted Node 24/Nitro/Workflow runtime. The controlled appearance switcher uses the app store through its existing adapter. AI presentation components do not replace the hosted generation and provider contracts.
 
-Checkbox and other retained Radix wrappers keep their own `asChild` APIs. Do not pass `asChild` to Base UI. Tooltips follow Pulse MD: a 400 ms provider delay, zero trigger close delay, and non-hoverable popups by default. The entire Base UI tooltip positioner ignores pointer hit testing, including its arrow; explicit `disableHoverablePopup={false}` remains available for interactive content. The responsive appearance control retains the reader's theme persistence. `components.json` records the original Radix generator style, not permission to overwrite these tuned mixed-primitive wrappers.
+Product dropdowns use the shared Select or Combobox, including Calendar navigation. NativeSelect remains a test-only fixture. Selected labels require the Select root's `items` mapping. Base UI ToggleGroup values are arrays; indeterminate Progress uses `value={null}`. Use `toast.add({ title, description, type, actionProps })` from `@/components/ui/toast`; the root UiProvider supplies Toast and Tooltip context.
 
-Preserve keyboard navigation, checked/disabled states, dismissal, and focus return provided by the underlying primitive. Product policies belong at call sites. After shared visual changes, run unit tests, lint, the production build, and the reader's browser UI checks in light/dark themes and constrained viewports.
+Run `npm run lint`, `npm run test:run`, `npm run build:test`, `npm run test:ui`, and `npm run test:foundation`. The product suite includes the reader's existing overlay/chooser fixture on port 4181. The full template contract suite runs a separate production gallery on port 4182; neither gallery ships as an application route. Inspect both themes and narrow widths; counts alone do not establish visual quality.
 
-The test-only foundation gallery is a separate Vite entry, excluded from product routes. `npm run test:ui` runs its focused checks alongside the complete Study Cards browser suite in both themes and widths. Lint enforces shared dropdown use in product code.
+Use `docs/learnings/typography-design-system.md` for reader-specific type decisions and [Typeset presets](typography-design-system.md) for rich document/AI compositions. Keep reusable behavior in wrappers, preserve the debugged corner implementation, and selectively review new registry source instead of regenerating tuned wrappers.
+
+## Interaction defaults
+
+Buttons and action/disclosure controls use the native default cursor; links use the pointer, text fields use the text cursor, and draggable handles retain their grab/resize cursors. This follows [shadcn's Tailwind v4 button default](https://ui.shadcn.com/docs/components/base/button#cursor). Do not add a pointer cursor to ordinary actions or suppress their hover feedback. Ghost icon and text buttons share a muted background hover; `aria-current="page"` gives a ghost navigation link its selected surface and stronger selected hover. Checked toggles and expanded ghost actions also retain visible hover feedback.
+
+Product actions use the shared ghost variant: visible text or a meaningful icon at rest, a muted surface on hover, and the shared focus ring. This includes creation/import, send/stop, retry, account connection and editor save/cancel actions. Placement and labels establish the next action; ordinary actions do not need filled or outlined emphasis. Keep destructive styling for delete, reset confirmations, replacement and discard. Selects, toggles and switches retain their selection styling. Generate cards navigation retains its plus icon; only the Generate form submit action omits the plus. Library Import set and Generate cards use the same small height and centered action-row alignment.
+
+Text triggers own their label inset. Select and an uncomposed ComboboxTrigger share one filled field style, 12px horizontal padding, hover/open feedback, and default/small heights. Input, Textarea and InputGroup own the same field hover treatment. Bare Collapsible, DropdownMenu, Popover, Dialog, AlertDialog, Sheet and Drawer triggers (and bare dialog/sheet/drawer close actions) use padded ghost action defaults; an explicit `render` supplies the composed control's style instead. Use `render={<Button variant="ghost" size="icon" />}` for an icon action with its own fixed hit area. Do not remove horizontal padding from a text trigger to align it with nearby content. Accordion keeps its 16px inset; menu items and labels keep 12px inside the padded popup viewport. Trace disclosures keep auto-height text-action styling with a 12px label inset, rather than inheriting a fixed Button height.
+
+`className` still owns a popup's outer shell; `viewportClassName` owns content padding. Trigger insets and content insets solve separate boundaries and must not cancel each other. Drawer supports `swipeDirection="down" | "up" | "left" | "right"`; its inner viewport scrolls and defaults to 8px padding, with 16px Header/Footer padding. Use the direction that suits the current layout; explicit render composition remains available for all triggers.
+
+Native scrollbars and ScrollArea paint only the draggable thumb. Rails/corners stay transparent, scrollbar arrows are absent, and wheel, trackpad, thumb dragging and keyboard viewport scrolling remain available. Firefox uses its thin, transparent-rail native scrollbar. No custom direction buttons or reserved arrow space should be added.
+
+Chromium and WebKit must retain computed `scrollbar-width: auto` and `scrollbar-color: auto` so our custom scrollbar parts are used. Standard `scrollbar-thin`, `scrollbar-thumb-*` and `scrollbar-track-*` utilities override those parts and can restore platform rails and arrows; ESLint rejects them in source, including shared wrappers. Change thumb visibility with `--scrollbar-thumb-color` instead (the message scroller uses transparent during autoscroll). Intentional `scrollbar-none` remains supported. This follows the [CSS Scrollbars compatibility requirements](https://drafts.csswg.org/css-scrollbars/); Linux Chromium raster and actual MessageScroller/CodeBlock interaction tests cover the regression.
+
+The isolated interaction and scrollbar gallery tests verify label bounds, matching selection styles, hover/cursor states, icon geometry, native/fallback corners, and scrolling in both themes at desktop and narrow widths.
+
+Dynamic navigation links should mirror selected `aria-current="page"` into `data-active`, as the app header does. The preserved Hyperellipse observer watches `data-active`; keep the corner implementation unchanged.
+
+## Search behavior
+
+All product searches update locally on input, without a submit action or debounce delay. `createFuzzySearch` indexes set titles/categories; `createFuzzyFilter` integrates the same matching with Base UI source, model and category pickers. Model searches include both the displayed label and stable provider model ID. Search does not index private document bodies or change selection/provider settings merely because the query changes.
+
+The maintained Fuse.js 7.5 engine provides [token search](https://www.fusejs.io/token-search.html): every query word must match, words can appear in any order, accents/case are ignored, and a restrained 0.35 fuzzy threshold tolerates ordinary misspellings. Matching applies anywhere in a label, including long filename endings. Indexes are memoized per collection; Base UI predicates cache matches per query instead of rescanning for every option. Clearing restores the complete original collection; library results retain their category/favorite structure. No result or source-content cap is introduced.
+
+Chrome's standard `scrollbar-width` and `scrollbar-color` override `::-webkit-scrollbar` parts whenever their computed values are not `auto`. In particular, `scrollbar-thin` restores platform tracks and arrow buttons on Linux Chrome. MessageScroller and CodeBlock inherit the global thumb-only policy; autoscroll visibility uses `--scrollbar-thumb-color`, including hover/active states. Keep intentional `scrollbar-none`/`no-scrollbar` hiding, but do not add standard width/color utilities to components. ESLint rejects the conflicting classes, and the actual message/code viewport fixtures verify keyboard, wheel and thumb dragging. See the [CSS scrollbar interaction rules](https://drafts.csswg.org/css-scrollbars/) and `native-scrollbars.pw.mjs` in the shared gallery.

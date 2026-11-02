@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Accordion as AccordionPrimitive } from "radix-ui";
+import { Accordion as AccordionPrimitive } from "@base-ui/react/accordion";
 
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -34,7 +34,7 @@ function AccordionTrigger({ className, children, ...props }) {
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
         className={cn(
-          "group/accordion-trigger text-label-lg relative flex flex-1 items-start justify-between gap-6 border border-transparent p-4 text-left transition-all outline-none hover:underline focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/30 disabled:pointer-events-none disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4 **:data-[slot=accordion-trigger-icon]:text-muted-foreground",
+          "group/accordion-trigger text-label-lg relative flex flex-1 items-start justify-between gap-6 border border-transparent p-4 text-left transition-all outline-none hover:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/30 data-disabled:pointer-events-none data-disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4 **:data-[slot=accordion-trigger-icon]:text-muted-foreground",
           className,
         )}
         {...props}
@@ -59,7 +59,7 @@ function AccordionTrigger({ className, children, ...props }) {
 
 function AccordionContent({ className, children, ...props }) {
   return (
-    <AccordionPrimitive.Content
+    <AccordionPrimitive.Panel
       data-slot="accordion-content"
       className="text-body-md overflow-hidden px-4 data-open:animate-accordion-down data-closed:animate-accordion-up"
       {...props}
@@ -72,7 +72,7 @@ function AccordionContent({ className, children, ...props }) {
       >
         {children}
       </div>
-    </AccordionPrimitive.Content>
+    </AccordionPrimitive.Panel>
   );
 }
 

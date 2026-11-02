@@ -1,5 +1,17 @@
+import { createFuzzyFilter } from "@/lib/fuzzy-search";
 import * as React from "react";
-import { toast } from "sonner";
+import { KebabHorizontalIcon } from "@primer/octicons-react";
+import { useCapabilities } from "@/lib/runtime-client";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +29,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   Combobox,
@@ -61,16 +74,18 @@ async function savePatch(record, patch, label) {
     { expectedRevision: record.revision },
   );
   await refreshRuntimeState();
-  toast.success(label, {
-    action: {
-      label: "Undo",
+  toast.add({
+    title: label,
+    type: "success",
+    actionProps: {
+      children: "Undo",
       onClick: async () => {
         try {
           await flushBeforeEdit();
           await undoLibraryAction(result.mutationId);
           await refreshRuntimeState();
         } catch (error) {
-          toast.error(error.message);
+          toast.add({ title: error.message, type: "error" });
         }
       },
     },
@@ -82,7 +97,16 @@ function useRecord(slug) {
   );
 }
 
-export function SetEditMenu({ set }) {
+export function SetEditMenu({
+  set,
+  canReset = false,
+  onReset,
+  canDelete = false,
+  onDelete,
+}) {
+  const capabilities = useCapabilities();
+  const menuButtonRef = React.useRef(null);
+  const [pendingAction, setPendingAction] = React.useState(null);
   const record = useRecord(set.slug);
   const records = useStudySetsStore((state) => state.records);
   const [mode, setMode] = React.useState(null);
@@ -90,10 +114,15 @@ export function SetEditMenu({ set }) {
   const [value, setValue] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState(null);
-  const categories = [
-    ...new Set(records.map((item) => item.rawSet.category)),
-  ].sort();
-  if (!record?.id) {
+  const categories = React.useMemo(
+    () => [...new Set(records.map((item) => item.rawSet.category))].sort(),
+    [records],
+  );
+  const filterCategories = React.useMemo(
+    () => createFuzzyFilter(categories),
+    [categories],
+  );
+  if (!record) {
     return null;
   }
   function open(next) {
@@ -121,6 +150,24 @@ export function SetEditMenu({ set }) {
       setBusy(false);
     }
   }
+  async function performAction(action) {
+    setBusy(true);
+    try {
+      await (action === "reset" ? onReset() : onDelete());
+      setPendingAction(null);
+    } catch (cause) {
+      toast.add({ title: cause.message, type: "error" });
+    } finally {
+      setBusy(false);
+    }
+  }
+  function requestAction(action) {
+    if (capabilities?.server) {
+      performAction(action);
+    } else {
+      setPendingAction(action);
+    }
+  }
   return (
     <>
       <DropdownMenu>
@@ -128,31 +175,92 @@ export function SetEditMenu({ set }) {
           render={
             <Button
               variant="ghost"
-              size="icon-xs"
-              aria-label={`Edit ${set.title}`}
+              size="icon"
+              className="pointer-events-auto"
+              ref={menuButtonRef}
+              aria-label={`Options for ${set.title}`}
+              disabled={busy}
             />
           }
         >
-          •••
+          <KebabHorizontalIcon aria-hidden="true" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => open("rename")}>
-            Rename
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => open("move")}>Move</DropdownMenuItem>
+          {record.id && (
+            <>
+              <DropdownMenuItem onClick={() => open("rename")}>
+                Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => open("move")}>
+                Move
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuItem
             onClick={() => {
               try {
                 downloadStudySet(record);
               } catch (cause) {
-                toast.error(cause.message || "Could not export this set.");
+                toast.add({
+                  title: cause.message || "Could not export this set.",
+                  type: "error",
+                });
               }
             }}
           >
             Export
           </DropdownMenuItem>
+          {(canReset || canDelete) && <DropdownMenuSeparator />}
+          {canReset && (
+            <DropdownMenuItem onClick={() => requestAction("reset")}>
+              Reset progress
+            </DropdownMenuItem>
+          )}
+          {canDelete && (
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => requestAction("delete")}
+            >
+              Delete set
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
+      <AlertDialog
+        open={Boolean(pendingAction)}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen && !busy) {
+            setPendingAction(null);
+          }
+        }}
+      >
+        <AlertDialogContent size="sm" finalFocus={menuButtonRef}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingAction === "reset"
+                ? "Reset this set?"
+                : "Delete this set?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingAction === "reset"
+                ? "Clear saved answers and progress."
+                : "Remove it from local study sets."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel variant="ghost" disabled={busy}>
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={busy}
+              onClick={() => performAction(pendingAction)}
+            >
+              {pendingAction === "reset" ? "Reset" : "Delete"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <Dialog
         open={Boolean(mode)}
         onOpenChange={(nextOpen) => {
@@ -161,54 +269,57 @@ export function SetEditMenu({ set }) {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent finalFocus={menuButtonRef}>
           <DialogHeader>
             <DialogTitle>
               {mode === "rename" ? "Rename set" : "Move set"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={save} className="flex flex-col gap-4">
-            <Label htmlFor={`set-edit-${set.slug}`}>
-              {mode === "rename" ? "Title" : "Category"}
-            </Label>
-            {mode === "rename" ? (
-              <Input
-                id={`set-edit-${set.slug}`}
-                value={value}
-                onChange={(event) => setValue(event.target.value)}
-                required
-                autoFocus
-              />
-            ) : (
-              <Combobox
-                items={categories}
-                value={value}
-                inputValue={value}
-                onInputValueChange={setValue}
-                onValueChange={(next) => {
-                  if (next) {
-                    setValue(next);
-                  }
-                }}
-              >
-                <ComboboxInput
+          <form onSubmit={save} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`set-edit-${set.slug}`}>
+                {mode === "rename" ? "Title" : "Category"}
+              </Label>
+              {mode === "rename" ? (
+                <Input
                   id={`set-edit-${set.slug}`}
-                  placeholder="Choose or enter a category"
+                  value={value}
+                  onChange={(event) => setValue(event.target.value)}
+                  required
+                  autoFocus
                 />
-                <ComboboxContent>
-                  <ComboboxEmpty>
-                    {value ? `Use “${value}”` : "Enter a category"}
-                  </ComboboxEmpty>
-                  <ComboboxList>
-                    {(item) => (
-                      <ComboboxItem key={item} value={item}>
-                        {item}
-                      </ComboboxItem>
-                    )}
-                  </ComboboxList>
-                </ComboboxContent>
-              </Combobox>
-            )}
+              ) : (
+                <Combobox
+                  items={categories}
+                  filter={filterCategories}
+                  value={value}
+                  inputValue={value}
+                  onInputValueChange={setValue}
+                  onValueChange={(next) => {
+                    if (next) {
+                      setValue(next);
+                    }
+                  }}
+                >
+                  <ComboboxInput
+                    id={`set-edit-${set.slug}`}
+                    placeholder="Choose or enter a category"
+                  />
+                  <ComboboxContent>
+                    <ComboboxEmpty>
+                      {value ? `Use “${value}”` : "Enter a category"}
+                    </ComboboxEmpty>
+                    <ComboboxList>
+                      {(item) => (
+                        <ComboboxItem key={item} value={item}>
+                          {item}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              )}
+            </div>
             {error && (
               <p role="alert" className="text-body-sm text-destructive">
                 {error}
@@ -217,13 +328,17 @@ export function SetEditMenu({ set }) {
             <DialogFooter>
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 disabled={busy}
                 onClick={() => setMode(null)}
               >
                 Cancel
               </Button>
-              <Button disabled={busy || !value.trim()}>
+              <Button
+                variant="ghost"
+                type="submit"
+                disabled={busy || !value.trim()}
+              >
                 {busy ? "Saving…" : "Save"}
               </Button>
             </DialogFooter>
@@ -617,50 +732,62 @@ export function CardEditControl({ card, setSlug }) {
           }
         }}
       >
-        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
-          <DialogHeader>
+        <DialogContent
+          className="max-h-[90dvh] sm:max-w-xl"
+          viewportClassName="flex min-h-0 flex-col gap-0 overflow-hidden p-0"
+        >
+          <DialogHeader className="shrink-0 border-b px-6 py-5">
             <DialogTitle>Edit card</DialogTitle>
           </DialogHeader>
           {draft && (
-            <form onSubmit={save} className="flex flex-col gap-5">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="card-question">Question</Label>
-                <Textarea
-                  id="card-question"
-                  value={draft.question}
-                  onChange={(event) =>
-                    setDraft({ ...draft, question: event.target.value })
-                  }
-                  required
-                />
-              </div>
-              <CardAnswerFields draft={draft} setDraft={setDraft} />
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="card-explanation">Explanation</Label>
-                <Textarea
-                  id="card-explanation"
-                  value={draft.explanation}
-                  onChange={(event) =>
-                    setDraft({ ...draft, explanation: event.target.value })
-                  }
-                  required
-                />
+            <form onSubmit={save} className="flex min-h-0 flex-col">
+              <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain px-6 py-5">
+                <fieldset disabled={busy} className="contents">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="card-question">Question</Label>
+                    <Textarea
+                      id="card-question"
+                      value={draft.question}
+                      onChange={(event) =>
+                        setDraft({ ...draft, question: event.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <CardAnswerFields draft={draft} setDraft={setDraft} />
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="card-explanation">Explanation</Label>
+                    <Textarea
+                      id="card-explanation"
+                      value={draft.explanation}
+                      onChange={(event) =>
+                        setDraft({ ...draft, explanation: event.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                </fieldset>
               </div>
               {error && (
-                <p role="alert" className="text-body-sm text-destructive">
+                <p
+                  role="alert"
+                  className="shrink-0 px-6 pb-3 text-body-sm text-destructive"
+                >
                   {error}
                 </p>
               )}
-              <DialogFooter>
+              <DialogFooter className="shrink-0 border-t px-6 py-4">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   disabled={busy}
                   onClick={() => setOpen(false)}
                 >
                   Cancel
                 </Button>
-                <Button disabled={busy}>{busy ? "Saving…" : "Save"}</Button>
+                <Button variant="ghost" type="submit" disabled={busy}>
+                  {busy ? "Saving…" : "Save"}
+                </Button>
               </DialogFooter>
             </form>
           )}

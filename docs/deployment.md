@@ -102,11 +102,15 @@ Ordinary automated checks do not need paid inference:
 ```sh
 npm run lint
 npm run test:run
-npm run build
+npm run build:test
+npm run build:vercel:test
 npm run test:ui
+npm run test:foundation
+npm run test:foundation:webkit
+npm run test:pwa
 ```
 
-Tests use provider fixtures and embedded PostgreSQL through PGlite. Browser checks also start the built app and use the configured development database for owner login; pull the development environment first. Their ordinary library and generation scenarios use fixture API responses. Browser suites named `hosted-flow` still mock inference; those tests do not establish real-model quality. Use [the verification record](verification.md) to distinguish mocked, hosted-service, and paid-inference checks.
+Automated test and test-build scripts run from a source snapshot with an allowlisted environment, excluding every local dotenv file, hosted metadata and private runtime directory. Nitro loads dotenv independently of Vite; never run fixture builds against a credential-bearing checkout by setting only a Vite flag. Unit tests use provider fixtures and embedded PostgreSQL through PGlite. Hosted browser/PWA checks use a unique disposable PostgreSQL 18.6 Docker container published only on loopback with tmpfs storage. Docker must be installed with a local socket context. Containers and owned child processes are removed on completion or interruption. Browser library/generation scenarios use fixture API responses; PWA uses the disposable database directly. No configured development database or provider key is imported. Logs, source digests, reports and build outputs are retained under `work/modernization/<run>`; `latest.json` identifies the most recent run. Browser suites named `hosted-flow` still mock inference; those tests do not establish real-model quality. Use [the verification record](verification.md) to distinguish mocked, hosted-service, and paid-inference checks.
 
 For a regular production-mode Node preview using ignored development environment values:
 

@@ -1,17 +1,24 @@
 @import "tailwindcss" source(".");
 @import "tw-animate-css";
 @import "@fontsource/oooh-baby";
-@import "shadcn/tailwind.css";
+@import "./styles/shadcn.css";
+@import "./styles/typeset.css";
+@import "./styles/typeset-presets.css";
 @import "@fontsource-variable/inter/wght.css";
 @import "@fontsource-variable/inter/wght-italic.css";
 @import "@fontsource-variable/cascadia-code/wght.css";
 @import "@fontsource-variable/cascadia-code/wght-italic.css";
 
+@source "../node_modules/streamdown/dist/*.js";
+@source "../node_modules/@streamdown/cjk/dist/*.js";
+@source "../node_modules/@streamdown/mermaid/dist/*.js";
+@source "../node_modules/@streamdown/math/dist/*.js";
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --app-corner-radius-scale: 1;
-  --app-corner-shape: round;
+  --app-corner-radius-scale: 1.25;
+  --app-corner-shape: superellipse(1.5);
   --radius-base: 0.625rem;
   --radius: calc(var(--radius-base) * var(--app-corner-radius-scale));
   --background: #ffffff;
@@ -65,15 +72,13 @@
   --chart-5: #7d8799;
 }
 
-@supports (corner-shape: superellipse(1.5)) {
-  :root {
-    --app-corner-radius-scale: 1.25;
-    --app-corner-shape: superellipse(1.5);
-  }
-}
+/* Hyperellipse registers --corner-shape as non-inherited in JavaScript.
+   A CSS @property here makes Tailwind emit a universal fallback carrier;
+   the polyfill would then discover and rewrite the document root itself. */
 
 @theme inline {
   --font-oooh-baby: "Oooh Baby", cursive;
+  --color-active-hover: color-mix(in oklch, var(--muted), var(--foreground) 8%);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -197,11 +202,31 @@
     @apply border-border outline-ring/50;
   }
 
-  /* Enhance app surfaces without changing third-party or native geometry. */
-  @supports (corner-shape: superellipse(1.5)) {
+  /* The custom property survives parsing in browsers without corner-shape.
+     Keep --radius local so the fallback can measure at its full native scale. */
+  :where(
+    [data-slot],
+    [data-app-corner],
+    .rounded-sm,
+    .rounded-md,
+    .rounded-lg,
+    .rounded-xl,
+    .rounded-2xl,
+    .rounded-3xl,
+    .rounded-4xl
+  ) {
+    --radius: calc(
+      var(--radius-base) * var(--app-corner-radius-scale) *
+        var(--corner-scale, 1)
+    );
+    --corner-shape: var(--app-corner-shape);
+    corner-shape: var(--app-corner-shape);
+  }
+
+  @supports not (corner-shape: superellipse(1.5)) {
     :where(
       [data-slot],
-      [data-corner-shape="app"],
+      [data-app-corner],
       .rounded-sm,
       .rounded-md,
       .rounded-lg,
@@ -209,38 +234,51 @@
       .rounded-2xl,
       .rounded-3xl,
       .rounded-4xl
-    ),
-    [data-slot]::before,
-    [data-slot]::after,
-    [data-corner-shape="app"]::before,
-    [data-corner-shape="app"]::after {
-      corner-shape: var(--app-corner-shape);
-    }
-
-    :where(
-      .rounded-full,
-      [data-corner-shape="round"],
-      input[type="radio"],
-      [data-slot="radio-group-item"],
-      [data-slot="radio-group-indicator"] span,
-      [data-slot="spinner"],
-      [data-slot="slider-track"],
-      [data-slot="slider-range"],
-      [data-slot="slider-thumb"],
-      [data-slot="switch"],
-      [data-slot="switch-thumb"],
-      [data-slot^="avatar"]
-    ),
-    .rounded-full::before,
-    .rounded-full::after,
-    [data-corner-shape="round"]::before,
-    [data-corner-shape="round"]::after {
-      corner-shape: round;
+    ) {
+      /* Retain the former round radius until the fallback paints the shape. */
+      --corner-scale: 0.8;
     }
   }
 
-  /* Native overflow (pages, textareas and popup lists): only arrows + thumb.
-     Keep scrollbar-color auto here: non-auto values override WebKit parts. */
+  @supports (corner-shape: superellipse(1.5)) {
+    [data-slot]::before,
+    [data-slot]::after,
+    [data-app-corner]::before,
+    [data-app-corner]::after {
+      corner-shape: var(--app-corner-shape);
+    }
+  }
+
+  :where(
+    .rounded-full,
+    [data-corner-shape="round"],
+    input[type="radio"],
+    [data-slot="radio-group-item"],
+    [data-slot="radio-group-indicator"] span,
+    [data-slot="spinner"],
+    [data-slot="slider-track"],
+    [data-slot="slider-range"],
+    [data-slot="slider-thumb"],
+    [data-slot="switch"],
+    [data-slot="switch-thumb"],
+    [data-slot^="avatar"]
+  ) {
+    --corner-scale: 1;
+    --corner-shape: round;
+    corner-shape: round;
+  }
+
+  .rounded-full::before,
+  .rounded-full::after,
+  [data-corner-shape="round"]::before,
+  [data-corner-shape="round"]::after {
+    corner-shape: round;
+  }
+
+  /* Native overflow (pages, textareas and popup lists): thumb only; no arrows or painted rails.
+     Keep scrollbar-width AND scrollbar-color auto in Chromium/WebKit: either non-auto
+     property bypasses these parts and restores platform rails/buttons. Components may
+     set --scrollbar-thumb-color (for example while autoscrolling), not those properties. */
   @supports selector(::-webkit-scrollbar) {
     ::-webkit-scrollbar {
       width: 14px;
@@ -261,13 +299,13 @@
       min-height: 24px;
       border: 4px solid transparent;
       border-radius: 999px;
-      background: var(--muted-foreground);
+      background: var(--scrollbar-thumb-color, var(--muted-foreground));
       background-clip: padding-box;
     }
 
     ::-webkit-scrollbar-thumb:hover,
     ::-webkit-scrollbar-thumb:active {
-      background-color: var(--foreground);
+      background-color: var(--scrollbar-thumb-color, var(--foreground));
     }
 
     ::-webkit-scrollbar-button {
@@ -280,65 +318,14 @@
       background-position: center;
       color: var(--muted-foreground);
     }
-
-    ::-webkit-scrollbar-button:hover,
-    ::-webkit-scrollbar-button:active {
-      color: var(--foreground);
-    }
-
-    ::-webkit-scrollbar-button:vertical:decrement:start,
-    ::-webkit-scrollbar-button:vertical:increment:end {
-      display: block;
-      width: 14px;
-      height: 14px;
-      background-size: 8px 4px;
-    }
-
-    ::-webkit-scrollbar-button:vertical:decrement:start {
-      background-image: conic-gradient(
-        from 135deg at 50% 0,
-        currentColor 90deg,
-        transparent 0
-      );
-    }
-
-    ::-webkit-scrollbar-button:vertical:increment:end {
-      background-image: conic-gradient(
-        from -45deg at 50% 100%,
-        currentColor 90deg,
-        transparent 0
-      );
-    }
-
-    ::-webkit-scrollbar-button:horizontal:decrement:start,
-    ::-webkit-scrollbar-button:horizontal:increment:end {
-      display: block;
-      width: 14px;
-      height: 14px;
-      background-size: 4px 8px;
-    }
-
-    ::-webkit-scrollbar-button:horizontal:decrement:start {
-      background-image: conic-gradient(
-        from 45deg at 0 50%,
-        currentColor 90deg,
-        transparent 0
-      );
-    }
-
-    ::-webkit-scrollbar-button:horizontal:increment:end {
-      background-image: conic-gradient(
-        from 225deg at 100% 50%,
-        currentColor 90deg,
-        transparent 0
-      );
-    }
   }
 
-  /* Firefox exposes thumb/track colors, but not individual arrow styling. */
+  /* Firefox thin scrollbars omit native buttons and keep the rail unpainted. */
   @supports not selector(::-webkit-scrollbar) {
     * {
-      scrollbar-color: var(--muted-foreground) transparent;
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb-color, var(--muted-foreground))
+        transparent;
     }
   }
 
@@ -381,5 +368,50 @@
 
   .type-numeric {
     font-variant-numeric: tabular-nums;
+  }
+}
+
+/* SVG paint snapshots must settle immediately. Transforms, opacity, and
+ foreground color remain native; intentional round controls are excluded. */
+:root[data-app-corners-fallback]
+  :where(
+    [data-slot],
+    [data-app-corner],
+    .rounded-sm,
+    .rounded-md,
+    .rounded-lg,
+    .rounded-xl,
+    .rounded-2xl,
+    .rounded-3xl,
+    .rounded-4xl
+  ):not(
+    :where(
+      .rounded-full,
+      [data-corner-shape="round"],
+      input[type="radio"],
+      [data-slot="radio-group-item"],
+      [data-slot="radio-group-indicator"] span,
+      [data-slot="spinner"],
+      [data-slot="slider-track"],
+      [data-slot="slider-range"],
+      [data-slot="slider-thumb"],
+      [data-slot="switch"],
+      [data-slot="switch-thumb"],
+      [data-slot^="avatar"]
+    )
+  ) {
+  transition-property: color, opacity, transform;
+}
+
+/* Shared controls honor the OS motion preference while preserving the short
+   animation lifecycle that popup primitives use for dismissal and focus return. */
+@media (prefers-reduced-motion: reduce) {
+  [data-slot],
+  [data-slot]::before,
+  [data-slot]::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -1,9 +1,8 @@
+import { mergeProps } from "@base-ui/react/merge-props";
+import { useRender } from "@base-ui/react/use-render";
 import { cva } from "class-variance-authority";
-import { Slot } from "radix-ui";
-
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-
 const buttonGroupVariants = cva(
   "flex w-fit items-stretch *:focus-visible:relative *:focus-visible:z-10 has-[>[data-slot=button-group]]:gap-2 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-4xl [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
   {
@@ -20,33 +19,37 @@ const buttonGroupVariants = cva(
     },
   },
 );
-
 function ButtonGroup({ className, orientation, ...props }) {
   return (
     <div
       role="group"
       data-slot="button-group"
       data-orientation={orientation}
-      className={cn(buttonGroupVariants({ orientation }), className)}
-      {...props}
-    />
-  );
-}
-
-function ButtonGroupText({ className, asChild = false, ...props }) {
-  const Comp = asChild ? Slot.Root : "div";
-
-  return (
-    <Comp
       className={cn(
-        "text-label-lg flex items-center gap-2 rounded-4xl border bg-muted px-2.5 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
+        buttonGroupVariants({
+          orientation,
+        }),
         className,
       )}
       {...props}
     />
   );
 }
-
+function ButtonGroupText({ className, render, ...props }) {
+  return useRender({
+    defaultTagName: "div",
+    render,
+    props: mergeProps(
+      {
+        className: cn(
+          "text-label-lg flex items-center gap-2 rounded-4xl border bg-muted px-2.5 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
+          className,
+        ),
+      },
+      props,
+    ),
+  });
+}
 function ButtonGroupSeparator({
   className,
   orientation = "vertical",
@@ -64,7 +67,6 @@ function ButtonGroupSeparator({
     />
   );
 }
-
 export {
   ButtonGroup,
   ButtonGroupSeparator,

@@ -8,6 +8,21 @@ assert.ok(
   origin && password,
   "Set PLAYWRIGHT_BASE_URL and PLAYWRIGHT_APP_PASSWORD for the preview deployment.",
 );
+if (process.env.LUMINA_TEST_FIXTURES === "1") {
+  assert.equal(new URL(origin).hostname, "127.0.0.1");
+  assert.equal(new URL(process.env.DATABASE_URL).hostname, "127.0.0.1");
+  for (const name of [
+    "OPENROUTER_API_KEY",
+    "BLOB_READ_WRITE_TOKEN",
+    "VERCEL_OIDC_TOKEN",
+  ]) {
+    assert.equal(
+      process.env[name],
+      undefined,
+      `Hosted credential entered PWA fixture: ${name}`,
+    );
+  }
+}
 const browser = await chromium.launch({
   headless: true,
   ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
@@ -19,6 +34,16 @@ const context = await browser.newContext({
   serviceWorkers: "allow",
   viewport: { width: 390, height: 844 },
   colorScheme: "dark",
+});
+const externalRequests = [];
+context.on("request", (request) => {
+  const url = new URL(request.url());
+  if (
+    ["http:", "https:"].includes(url.protocol) &&
+    url.origin !== new URL(origin).origin
+  ) {
+    externalRequests.push(url.origin);
+  }
 });
 let record;
 try {
@@ -138,6 +163,7 @@ try {
     page.getByRole("radio", { name: "True", exact: true }),
   ).toBeChecked();
   assert.deepEqual(errors, []);
+  assert.deepEqual(externalRequests, [], "PWA contacted an external origin.");
   process.stdout.write(
     "PASS: authenticated preview shell, first-visit offline reload, durable queued answer, reconnect, and no API/login cache.\n",
   );
