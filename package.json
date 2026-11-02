@@ -1,6 +1,6 @@
 {
   "name": "study-cards-vercel",
-  "version": "1.39.0",
+  "version": "1.39.1",
   "description": "Private, single-owner study cards hosted on Vercel with OpenRouter",
   "scripts": {
     "test": "node scripts/test-environment.mjs -- vitest",

@@ -645,6 +645,8 @@ export default function GenerateRoute() {
                   Source
                 </h2>
                 <ToggleGroup
+                  variant="outline"
+                  spacing={0}
                   value={[mode]}
                   onValueChange={(values) => {
                     const value = values[0];
@@ -1007,7 +1009,7 @@ export default function GenerateRoute() {
                   </CollapsibleContent>
                 </Collapsible>
                 <div className="flex items-center justify-between gap-4">
-                  <Label htmlFor="card-count">Cards</Label>
+                  <Label htmlFor="card-count">Number of cards</Label>
                   <Input
                     id="card-count"
                     type="number"
