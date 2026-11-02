@@ -274,7 +274,7 @@ test("whole-source form survives reload of a generation job", async ({
   await page
     .getByRole("checkbox", { name: "Short Answer", exact: true })
     .check();
-  await page.getByLabel("Cards", { exact: true }).fill("3");
+  await page.getByLabel("Number of cards", { exact: true }).fill("3");
   await capture(page, testInfo, "generation-form");
   await page.getByRole("button", { name: "Generate", exact: true }).click();
   await expect(page).toHaveURL(/job=job-1/);
@@ -904,7 +904,9 @@ test("failed generation statuses are plain text and Details supports a complete 
   await expect(
     page.locator("form").getByText("Section 11", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByLabel("Cards", { exact: true })).toHaveValue("3");
+  await expect(page.getByLabel("Number of cards", { exact: true })).toHaveValue(
+    "3",
+  );
   await page.getByRole("button", { name: "Card types 1 selected" }).click();
   await expect(page.getByRole("checkbox", { checked: true })).toHaveCount(1);
   await expect(
@@ -956,7 +958,9 @@ test("retry asks for a deleted source again instead of submitting a stale source
   await page.goto("/generate?job=missing-source");
   await page.getByRole("button", { name: "Try again", exact: true }).click();
   await expect(page).toHaveURL(/\/generate$/);
-  await expect(page.getByLabel("Cards", { exact: true })).toHaveValue("4");
+  await expect(page.getByLabel("Number of cards", { exact: true })).toHaveValue(
+    "4",
+  );
   await expect(page.getByRole("alert")).toHaveText(
     "Add the source again to retry.",
   );
@@ -1577,7 +1581,9 @@ test("job details never retain another job's actions during delayed or failed na
     .getByRole("link", { name: "View details for Source B", exact: true })
     .click();
   await detail.getByRole("button", { name: "Try again", exact: true }).click();
-  await expect(page.getByLabel("Cards", { exact: true })).toHaveValue("9");
+  await expect(page.getByLabel("Number of cards", { exact: true })).toHaveValue(
+    "9",
+  );
   await expect(page.locator('span[title="Source B"]')).toBeVisible();
   expect(writes).toEqual([]);
 });

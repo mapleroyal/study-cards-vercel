@@ -168,13 +168,10 @@ export function ModelPicker({
       <PopoverTrigger
         render={<Button variant="ghost" disabled={disabled} />}
         aria-label="Change generation model"
-        className="h-auto min-h-9 max-w-full justify-start text-left"
+        className="h-auto min-h-9 max-w-full justify-start py-2 text-left"
         title={`${selected?.name || value.model} · ${value.reasoningEffort || "Default effort"}`}
       >
         <span className="min-w-0">
-          <span className="block text-label-md text-muted-foreground">
-            Generation model
-          </span>
           <span className="block truncate">
             {selected?.name || value.model}
           </span>
