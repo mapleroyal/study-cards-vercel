@@ -309,7 +309,7 @@ function Overlays() {
             </UI.SheetFooter>
           </UI.SheetContent>
         </UI.Sheet>
-        <UI.Drawer>
+        <UI.Drawer showSwipeHandle>
           <UI.DrawerTrigger render={<UI.Button variant="outline" />}>
             Open drawer
           </UI.DrawerTrigger>

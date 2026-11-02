@@ -19,7 +19,7 @@ function useDrawer() {
 
 function Drawer({
   modal = true,
-  showSwipeHandle = true,
+  showSwipeHandle = false,
   snapPoints,
   swipeDirection = "down",
   ...props
@@ -145,7 +145,7 @@ function DrawerContent({ className, viewportClassName, children, ...props }) {
           )}
           {...props}
         >
-          {showSwipeHandle && swipeAxis === "y" && <DrawerSwipeHandle />}
+          {showSwipeHandle && <DrawerSwipeHandle />}
           <DrawerPrimitive.Content
             data-slot="surface-viewport"
             render={<SurfaceViewport />}

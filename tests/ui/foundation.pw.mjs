@@ -18,9 +18,21 @@ async function attach(locator, testInfo, name) {
 }
 
 test.beforeEach(async ({ page }) => {
+  const interResponse = page.waitForResponse((response) =>
+    new URL(response.url()).pathname.endsWith("/inter-latin-wght-normal.woff2"),
+  );
   await page.goto("/");
   await expect(page.getByTestId("native-scroll")).toBeAttached();
+  expect((await interResponse).status()).toBe(200);
   await page.evaluate(() => document.fonts.ready);
+  await expect(page.locator("body")).toHaveCSS("font-family", /Inter Variable/);
+  expect(
+    await page.evaluate(async () =>
+      (await document.fonts.load('400 16px "Inter Variable"', "Study")).map(
+        (font) => font.status,
+      ),
+    ),
+  ).toContain("loaded");
 });
 
 test("intentional circles stay round while app surfaces retain their corner treatment", async ({

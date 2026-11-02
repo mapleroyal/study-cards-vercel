@@ -31,6 +31,8 @@
 - Compose interactive wrappers with Base UI `render`. Navigation uses native anchors or Router links styled with `buttonVariants` (or the app ButtonLink), never Base Button rendered as a link. ToggleGroup values are arrays; indeterminate Progress uses `value={null}`; notifications use `toast.add` from the shared Toast wrapper.
 - Surface `className` controls outer placement/size/paint; `viewportClassName` controls inner layout/padding. Explicit trigger `render` supplies the control's own dimensions and styling.
 
+Follow current stock shadcn/Base UI defaults except the explicitly retained foundations and demonstrated fixes: typography, the exact squircle implementation, the custom appearance switcher and first-paint behavior, tooltip and inset corrections, and the documented interaction/scrollbar fixes. Keep product-specific choices at product callsites through supported props; do not turn a product preference into a new template default. Verify upstream defaults before changing a shared wrapper.
+
 # Styling
 
 - Use Tailwind v4 and the shared theme.

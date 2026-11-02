@@ -105,37 +105,54 @@ test("drawer handle dismisses by dragging while preserving modal focus return", 
   await expect(trigger).toBeFocused();
 });
 
-test("drawer handles follow orientation without reserving a side rail", async ({
-  page,
-}, testInfo) => {
-  for (const direction of ["down", "up", "left", "right"]) {
-    const trigger = page.getByTestId(`drawer-direction-${direction}`);
-    await trigger.click();
-    const drawer = page.getByRole("dialog", {
-      name: `${direction} drawer orientation`,
-      exact: true,
-    });
-    await expect(drawer).toBeVisible();
-    const handle = drawer.locator('[data-slot="drawer-swipe-handle"]');
-    if (direction === "down" || direction === "up") {
-      await expect(handle).toBeVisible();
-    } else {
-      await expect(handle).toHaveCount(0);
-      expect(
-        await drawer.evaluate((element) => {
-          const viewport = element.querySelector(
-            '[data-slot="surface-viewport"]',
-          );
-          return Math.abs(element.clientWidth - viewport.offsetWidth);
-        }),
-      ).toBeLessThanOrEqual(1);
-    }
-    await drawer.screenshot({
-      path: testInfo.outputPath(`drawer-${direction}.png`),
-      animations: "disabled",
-    });
-    await drawer.press("Escape");
-    await expect(drawer).toBeHidden();
-    await expect(trigger).toBeFocused();
-  }
-});
+for (const explicit of [false, true]) {
+  test(
+    explicit
+      ? "drawer handles support explicit opt-in in every direction"
+      : "drawer handles are absent by stock default in every direction",
+    async ({ page }, testInfo) => {
+      for (const direction of ["down", "up", "left", "right"]) {
+        const trigger = page.getByTestId(
+          (explicit ? "drawer-explicit-" : "drawer-direction-") + direction,
+        );
+        await trigger.click();
+        const drawer = page.getByRole("dialog", {
+          name:
+            direction +
+            (explicit ? " drawer explicit handle" : " drawer orientation"),
+          exact: true,
+        });
+        await expect(drawer).toBeVisible();
+        const handle = drawer.locator('[data-slot="drawer-swipe-handle"]');
+        if (explicit) {
+          await expect(handle).toBeVisible();
+          const mark = await handle.locator("span").boundingBox();
+          const verticalSwipe = direction === "down" || direction === "up";
+          expect(verticalSwipe ? mark.width : mark.height).toBe(100);
+          expect(verticalSwipe ? mark.height : mark.width).toBe(6);
+        } else {
+          await expect(handle).toHaveCount(0);
+          if (direction === "left" || direction === "right") {
+            expect(
+              await drawer.evaluate((element) => {
+                const viewport = element.querySelector(
+                  '[data-slot="surface-viewport"]',
+                );
+                return Math.abs(element.clientWidth - viewport.offsetWidth);
+              }),
+            ).toBeLessThanOrEqual(1);
+          }
+        }
+        await drawer.screenshot({
+          path: testInfo.outputPath(
+            `drawer-${direction}${explicit ? "-explicit.png" : "-default.png"}`,
+          ),
+          animations: "disabled",
+        });
+        await drawer.press("Escape");
+        await expect(drawer).toBeHidden();
+        await expect(trigger).toBeFocused();
+      }
+    },
+  );
+}

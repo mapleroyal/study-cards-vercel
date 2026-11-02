@@ -1,9 +1,11 @@
+import { realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
+const fixtureRoot = path.resolve(directory, "../..");
 
 // A separate entry point keeps the component gallery out of application routes.
 export default defineConfig({
@@ -31,5 +33,16 @@ export default defineConfig({
     },
   },
   preview: { host: "127.0.0.1", port: 4181, strictPort: true },
-  server: { host: "127.0.0.1", port: 4181, strictPort: true },
+  server: {
+    host: "127.0.0.1",
+    port: 4181,
+    strictPort: true,
+    // Isolated snapshots symlink dependencies, never the source checkout or dotenv.
+    fs: {
+      allow: [
+        fixtureRoot,
+        realpathSync(path.join(fixtureRoot, "node_modules")),
+      ],
+    },
+  },
 });
