@@ -26,7 +26,7 @@ Defaults are implemented and tested here; this document only maps the code and t
 
 ## App integration and maintenance
 
-The current baseline is [React template 1f79c91132e3e696278cb910d96733138739af2a](https://github.com/mapleroyal/react-template/commit/1f79c91132e3e696278cb910d96733138739af2a). See [the integration record](template-foundation.md) for source boundaries and qualification evidence.
+The current baseline is [React template e3b8d947c90ad50e886475592a008130dd7cebd8](https://github.com/mapleroyal/react-template/commit/e3b8d947c90ad50e886475592a008130dd7cebd8). See [the integration record](template-foundation.md) for source boundaries and qualification evidence.
 
 The app preserves its Oooh Baby wordmark font, explicit HTML canvas background, the existing appearance storage key, pre-paint `public/theme-init.js`, service-worker/offline behavior, reader Markdown CSS, and hosted Node 24/Nitro/Workflow runtime. The controlled appearance switcher uses the app store through its existing adapter. AI presentation components do not replace the hosted generation and provider contracts.
 
@@ -44,7 +44,7 @@ Product actions use the shared ghost variant: visible text or a meaningful icon 
 
 Text triggers own their label inset. Select and an uncomposed ComboboxTrigger share one filled field style, 12px horizontal padding, hover/open feedback, and default/small heights. Input, Textarea and InputGroup own the same field hover treatment. Bare Collapsible, DropdownMenu, Popover, Dialog, AlertDialog, Sheet and Drawer triggers (and bare dialog/sheet/drawer close actions) use padded ghost action defaults; an explicit `render` supplies the composed control's style instead. Use `render={<Button variant="ghost" size="icon" />}` for an icon action with its own fixed hit area. Do not remove horizontal padding from a text trigger to align it with nearby content. Accordion keeps its 16px inset; menu items and labels keep 12px inside the padded popup viewport. Trace disclosures keep auto-height text-action styling with a 12px label inset, rather than inheriting a fixed Button height.
 
-`className` still owns a popup's outer shell; `viewportClassName` owns content padding. Trigger insets and content insets solve separate boundaries and must not cancel each other. Drawer supports `swipeDirection="down" | "up" | "left" | "right"`; its inner viewport scrolls and defaults to 8px padding, with 16px Header/Footer padding. Use the direction that suits the current layout; explicit render composition remains available for all triggers.
+`className` still owns a popup's outer shell; `viewportClassName` owns content padding. Trigger insets and content insets solve separate boundaries and must not cancel each other. Drawer supports `swipeDirection="down" | "up" | "left" | "right"`; its inner viewport scrolls and defaults to 8px padding, with 16px Header/Footer padding. Top and bottom drawers show a swipe handle by default; left and right drawers omit it without reserving a side rail. Use the direction that suits the current layout; explicit render composition remains available for all triggers.
 
 Native scrollbars and ScrollArea paint only the draggable thumb. Rails/corners stay transparent, scrollbar arrows are absent, and wheel, trackpad, thumb dragging and keyboard viewport scrolling remain available. Firefox uses its thin, transparent-rail native scrollbar. No custom direction buttons or reserved arrow space should be added.
 

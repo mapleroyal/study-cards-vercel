@@ -1,6 +1,6 @@
 # Template foundation integration
 
-The current shared source is [React template `1f79c91132e3e696278cb910d96733138739af2a`](https://github.com/mapleroyal/react-template/commit/1f79c91132e3e696278cb910d96733138739af2a), the November 2026 Base UI/Typeset/AI and interaction baseline. This includes the Chrome native-scrollbar correction synchronized in React PR 5. Product layout and action/search adaptations derive from [server app `7da41b699a04209aac6d6bbfb28b0f28d0889172`](https://github.com/mapleroyal/interactive-study-cards/commit/7da41b699a04209aac6d6bbfb28b0f28d0889172); this records a source comparison, not a backend port.
+The current shared source is [React template `e3b8d947c90ad50e886475592a008130dd7cebd8`](https://github.com/mapleroyal/react-template/commit/e3b8d947c90ad50e886475592a008130dd7cebd8), the November 2026 Base UI/Typeset/AI and interaction baseline. This includes the Chrome native-scrollbar correction synchronized in React PR 5. Product layout and action/search adaptations derive from [server app `7da41b699a04209aac6d6bbfb28b0f28d0889172`](https://github.com/mapleroyal/interactive-study-cards/commit/7da41b699a04209aac6d6bbfb28b0f28d0889172); this records a source comparison, not a backend port.
 
 ## Source boundaries
 
@@ -43,3 +43,5 @@ Product browser, PWA and deployed acceptance are reported separately in the rele
 ## Earlier provenance
 
 The prior hosted foundation came from React `b8f0d5d0da94699aef2b4f848510a7568d34cfc7`, with a later tooltip/combobox follow-up. Those mixed Radix/Base wrappers, native-only corner enhancement and arrow scrollbar defaults are superseded by this integration. Historical validation records must not be reused as current hosted qualification.
+
+The side-drawer follow-up adopts [React PR #6](https://github.com/mapleroyal/react-template/pull/6) and [Electron PR #6](https://github.com/mapleroyal/electron-template/pull/6): automatic swipe handles render only on the vertical swipe axis (top/bottom drawers). Left/right drawers retain their dismissal and focus behavior without a handle or reserved handle rail. The exact corner engine is unchanged. Focused app acceptance passes eight cases across both themes and widths, including bottom-handle dragging and all four directions.
