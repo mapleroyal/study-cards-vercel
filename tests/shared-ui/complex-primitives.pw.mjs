@@ -104,3 +104,38 @@ test("drawer handle dismisses by dragging while preserving modal focus return", 
   await expect(drawer).toBeHidden();
   await expect(trigger).toBeFocused();
 });
+
+test("drawer handles follow orientation without reserving a side rail", async ({
+  page,
+}, testInfo) => {
+  for (const direction of ["down", "up", "left", "right"]) {
+    const trigger = page.getByTestId(`drawer-direction-${direction}`);
+    await trigger.click();
+    const drawer = page.getByRole("dialog", {
+      name: `${direction} drawer orientation`,
+      exact: true,
+    });
+    await expect(drawer).toBeVisible();
+    const handle = drawer.locator('[data-slot="drawer-swipe-handle"]');
+    if (direction === "down" || direction === "up") {
+      await expect(handle).toBeVisible();
+    } else {
+      await expect(handle).toHaveCount(0);
+      expect(
+        await drawer.evaluate((element) => {
+          const viewport = element.querySelector(
+            '[data-slot="surface-viewport"]',
+          );
+          return Math.abs(element.clientWidth - viewport.offsetWidth);
+        }),
+      ).toBeLessThanOrEqual(1);
+    }
+    await drawer.screenshot({
+      path: testInfo.outputPath(`drawer-${direction}.png`),
+      animations: "disabled",
+    });
+    await drawer.press("Escape");
+    await expect(drawer).toBeHidden();
+    await expect(trigger).toBeFocused();
+  }
+});

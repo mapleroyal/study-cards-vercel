@@ -185,6 +185,25 @@ export function InteractionGallery() {
             </UI.DrawerContent>
           </UI.Drawer>
         </div>
+        <div className="gallery-row">
+          {["down", "up", "left", "right"].map((direction) => (
+            <UI.Drawer key={direction} swipeDirection={direction}>
+              <UI.DrawerTrigger data-testid={`drawer-direction-${direction}`}>
+                Open {direction} drawer
+              </UI.DrawerTrigger>
+              <UI.DrawerContent>
+                <UI.DrawerHeader>
+                  <UI.DrawerTitle>
+                    {direction} drawer orientation
+                  </UI.DrawerTitle>
+                </UI.DrawerHeader>
+                <UI.DrawerFooter>
+                  <UI.DrawerClose>Close orientation drawer</UI.DrawerClose>
+                </UI.DrawerFooter>
+              </UI.DrawerContent>
+            </UI.Drawer>
+          ))}
+        </div>
         <TraceCollapsible>
           <TraceCollapsibleTrigger data-testid="trigger-trace">
             <TraceLine>

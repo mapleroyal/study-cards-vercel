@@ -145,7 +145,7 @@ function DrawerContent({ className, viewportClassName, children, ...props }) {
           )}
           {...props}
         >
-          {showSwipeHandle && <DrawerSwipeHandle />}
+          {showSwipeHandle && swipeAxis === "y" && <DrawerSwipeHandle />}
           <DrawerPrimitive.Content
             data-slot="surface-viewport"
             render={<SurfaceViewport />}
